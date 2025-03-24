@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Upload</title>
+    <link href="/static/style.css" rel="stylesheet" type="text/css" />
+    <style>
+        select {
+            width: 200px;
+            padding: 5px;
+            margin-bottom: 10px;
+        }
+        #model {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Upload Audio File</h1>
+        <form action="/transcribe" method="post" enctype="multipart/form-data">
+            <label for="file">Choose an audio file:</label>
+            <input type="file" name="file" id="file" accept="audio/*" required><br><br>
+
+            <label for="language_code">Language:</label>
+            <select name="language_code" id="language_code" required>
+                <option value="zh-CN">中文（简体）</option>
+                <option value="th-TH">泰语</option>
+                <option value="my-MM">缅甸</option>
+                <option value="en-US">English (United States)</option>
+                <option value="ja-JP">日本語</option>
+                <option value="ko-KR">한국어</option>
+                <option value="fr-FR">Français</option>
+                <option value="de-DE">Deutsch</option>
+            </select><br><br>
+
+            <input type="hidden" name="model" id="model" value="long">
+
+            <button type="submit">Transcribe</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('language_code').addEventListener('change', function() {
+            const languageModels = {
+                'zh-CN': 'long',
+                'en-US': 'latest_long',
+                'ja-JP': 'long',
+                'ko-KR': 'long',
+                'fr-FR': 'long',
+                'de-DE': 'long'
+            };
+            document.getElementById('model').value = languageModels[this.value] || 'long';
+        });
+    </script>
+</body>
+</html>
