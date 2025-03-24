@@ -1,0 +1,58 @@
+{% extends "user/layout.html" %}
+
+{% block title %}订单支付{% endblock %}
+
+{% block content %}
+<div class="checkout-container">
+    <div class="order-summary">
+        <h2>订单详情</h2>
+        <div class="plan-details">
+            <h3>{{ plan.name }}</h3>
+            <div class="price-tag">¥{{ plan.price }}</div>
+            <div class="plan-description">
+                <ul>
+                    <li>{{ plan.minutes }}分钟转写时长</li>
+                    <li>有效期：{{ plan.duration }}个月</li>
+                    {% for feature in plan.features %}
+                    <li>{{ feature }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="payment-methods">
+        <h2>选择支付方式</h2>
+        <div class="payment-options">
+            <div class="payment-option" data-method="wechat">
+                <img src="/static/images/wechat-pay.png" alt="微信支付">
+                <span>微信支付</span>
+            </div>
+            <div class="payment-option" data-method="alipay">
+                <img src="/static/images/alipay.png" alt="支付宝">
+                <span>支付宝</span>
+            </div>
+            <div class="payment-option" data-method="stripe">
+                <img src="/static/images/stripe.png" alt="Stripe">
+                <span>信用卡支付</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="payment-qrcode hidden">
+        <div class="qrcode-container">
+            <img id="qrcode" src="" alt="支付二维码">
+            <p>请使用手机扫码支付</p>
+        </div>
+        <button class="cancel-payment">取消支付</button>
+    </div>
+
+    <div class="stripe-form hidden">
+        <div id="stripe-card-element"></div>
+        <button id="stripe-submit">确认支付</button>
+    </div>
+</div>
+
+<script src="https://js.stripe.com/v3/"></script>
+<script src="/static/js/checkout.js"></script>
+{% endblock %}
