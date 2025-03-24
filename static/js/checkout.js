@@ -11,6 +11,10 @@ document.addEventListener('DOMContentLoaded', function() {
     const card = elements.create('card');
     card.mount('#stripe-card-element');
 
+    // 获取计划ID
+    const urlParams = new URLSearchParams(window.location.search);
+    const planId = urlParams.get('plan');
+
     // 支付方式选择
     paymentOptions.forEach(option => {
         option.addEventListener('click', async () => {
@@ -21,19 +25,24 @@ document.addEventListener('DOMContentLoaded', function() {
             paymentOptions.forEach(opt => opt.classList.remove('selected'));
             option.classList.add('selected');
 
-            // 创建支付订单
-            const response = await fetch('/payment/create', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    method: method,
-                    plan_id: planId
-                })
-            });
+            try {
+                // 创建支付订单
+                const response = await fetch('/payment/create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        method: method,
+                        plan_id: planId
+                    })
+                });
 
-            const paymentData = await response.json();
+                if (!response.ok) {
+                    throw new Error('支付创建失败');
+                }
+
+                const paymentData = await response.json();
 
             // 根据支付方式显示不同的支付界面
             if (paymentData.type === 'qrcode') {

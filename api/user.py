@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from utils.auth import get_current_user
 from services.firestore_service import FirestoreService
+from config.plans import SUBSCRIPTION_PLANS
 
 router = APIRouter(prefix="/user")
 templates = Jinja2Templates(directory="templates")
@@ -79,8 +80,8 @@ async def checkout(request: Request):
     if not user:
         return RedirectResponse(url="/login", status_code=302)
     
-    plan = request.query_params.get("plan")
-    if not plan:
+    plan_id = request.query_params.get("plan")
+    if not plan_id or plan_id not in SUBSCRIPTION_PLANS:
         return RedirectResponse(url="/user/plans", status_code=302)
     
     return templates.TemplateResponse(
@@ -88,6 +89,6 @@ async def checkout(request: Request):
         {
             "request": request,
             "current_user": user,
-            "plan": plan
+            "plan": SUBSCRIPTION_PLANS[plan_id]
         }
     )

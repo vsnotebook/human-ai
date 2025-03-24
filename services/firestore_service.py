@@ -5,6 +5,9 @@ import os
 
 from env import PROJECT_ID
 from datetime import datetime, timedelta
+from config.plans import SUBSCRIPTION_PLANS
+import uuid
+from datetime import datetime
 
 db: Client = firestore.Client(project=PROJECT_ID)
 
@@ -174,3 +177,28 @@ class FirestoreService:
             } for order in orders]
         except Exception:
             return []
+
+    @staticmethod
+    async def create_order(user_id: str, plan_id: str):
+        if plan_id not in SUBSCRIPTION_PLANS:
+            raise ValueError("Invalid plan ID")
+            
+        plan = SUBSCRIPTION_PLANS[plan_id]
+        order_id = str(uuid.uuid4())
+        
+        order_data = {
+            'id': order_id,
+            'user_id': user_id,
+            'plan_id': plan_id,
+            'plan_name': plan['name'],
+            'amount': plan['price'],
+            'minutes': plan['minutes'],
+            'duration': plan['duration'],
+            'status': 'pending',
+            'created_at': datetime.now()
+        }
+        
+        # 保存订单到 Firestore
+        db.collection('orders').document(order_id).set(order_data)
+        
+        return order_data
