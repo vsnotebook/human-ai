@@ -1,26 +1,39 @@
 from typing import Annotated
-from fastapi import APIRouter, File, UploadFile, Form, Request
-from fastapi.responses import HTMLResponse, JSONResponse
+from fastapi import APIRouter, File, UploadFile, Form, Request, Depends, Response
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-import os
+
 from services.speech_service import SpeechService
+from utils.auth import get_current_user
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")
 
 @router.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
-    message = "It's running!"
-    service = os.environ.get('K_SERVICE', 'Unknown service')
-    revision = os.environ.get('K_REVISION', 'Unknown revision')
-
+    user = await get_current_user(request)
     return templates.TemplateResponse(
         "index.html",
         {
             "request": request,
-            "message": message,
-            "Service": service,
-            "Revision": revision,
+            "current_user": user,
+        },
+    )
+
+@router.get("/transcribe-audio", response_class=HTMLResponse)
+async def upload_page(request: Request):
+    user = await get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    
+    return templates.TemplateResponse(
+        "transcribe-audio.html",
+        {
+            "request": request,
+            "current_user": user,
+            "trial_count": user.get("trial_count", 10) if user else 10,
+            "trial_seconds": user.get("trial_seconds", 60) if user else 60,
+            "subscription": None,  # 这里可以添加订阅信息
         },
     )
 
@@ -44,6 +57,37 @@ async def transcribe_audio(
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
-@router.get("/transcribe-audio", response_class=HTMLResponse)
-async def upload_page(request: Request):
-    return templates.TemplateResponse("transcribe-audio.html", {"request": request})
+
+@router.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request):
+    return templates.TemplateResponse("login.html", {"request": request})
+
+@router.post("/login")
+async def login(
+    request: Request,
+    response: Response,
+    username: str = Form(...),
+    password: str = Form(...)
+):
+    # 这里添加实际的用户验证逻辑
+    # 示例中仅作演示，实际应用中需要进行真实的用户验证
+    if username == "demo" and password == "demo123":
+        request.session["user"] = {
+            "username": username,
+            "trial_count": 10,
+            "trial_seconds": 60
+        }
+        return RedirectResponse(url="/", status_code=302)
+    else:
+        return templates.TemplateResponse(
+            "login.html",
+            {
+                "request": request,
+                "error": "用户名或密码错误"
+            }
+        )
+
+@router.get("/logout")
+async def logout(request: Request):
+    request.session.clear()
+    return RedirectResponse(url="/", status_code=302)

@@ -8,11 +8,22 @@
 </head>
 <body>
     <div class="container">
-        <header>
-            <h1>智能语音识别服务</h1>
-            <p class="subtitle">基于Google Cloud Speech-to-Text技术</p>
+        <header class="main-header">
+            <div class="logo">
+                <h1>智能语音识别服务</h1>
+            </div>
+            <nav class="main-nav">
+                {% if current_user %}
+                    <span class="user-name">{{ current_user.username }}</span>
+                    <a href="/logout" class="nav-btn">退出</a>
+                {% else %}
+                    <a href="/login" class="nav-btn">登录</a>
+                    <a href="/register" class="nav-btn signup">注册</a>
+                {% endif %}
+            </nav>
         </header>
 
+        <!-- 保持原有的主要内容不变 -->
         <main>
             <section class="features">
                 <h2>主要特点</h2>

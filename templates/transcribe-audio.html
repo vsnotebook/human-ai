@@ -11,8 +11,25 @@
         <header>
             <h1>音频转写</h1>
             <p class="subtitle">选择音频文件和语言开始转写</p>
+            {% if current_user.is_authenticated %}
+                <div class="user-info">
+                    <p>剩余可用时长：{{ remaining_minutes }}分钟</p>
+                    {% if subscription %}
+                        <p>当前订阅：{{ subscription.plan_type }} (有效期至 {{ subscription.end_date.strftime('%Y-%m-%d') }})</p>
+                    {% else %}
+                        <p>免费试用：剩余{{ trial_count }}次 (总计{{ trial_seconds }}秒)</p>
+                        <a href="/subscription" class="upgrade-btn">升级订阅</a>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="auth-buttons">
+                    <a href="/login" class="login-btn">登录</a>
+                    <a href="/register" class="register-btn">注册</a>
+                </div>
+            {% endif %}
         </header>
 
+        <!-- 保持原有的表单部分 -->
         <div class="upload-container">
             <form action="/transcribe" method="post" enctype="multipart/form-data">
                 <div class="form-group">
@@ -36,6 +53,18 @@
 
                 <button type="submit" class="submit-button">开始转写</button>
             </form>
+        </div>
+    </div>
+
+    <!-- 添加订阅提醒弹窗 -->
+    <div id="subscription-reminder" class="modal">
+        <div class="modal-content">
+            <h3>免费试用即将用完</h3>
+            <p>建议订阅会员以继续使用服务</p>
+            <div class="modal-buttons">
+                <a href="/subscription" class="primary-btn">查看订阅方案</a>
+                <button class="secondary-btn" onclick="closeModal()">稍后再说</button>
+            </div>
         </div>
     </div>
 

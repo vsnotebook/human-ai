@@ -7,3 +7,7 @@ python-multipart
 google-cloud-speech
 google-auth
 google-cloud-core
+python-multipart
+itsdangerous
+sqlalchemy
+
