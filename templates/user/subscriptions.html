@@ -1,0 +1,31 @@
+{% extends "user/layout.html" %}
+
+{% block title %}我的订阅{% endblock %}
+
+{% block content %}
+<div class="subscription-container">
+    <div class="current-subscription">
+        <h2>当前订阅</h2>
+        {% if subscriptions %}
+            {% for sub in subscriptions %}
+                <div class="subscription-card">
+                    <div class="plan-info">
+                        <h3>{{ sub.plan_name }}</h3>
+                        <span class="status {{ sub.status }}">{{ sub.status }}</span>
+                    </div>
+                    <div class="details">
+                        <p>剩余时长：{{ sub.minutes }}分钟</p>
+                        <p>开始时间：{{ sub.start_date.strftime('%Y-%m-%d') }}</p>
+                        <p>结束时间：{{ sub.end_date.strftime('%Y-%m-%d') }}</p>
+                    </div>
+                </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty-state">
+                <p>暂无订阅记录</p>
+                <a href="/user/plans" class="primary-btn">立即订阅</a>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
