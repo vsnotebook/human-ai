@@ -91,7 +91,7 @@ async def admin_users_page(request: Request):
     if not user or user.get('role') != 'admin':
         return RedirectResponse(url="/", status_code=302)
         
-    users = await FirestoreService.get_all_users(user['id'])
+    users = FirestoreService.get_all_users(user['id'])
     return templates.TemplateResponse(
         "admin/users.html",
         {
@@ -124,3 +124,25 @@ async def login(
 async def logout(request: Request):
     request.session.clear()
     return RedirectResponse(url="/", status_code=302)
+
+
+@router.get("/admin/dashboard", response_class=HTMLResponse)
+async def admin_dashboard(request: Request):
+    user = await get_current_user(request)
+    if not user or user.get('role') != 'admin':
+        return RedirectResponse(url="/", status_code=302)
+    
+    # 获取统计数据
+    stats = await FirestoreService.get_dashboard_stats()
+    activities = await FirestoreService.get_recent_activities()
+    
+    return templates.TemplateResponse(
+        "admin/dashboard.html",
+        {
+            "request": request,
+            "current_user": user,
+            "active_page": "dashboard",
+            "stats": stats,
+            "activities": activities
+        }
+    )

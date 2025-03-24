@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}用户中心{% endblock %} - 音频转写服务</title>
+    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.5.95/css/materialdesignicons.min.css" rel="stylesheet">
+    <link href="/static/user/style.css" rel="stylesheet">
+</head>
+<body>
+    <div class="user-container">
+        <aside class="sidebar">
+            <div class="sidebar-header">
+                <h1>用户中心</h1>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/user/dashboard" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+                    <i class="mdi mdi-view-dashboard"></i>
+                    <span>我的主页</span>
+                </a>
+                <a href="/user/subscriptions" class="nav-item {% if active_page == 'subscriptions' %}active{% endif %}">
+                    <i class="mdi mdi-credit-card-outline"></i>
+                    <span>我的订阅</span>
+                </a>
+                <a href="/user/plans" class="nav-item {% if active_page == 'plans' %}active{% endif %}">
+                    <i class="mdi mdi-shopping"></i>
+                    <span>购买订阅</span>
+                </a>
+                <a href="/user/orders" class="nav-item {% if active_page == 'orders' %}active{% endif %}">
+                    <i class="mdi mdi-format-list-bulleted"></i>
+                    <span>我的订单</span>
+                </a>
+            </nav>
+        </aside>
+
+        <main class="main-content">
+            <header class="top-bar">
+                <div class="breadcrumb">
+                    {% block breadcrumb %}{% endblock %}
+                </div>
+                <div class="user-menu">
+                    <a href="/" class="home-btn">返回首页</a>
+                    <span>{{ current_user.username }}</span>
+                </div>
+            </header>
+
+            <div class="content">
+                {% block content %}{% endblock %}
+            </div>
+        </main>
+    </div>
+</body>
+</html>

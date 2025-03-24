@@ -15,6 +15,11 @@
             <nav class="main-nav">
                 {% if current_user %}
                     <span class="user-name">{{ current_user.username }}</span>
+                    {% if current_user.role == 'admin' %}
+                        <a href="/admin/dashboard" class="nav-btn admin">管理后台</a>
+                    {% else %}
+                        <a href="/user/dashboard" class="nav-btn user">用户中心</a>
+                    {% endif %}
                     <a href="/logout" class="nav-btn">退出</a>
                 {% else %}
                     <a href="/login" class="nav-btn">登录</a>

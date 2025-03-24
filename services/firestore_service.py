@@ -4,6 +4,7 @@ import hashlib
 import os
 
 from env import PROJECT_ID
+from datetime import datetime, timedelta
 
 db: Client = firestore.Client(project=PROJECT_ID)
 
@@ -61,9 +62,9 @@ class FirestoreService:
                     'id': user.id,
                     'username': user_data['username'],
                     'email': user_data['email'],
-                    'role': user_data['role'],
-                    'trial_count': user_data['trial_count'],
-                    'trial_seconds': user_data['trial_seconds']
+                    'role': user_data.get('role', 'user'),  # 确保返回角色信息
+                    'trial_count': user_data.get('trial_count', 10),
+                    'trial_seconds': user_data.get('trial_seconds', 60)
                 }
         return None
 
@@ -85,3 +86,91 @@ class FirestoreService:
                 'created_at': user_data['created_at']
             })
         return users
+
+    @staticmethod
+    async def get_dashboard_stats():
+        try:
+            users = db.collection('users').get()
+            total_users = len(users)
+            
+            # 获取今日转写次数
+            today = datetime.now().date()
+            today_start = datetime.combine(today, datetime.min.time())
+            transcriptions = db.collection('transcriptions').where(
+                'created_at', '>=', today_start
+            ).get()
+            
+            return {
+                'total_users': total_users,
+                'today_transcriptions': len(transcriptions),
+                'active_subscriptions': 0,  # 待实现订阅功能后更新
+                'monthly_revenue': 0  # 待实现支付功能后更新
+            }
+        except Exception:
+            return {
+                'total_users': 0,
+                'today_transcriptions': 0,
+                'active_subscriptions': 0,
+                'monthly_revenue': 0
+            }
+    
+    @staticmethod
+    async def get_recent_activities():
+        try:
+            activities = db.collection('activities').order_by(
+                'created_at', direction=firestore.Query.DESCENDING
+            ).limit(10).get()
+            
+            return [{
+                'username': activity.get('username'),
+                'action': activity.get('action'),
+                'created_at': activity.get('created_at')
+            } for activity in activities]
+        except Exception:
+            return []
+
+    @staticmethod
+    async def get_user_usage_stats(user_id: str):
+        try:
+            user_ref = db.collection('users').document(user_id)
+            user = user_ref.get()
+            if not user.exists:
+                return None
+            
+            user_data = user.to_dict()
+            return {
+                'remaining_minutes': user_data.get('remaining_minutes', 0),
+                'total_used_minutes': user_data.get('total_used_minutes', 0),
+                'trial_count': user_data.get('trial_count', 0)
+            }
+        except Exception:
+            return None
+
+    @staticmethod
+    async def get_user_subscriptions(user_id: str):
+        try:
+            subs = db.collection('subscriptions').where('user_id', '==', user_id).get()
+            return [{
+                'id': sub.id,
+                'plan_name': sub.get('plan_name'),
+                'minutes': sub.get('minutes'),
+                'start_date': sub.get('start_date'),
+                'end_date': sub.get('end_date'),
+                'status': sub.get('status')
+            } for sub in subs]
+        except Exception:
+            return []
+
+    @staticmethod
+    async def get_user_orders(user_id: str):
+        try:
+            orders = db.collection('orders').where('user_id', '==', user_id).get()
+            return [{
+                'id': order.id,
+                'plan_name': order.get('plan_name'),
+                'amount': order.get('amount'),
+                'status': order.get('status'),
+                'created_at': order.get('created_at')
+            } for order in orders]
+        except Exception:
+            return []

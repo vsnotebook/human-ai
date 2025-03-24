@@ -1,0 +1,50 @@
+{% extends "admin/layout.html" %}
+
+{% block title %}控制台{% endblock %}
+
+{% block breadcrumb %}
+<span>控制台</span>
+{% endblock %}
+
+{% block content %}
+<div class="stats-grid">
+    <div class="stat-card">
+        <h3>总用户数</h3>
+        <div class="stat-value">{{ stats.total_users }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>今日转写次数</h3>
+        <div class="stat-value">{{ stats.today_transcriptions }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>活跃订阅</h3>
+        <div class="stat-value">{{ stats.active_subscriptions }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>本月收入</h3>
+        <div class="stat-value">¥{{ stats.monthly_revenue }}</div>
+    </div>
+</div>
+
+<div class="recent-activities">
+    <h2>最近活动</h2>
+    <table class="activity-table">
+        <thead>
+            <tr>
+                <th>用户</th>
+                <th>操作</th>
+                <th>时间</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for activity in activities %}
+            <tr>
+                <td>{{ activity.username }}</td>
+                <td>{{ activity.action }}</td>
+                <td>{{ activity.created_at }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}

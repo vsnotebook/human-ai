@@ -250,3 +250,23 @@ select, input[type="file"] {
         justify-content: center;
     }
 }
+
+.nav-btn.admin {
+    background-color: #ff9800;
+    color: white;
+    margin-right: 10px;
+}
+
+.nav-btn.admin:hover {
+    background-color: #f57c00;
+}
+
+.nav-btn.user {
+    background-color: #4CAF50;
+    color: white;
+    margin-right: 10px;
+}
+
+.nav-btn.user:hover {
+    background-color: #388E3C;
+}
