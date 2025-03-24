@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>订阅计划</title>
+    <link href="/static/style.css" rel="stylesheet" type="text/css" />
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>选择订阅计划</h1>
+            <p class="subtitle">选择最适合您的计划</p>
+        </header>
+
+        <div class="plans-container">
+            {% for plan_id, plan in plans.items() %}
+            <div class="plan-card">
+                <h2>{{ plan.name }}</h2>
+                <div class="price">
+                    <span class="amount">￥{{ plan.price.CNY }}</span>
+                    <span class="period">/月</span>
+                </div>
+                <div class="features">
+                    <p>✓ {{ plan.minutes }}分钟转写时长</p>
+                    <p>✓ 支持多种语言</p>
+                    <p>✓ 高精度识别</p>
+                </div>
+                <button class="subscribe-btn" onclick="subscribe('{{ plan_id }}')">立即订阅</button>
+            </div>
+            {% endfor %}
+        </div>
+
+        <div id="payment-modal" class="modal">
+            <div class="modal-content">
+                <h3>选择支付方式</h3>
+                <div class="payment-methods">
+                    <div class="payment-method" onclick="pay('wechat')">
+                        <img src="/static/images/wechat-pay.png" alt="微信支付">
+                        <span>微信支付</span>
+                    </div>
+                    <div class="payment-method" onclick="pay('alipay')">
+                        <img src="/static/images/alipay.png" alt="支付宝">
+                        <span>支付宝</span>
+                    </div>
+                    <div class="payment-method" onclick="pay('stripe')">
+                        <img src="/static/images/stripe.png" alt="Stripe">
+                        <span>信用卡</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/subscription.js"></script>
+</body>
+</html>
