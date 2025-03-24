@@ -1,183 +1,149 @@
+:root {
+    --primary-color: #2196F3;
+    --secondary-color: #1976D2;
+    --text-color: #333;
+    --background-color: #f5f5f5;
+    --container-width: 1200px;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
 body {
-	font-family: 'Roboto', sans-serif;
-	font-display: fallback;
-	background: url('cloud_bg.svg');
-	background-size: cover;
-	background-position: center;
-	line-height: 1.6;
- }
-
-h1 {
-	font-size: 24px;
-	font-weight: bold;
-	margin-bottom: 0px;
-}
-
-h2 {
-	font-size: 18px;
-	font-weight: normal;
-	margin-top: 4px;
-}
-
-h3 {
-	font-size: 20px;
-	margin-bottom: 0px;
-}
-
-em {
-	font-weight: 600;
-	font-style: normal;
-}
-
-.next {
-    font-size: 15px;
-	margin-top: 8px;
-	margin-bottom: 8px;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    line-height: 1.6;
+    color: var(--text-color);
+    background-color: var(--background-color);
 }
 
 .container {
-	max-width: 700px;
-	margin-left: auto;
-	margin-right: auto;
-} 
-
-.hero {
-	margin-top: 172px;
+    max-width: var(--container-width);
+    margin: 0 auto;
+    padding: 20px;
 }
 
-.hero .logo {
-	width: 140px;
-	float: left;
-	margin-right: 32px;
+header {
+    text-align: center;
+    padding: 40px 0;
 }
 
-.hero .message {
-	font-size: 15px;
-	text-align: center;
-	margin-bottom: 24px;
+h1 {
+    font-size: 2.5rem;
+    color: var(--primary-color);
+    margin-bottom: 10px;
 }
 
-.details {
-	clear: both;
-	height: 400px;
-	line-height: 1.8;
+.subtitle {
+    font-size: 1.2rem;
+    color: #666;
 }
 
-.callout {
-	font-size: 14px;
-	color: #1967D2;
-	font-weight: 600;
-	padding: 16px 24px 16px 40px;
-	background: url('lightbulb_icon.svg') #E8F0FE ;
-	background-position: 16px 16px;
-	background-repeat: no-repeat;
-	line-height: 1.6;
+.features {
+    margin: 40px 0;
 }
 
-code {
-	font-family: 'Roboto Mono', Courier, monospace;
-	color: #A30038;
-	background-color: #F8F8F8;
-	border: 1px solid #DDD;
-	border-radius: 2px;
-	padding: 0 6px;
-	font-weight: 500;
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 30px;
+    margin-top: 20px;
+}
+
+.feature-item {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease;
+}
+
+.feature-item:hover {
+    transform: translateY(-5px);
 }
 
 .cta {
-	padding-bottom: 52px;
-}
-
-.cta a {
-	color: white;
-	text-decoration: none;
-	background-color: rgb(14, 101, 241);
-	padding: 8px 12px;
-	margin: 8px;
-	min-height: 36px;
-	border-radius: 2px;
-	font-weight: 600;
-}
-
-.cta a:hover {
-    background-color: rgb(66, 133, 244, 0.9);
-}
-
-@media (max-width: 600px) {
-    .hero .logo {
-        float: initial;
-        display: block;
-        margin-left: auto;
-        margin-right: auto;
-    }
-
-	.container {
-        margin-top: 0;
-	}
-
-    .hero {
-        margin-top: 0;
-        margin-bottom: 24px;
-	}
-}
-@media (prefers-color-scheme: dark) {
-    body {
-        background: black url('dark_bg.svg');
-        color:white;
-    }
-	a {
-		color: #8AB4F8;
-	}
-	a:visited {
-		color: #b48af8;
-	}
-	.cta a {
-		color: white;
-	}
-}
-
-
-body {
-    font-family: sans-serif;
-    margin: 20px;
-}
-
-.container {
-    max-width: 600px;
-    margin: 0 auto;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-}
-
-h1 {
     text-align: center;
+    padding: 60px 0;
+}
+
+.cta-button {
+    display: inline-block;
+    padding: 15px 30px;
+    background-color: var(--primary-color);
+    color: white;
+    text-decoration: none;
+    border-radius: 5px;
+    font-size: 1.2rem;
+    transition: background-color 0.3s ease;
+}
+
+.cta-button:hover {
+    background-color: var(--secondary-color);
+}
+
+/* 音频转写页面样式 */
+.upload-container {
+    max-width: 600px;
+    margin: 40px auto;
+    background: white;
+    padding: 30px;
+    border-radius: 10px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+}
+
+.form-group {
+    margin-bottom: 20px;
 }
 
 label {
     display: block;
-    margin-bottom: 5px;
+    margin-bottom: 8px;
+    font-weight: 500;
 }
 
-input[type="file"],
-input[type="text"] {
+select, input[type="file"] {
     width: 100%;
-    padding: 8px;
-    margin-bottom: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
+    padding: 10px;
+    border: 2px solid #ddd;
+    border-radius: 5px;
+    font-size: 1rem;
 }
 
-button[type="submit"] {
-    background-color: #4CAF50;
+.submit-button {
+    width: 100%;
+    padding: 12px;
+    background-color: var(--primary-color);
     color: white;
-    padding: 10px 20px;
     border: none;
-    border-radius: 4px;
+    border-radius: 5px;
+    font-size: 1.1rem;
     cursor: pointer;
+    transition: background-color 0.3s ease;
 }
 
-button[type="submit"]:hover {
-    background-color: #45a049;
+.submit-button:hover {
+    background-color: var(--secondary-color);
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .container {
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 2rem;
+    }
+
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .upload-container {
+        margin: 20px 15px;
+        padding: 20px;
+    }
 }
