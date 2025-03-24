@@ -3,6 +3,7 @@ from fastapi import APIRouter, File, UploadFile, Form, Request, Depends, Respons
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
+from services.firestore_service import FirestoreService
 from services.speech_service import SpeechService
 from utils.auth import get_current_user
 
@@ -62,6 +63,44 @@ async def transcribe_audio(
 async def login_page(request: Request):
     return templates.TemplateResponse("login.html", {"request": request})
 
+@router.get("/register", response_class=HTMLResponse)
+async def register_page(request: Request):
+    return templates.TemplateResponse("register.html", {"request": request})
+
+@router.post("/register")
+async def register(
+    request: Request,
+    username: str = Form(...),
+    email: str = Form(...),
+    password: str = Form(...)
+):
+    # if await FirestoreService.create_user(username, email, password):
+    if FirestoreService.create_user(username, email, password):
+        return RedirectResponse(url="/login", status_code=302)
+    return templates.TemplateResponse(
+        "register.html",
+        {
+            "request": request,
+            "error": "用户名或邮箱已存在"
+        }
+    )
+
+@router.get("/admin/users", response_class=HTMLResponse)
+async def admin_users_page(request: Request):
+    user = await get_current_user(request)
+    if not user or user.get('role') != 'admin':
+        return RedirectResponse(url="/", status_code=302)
+        
+    users = await FirestoreService.get_all_users(user['id'])
+    return templates.TemplateResponse(
+        "admin/users.html",
+        {
+            "request": request,
+            "current_user": user,
+            "users": users
+        }
+    )
+
 @router.post("/login")
 async def login(
     request: Request,
@@ -69,23 +108,17 @@ async def login(
     username: str = Form(...),
     password: str = Form(...)
 ):
-    # 这里添加实际的用户验证逻辑
-    # 示例中仅作演示，实际应用中需要进行真实的用户验证
-    if username == "demo" and password == "demo123":
-        request.session["user"] = {
-            "username": username,
-            "trial_count": 10,
-            "trial_seconds": 60
-        }
+    user = FirestoreService.verify_user(username, password)
+    if user:
+        request.session["user"] = user
         return RedirectResponse(url="/", status_code=302)
-    else:
-        return templates.TemplateResponse(
-            "login.html",
-            {
-                "request": request,
-                "error": "用户名或密码错误"
-            }
-        )
+    return templates.TemplateResponse(
+        "login.html",
+        {
+            "request": request,
+            "error": "用户名或密码错误"
+        }
+    )
 
 @router.get("/logout")
 async def logout(request: Request):
