@@ -9,10 +9,10 @@ CREDENTIALS_PATH = "human-ai-454609-bf84b910d612.json"
 # os.environ["http_proxy"] = "http://127.0.0.1:7897"
 # os.environ["https_proxy"] = "http://127.0.0.1:7897"
 
-os.environ["http_proxy"] = "http://127.0.0.1:10808"
-os.environ["https_proxy"] = "http://127.0.0.1:10808"
+# os.environ["http_proxy"] = "http://127.0.0.1:10808"
+# os.environ["https_proxy"] = "http://127.0.0.1:10808"
 
 # Server settings
-# SERVER_HOST = "0.0.0.0"
-SERVER_HOST = "127.0.0.1"
+SERVER_HOST = "0.0.0.0"
+# SERVER_HOST = "127.0.0.1"
 SERVER_PORT = int(os.environ.get("PORT", 8080))
