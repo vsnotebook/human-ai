@@ -32,13 +32,23 @@
                 <img src="/static/images/alipay.png" alt="支付宝">
                 <span>支付宝</span>
             </div>
-            <div class="payment-option" data-method="stripe">
-                <img src="/static/images/stripe.png" alt="Stripe">
-                <span>信用卡支付</span>
-            </div>
+<!--            <div class="payment-option" data-method="stripe">-->
+<!--                <img src="/static/images/stripe.png" alt="Stripe">-->
+<!--                <span>信用卡支付</span>-->
+<!--            </div>-->
         </div>
     </div>
 
+    <div class="payment-overlay">
+        <div class="payment-modal">
+            <span class="close-modal">&times;</span>
+            <img id="payment-qrcode-large" src="" alt="支付二维码">
+            <div class="payment-status">
+                <p>请使用手机扫描二维码完成支付</p>
+                <p id="payment-result" class="success-message"></p>
+            </div>
+        </div>
+    </div>
     <div class="payment-qrcode hidden">
         <div class="qrcode-container">
             <img id="qrcode" src="" alt="支付二维码">

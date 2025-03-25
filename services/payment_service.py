@@ -1,8 +1,9 @@
-import stripe
+import qrcode
+from io import BytesIO
+import base64
 from alipay import AliPay
 from wechatpy.pay import WeChatPay
 from config.payment import (
-    STRIPE_SECRET_KEY,
     ALIPAY_APP_ID,
     ALIPAY_PRIVATE_KEY,
     ALIPAY_PUBLIC_KEY,
@@ -13,7 +14,25 @@ from config.payment import (
 
 class PaymentService:
     @staticmethod
+    def generate_test_qr(order_id: str, amount: float) -> str:
+        """生成测试用的支付二维码"""
+        qr = qrcode.QRCode(version=1, box_size=10, border=5)
+        qr.add_data(f"测试支付订单：{order_id}\n金额：¥{amount}")
+        qr.make(fit=True)
+        
+        # 修正：使用 qr.make_image() 而不是 qrcode.make_image()
+        img = qr.make_image(fill_color="black", back_color="white")
+        buffered = BytesIO()
+        img.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode()
+        return f"data:image/png;base64,{img_str}"
+
+    @staticmethod
     async def create_wechat_payment(order):
+        # 测试模式下使用测试二维码
+        if not WECHAT_APP_ID or WECHAT_APP_ID == '你的微信APP_ID':
+            return PaymentService.generate_test_qr(order['id'], order['amount'])
+
         wechat_pay = WeChatPay(
             appid=WECHAT_APP_ID,
             mch_id=WECHAT_MCH_ID,
@@ -27,13 +46,14 @@ class PaymentService:
             out_trade_no=order['id']
         )
         
-        return {
-            "type": "qrcode",
-            "data": result["code_url"]
-        }
+        return result["code_url"]
 
     @staticmethod
     async def create_alipay_payment(order):
+        # 测试模式下使用测试二维码
+        if not ALIPAY_APP_ID or ALIPAY_APP_ID == '你的支付宝APP_ID':
+            return PaymentService.generate_test_qr(order['id'], order['amount'])
+
         alipay = AliPay(
             appid=ALIPAY_APP_ID,
             app_private_key_string=ALIPAY_PRIVATE_KEY,
@@ -46,22 +66,4 @@ class PaymentService:
             total_amount=order['amount']
         )
         
-        return {
-            "type": "qrcode",
-            "data": result["qr_code"]
-        }
-
-    @staticmethod
-    async def create_stripe_payment(order):
-        stripe.api_key = STRIPE_SECRET_KEY
-        
-        payment_intent = stripe.PaymentIntent.create(
-            amount=int(order['amount'] * 100),
-            currency='usd',
-            metadata={'order_id': order['id']}
-        )
-        
-        return {
-            "type": "stripe",
-            "client_secret": payment_intent.client_secret
-        }
+        return result["qr_code"]

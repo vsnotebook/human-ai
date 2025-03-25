@@ -1,32 +1,17 @@
 document.addEventListener('DOMContentLoaded', function() {
     const paymentOptions = document.querySelectorAll('.payment-option');
-    const qrcodeContainer = document.querySelector('.payment-qrcode');
-    const stripeForm = document.querySelector('.stripe-form');
-    const qrcodeImg = document.querySelector('#qrcode');
-    let selectedMethod = null;
-
-    // 初始化Stripe
-    const stripe = Stripe('your_stripe_public_key');
-    const elements = stripe.elements();
-    const card = elements.create('card');
-    card.mount('#stripe-card-element');
-
-    // 获取计划ID
-    const urlParams = new URLSearchParams(window.location.search);
-    const planId = urlParams.get('plan');
+    const overlay = document.querySelector('.payment-overlay');
+    const qrcodeLarge = document.querySelector('#payment-qrcode-large');
+    const closeModal = document.querySelector('.close-modal');
+    const paymentResult = document.querySelector('#payment-result');
+    let paymentInterval;
 
     // 支付方式选择
     paymentOptions.forEach(option => {
         option.addEventListener('click', async () => {
             const method = option.dataset.method;
-            selectedMethod = method;
-
-            // 移除其他选项的选中状态
-            paymentOptions.forEach(opt => opt.classList.remove('selected'));
-            option.classList.add('selected');
 
             try {
-                // 创建支付订单
                 const response = await fetch('/payment/create', {
                     method: 'POST',
                     headers: {
@@ -34,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     },
                     body: JSON.stringify({
                         method: method,
-                        plan_id: planId
+                        plan_id: new URLSearchParams(window.location.search).get('plan')
                     })
                 });
 
@@ -43,57 +28,48 @@ document.addEventListener('DOMContentLoaded', function() {
                 }
 
                 const paymentData = await response.json();
-
-            // 根据支付方式显示不同的支付界面
-            if (paymentData.type === 'qrcode') {
-                qrcodeImg.src = paymentData.data;
-                qrcodeContainer.classList.remove('hidden');
-                stripeForm.classList.add('hidden');
-                startPollingOrderStatus();
-            } else if (paymentData.type === 'stripe') {
-                stripeForm.classList.remove('hidden');
-                qrcodeContainer.classList.add('hidden');
-                handleStripePayment(paymentData.client_secret);
+                
+                // 显示支付二维码
+                qrcodeLarge.src = paymentData.qr_code;
+                overlay.style.display = 'flex';
+                
+                // 开始轮询支付状态
+                startPollingOrderStatus(paymentData.order_id);
+            } catch (error) {
+                alert('创建支付订单失败：' + error.message);
             }
         });
     });
 
-    // 处理Stripe支付
-    async function handleStripePayment(clientSecret) {
-        const stripeSubmit = document.querySelector('#stripe-submit');
-        stripeSubmit.addEventListener('click', async () => {
-            const result = await stripe.confirmCardPayment(clientSecret, {
-                payment_method: {
-                    card: card
-                }
-            });
-
-            if (result.error) {
-                alert(result.error.message);
-            } else {
-                window.location.href = '/user/orders';
-            }
-        });
-    }
+    // 关闭弹窗
+    closeModal.addEventListener('click', () => {
+        overlay.style.display = 'none';
+        if (paymentInterval) {
+            clearInterval(paymentInterval);
+        }
+    });
 
     // 轮询订单状态
-    async function startPollingOrderStatus() {
-        const orderId = new URLSearchParams(window.location.search).get('order_id');
-        const interval = setInterval(async () => {
-            const response = await fetch(`/payment/status/${orderId}`);
-            const data = await response.json();
-            
-            if (data.status === 'paid') {
-                clearInterval(interval);
-                window.location.href = '/user/orders';
+    function startPollingOrderStatus(orderId) {
+        if (paymentInterval) {
+            clearInterval(paymentInterval);
+        }
+
+        paymentInterval = setInterval(async () => {
+            try {
+                const response = await fetch(`/payment/status/${orderId}`);
+                const data = await response.json();
+                
+                if (data.status === 'paid') {
+                    paymentResult.textContent = '支付成功！正在跳转...';
+                    clearInterval(paymentInterval);
+                    setTimeout(() => {
+                        window.location.href = '/user/subscriptions';
+                    }, 2000);
+                }
+            } catch (error) {
+                console.error('检查支付状态失败：', error);
             }
         }, 3000);
     }
-
-    // 取消支付
-    document.querySelector('.cancel-payment')?.addEventListener('click', () => {
-        qrcodeContainer.classList.add('hidden');
-        stripeForm.classList.add('hidden');
-        paymentOptions.forEach(opt => opt.classList.remove('selected'));
-    });
 });

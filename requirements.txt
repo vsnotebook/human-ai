@@ -11,3 +11,7 @@ python-multipart
 itsdangerous
 sqlalchemy
 google-cloud-firestore
+python-alipay-sdk
+wechatpy
+qrcode
+pillow

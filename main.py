@@ -4,6 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from api.speech import router as speech_router
 from api.user import router as user_router
+from api.payment import router as payment_router  # 添加这行
 from env import SERVER_HOST, SERVER_PORT
 
 app = FastAPI()
@@ -21,6 +22,7 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # 注册路由
 app.include_router(speech_router)
 app.include_router(user_router)
+app.include_router(payment_router)  # 添加这行
 
 if __name__ == "__main__":
     uvicorn.run(app, host=SERVER_HOST, port=SERVER_PORT)

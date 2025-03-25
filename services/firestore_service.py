@@ -202,3 +202,68 @@ class FirestoreService:
         db.collection('orders').document(order_id).set(order_data)
         
         return order_data
+
+
+    @staticmethod
+    async def activate_subscription(user_id: str, order_id: str):
+        try:
+            # 获取订单信息
+            order_ref = db.collection('orders').document(order_id)
+            order = order_ref.get()
+            if not order.exists:
+                return False
+            
+            order_data = order.to_dict()
+            if order_data['status'] != 'paid':
+                return False
+            
+            # 更新用户订阅信息
+            user_ref = db.collection('users').document(user_id)
+            user = user_ref.get()
+            if not user.exists:
+                return False
+            
+            user_data = user.to_dict()
+            current_minutes = user_data.get('remaining_minutes', 0)
+            
+            # 计算新的到期时间
+            current_expiry = user_data.get('subscription_expiry')
+            if current_expiry and datetime.fromisoformat(current_expiry) > datetime.now():
+                new_expiry = datetime.fromisoformat(current_expiry) + timedelta(days=30 * order_data['duration'])
+            else:
+                new_expiry = datetime.now() + timedelta(days=30 * order_data['duration'])
+            
+            # 更新用户数据
+            user_ref.update({
+                'remaining_minutes': current_minutes + order_data['minutes'],
+                'subscription_expiry': new_expiry.isoformat(),
+                'subscription_plan': order_data['plan_id']
+            })
+            
+            # 记录订阅历史
+            db.collection('subscription_history').add({
+                'user_id': user_id,
+                'order_id': order_id,
+                'plan_id': order_data['plan_id'],
+                'minutes_added': order_data['minutes'],
+                'created_at': datetime.now()
+            })
+            
+            return True
+            
+        except Exception as e:
+            print(f"激活订阅失败: {str(e)}")
+            return False
+
+    @staticmethod
+    @staticmethod
+    async def get_order_status(order_id: str):
+        try:
+            order_ref = db.collection('orders').document(order_id)
+            order = order_ref.get()
+            if not order.exists:
+                return "not_found"
+            
+            return order.to_dict().get('status', 'pending')
+        except Exception:
+            return "error"
