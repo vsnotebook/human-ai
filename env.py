@@ -15,6 +15,6 @@ CREDENTIALS_PATH = "human-ai-454609-bf84b910d612.json"
 # Server settings
 SERVER_HOST = "0.0.0.0"
 # SERVER_HOST = "127.0.0.1"
-SERVER_PORT = int(os.environ.get("PORT", 8080))
+SERVER_PORT = int(os.environ.get("PORT", 8085))
 
 
