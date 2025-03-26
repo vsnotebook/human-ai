@@ -53,6 +53,7 @@ async def transcribe_audio(
 
         audio_content = await file.read()
         transcription = await SpeechService.transcribe(audio_content, language_code)
+        print(transcription)
         return {"transcription": transcription}
 
     except Exception as e:
