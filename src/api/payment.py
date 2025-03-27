@@ -2,7 +2,7 @@ from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
 from services.payment_service import PaymentService
 from services.firestore_service import FirestoreService
-from utils.auth import get_current_user
+from src.utils.auth import get_current_user
 
 router = APIRouter(prefix="/payment")
 

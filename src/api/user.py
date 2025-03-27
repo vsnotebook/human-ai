@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
-from utils.auth import get_current_user
+from src.utils.auth import get_current_user
 from services.firestore_service import FirestoreService
 from config.plans import SUBSCRIPTION_PLANS
 

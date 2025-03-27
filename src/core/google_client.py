@@ -1,6 +1,6 @@
 from google.cloud import speech_v2 as speech
 from google.oauth2 import service_account
-from env import PROJECT_ID, CREDENTIALS_PATH
+from src.env import PROJECT_ID, CREDENTIALS_PATH
 
 def init_speech_client():
     if not PROJECT_ID:

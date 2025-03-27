@@ -1,29 +1,31 @@
-from google.cloud import firestore
-from google.cloud.firestore import Client
 import hashlib
 import os
-
-from env import PROJECT_ID
-from datetime import datetime, timedelta
-from config.plans import SUBSCRIPTION_PLANS
 import uuid
 from datetime import datetime
+from datetime import timedelta
+
+from google.cloud import firestore
+from google.cloud.firestore import Client
+
+from src.config.plans import SUBSCRIPTION_PLANS
+from src.env import PROJECT_ID
 
 db: Client = firestore.Client(project=PROJECT_ID)
+
 
 class FirestoreService:
     @staticmethod
     def create_user(username: str, email: str, password: str, role: str = "user") -> bool:
         users_ref = db.collection('users')
-        
+
         # 检查用户名是否已存在
         if users_ref.where('username', '==', username).get():
             return False
-            
+
         # 检查邮箱是否已存在
         if users_ref.where('email', '==', email).get():
             return False
-            
+
         # 密码加盐哈希
         salt = os.urandom(32)
         password_hash = hashlib.pbkdf2_hmac(
@@ -32,7 +34,7 @@ class FirestoreService:
             salt,
             100000
         )
-        
+
         # 创建用户文档
         users_ref.add({
             'username': username,
@@ -50,7 +52,7 @@ class FirestoreService:
     def verify_user(username: str, password: str) -> dict:
         users_ref = db.collection('users')
         users = users_ref.where('username', '==', username).get()
-        
+
         for user in users:
             user_data = user.to_dict()
             password_hash = hashlib.pbkdf2_hmac(
@@ -59,7 +61,7 @@ class FirestoreService:
                 user_data['salt'],
                 100000
             )
-            
+
             if password_hash == user_data['password_hash']:
                 return {
                     'id': user.id,
@@ -76,7 +78,7 @@ class FirestoreService:
         admin = db.collection('users').document(admin_id).get()
         if not admin.exists or admin.to_dict()['role'] != 'admin':
             return None
-            
+
         users = []
         for user in db.collection('users').get():
             user_data = user.to_dict()
@@ -95,14 +97,14 @@ class FirestoreService:
         try:
             users = db.collection('users').get()
             total_users = len(users)
-            
+
             # 获取今日转写次数
             today = datetime.now().date()
             today_start = datetime.combine(today, datetime.min.time())
             transcriptions = db.collection('transcriptions').where(
                 'created_at', '>=', today_start
             ).get()
-            
+
             return {
                 'total_users': total_users,
                 'today_transcriptions': len(transcriptions),
@@ -116,14 +118,14 @@ class FirestoreService:
                 'active_subscriptions': 0,
                 'monthly_revenue': 0
             }
-    
+
     @staticmethod
     async def get_recent_activities():
         try:
             activities = db.collection('activities').order_by(
                 'created_at', direction=firestore.Query.DESCENDING
             ).limit(10).get()
-            
+
             return [{
                 'username': activity.get('username'),
                 'action': activity.get('action'),
@@ -139,7 +141,7 @@ class FirestoreService:
             user = user_ref.get()
             if not user.exists:
                 return None
-            
+
             user_data = user.to_dict()
             return {
                 'remaining_minutes': user_data.get('remaining_minutes', 0),
@@ -182,10 +184,10 @@ class FirestoreService:
     async def create_order(user_id: str, plan_id: str):
         if plan_id not in SUBSCRIPTION_PLANS:
             raise ValueError("Invalid plan ID")
-            
+
         plan = SUBSCRIPTION_PLANS[plan_id]
         order_id = str(uuid.uuid4())
-        
+
         order_data = {
             'id': order_id,
             'user_id': user_id,
@@ -197,12 +199,11 @@ class FirestoreService:
             'status': 'pending',
             'created_at': datetime.now()
         }
-        
+
         # 保存订单到 Firestore
         db.collection('orders').document(order_id).set(order_data)
-        
-        return order_data
 
+        return order_data
 
     @staticmethod
     async def activate_subscription(user_id: str, order_id: str):
@@ -212,34 +213,34 @@ class FirestoreService:
             order = order_ref.get()
             if not order.exists:
                 return False
-            
+
             order_data = order.to_dict()
             if order_data['status'] != 'paid':
                 return False
-            
+
             # 更新用户订阅信息
             user_ref = db.collection('users').document(user_id)
             user = user_ref.get()
             if not user.exists:
                 return False
-            
+
             user_data = user.to_dict()
             current_minutes = user_data.get('remaining_minutes', 0)
-            
+
             # 计算新的到期时间
             current_expiry = user_data.get('subscription_expiry')
             if current_expiry and datetime.fromisoformat(current_expiry) > datetime.now():
                 new_expiry = datetime.fromisoformat(current_expiry) + timedelta(days=30 * order_data['duration'])
             else:
                 new_expiry = datetime.now() + timedelta(days=30 * order_data['duration'])
-            
+
             # 更新用户数据
             user_ref.update({
                 'remaining_minutes': current_minutes + order_data['minutes'],
                 'subscription_expiry': new_expiry.isoformat(),
                 'subscription_plan': order_data['plan_id']
             })
-            
+
             # 记录订阅历史
             db.collection('subscription_history').add({
                 'user_id': user_id,
@@ -248,9 +249,9 @@ class FirestoreService:
                 'minutes_added': order_data['minutes'],
                 'created_at': datetime.now()
             })
-            
+
             return True
-            
+
         except Exception as e:
             print(f"激活订阅失败: {str(e)}")
             return False
@@ -263,7 +264,7 @@ class FirestoreService:
             order = order_ref.get()
             if not order.exists:
                 return "not_found"
-            
+
             return order.to_dict().get('status', 'pending')
         except Exception:
             return "error"

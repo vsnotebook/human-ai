@@ -3,7 +3,7 @@ from io import BytesIO
 import base64
 from alipay import AliPay
 from wechatpy.pay import WeChatPay
-from config.payment import (
+from src.config.payment import (
     ALIPAY_APP_ID,
     ALIPAY_PRIVATE_KEY,
     ALIPAY_PUBLIC_KEY,

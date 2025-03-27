@@ -1,11 +1,11 @@
 from typing import Annotated
-from fastapi import APIRouter, File, UploadFile, Form, Request, Depends, Response
+from fastapi import APIRouter, File, UploadFile, Form, Request, Response
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
 from services.firestore_service import FirestoreService
 from services.speech_service import SpeechService
-from utils.auth import get_current_user
+from src.utils.auth import get_current_user
 
 router = APIRouter()
 templates = Jinja2Templates(directory="templates")

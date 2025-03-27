@@ -1,9 +1,9 @@
 from google.cloud.speech_v2.types import cloud_speech
-from config.language_config import LANGUAGE_CONFIG
+from src.config.language_config import LANGUAGE_CONFIG
 
 from google.cloud import speech_v2 as speech
 from google.oauth2 import service_account
-from env import PROJECT_ID, CREDENTIALS_PATH
+from src.env import PROJECT_ID, CREDENTIALS_PATH
 
 
 class SpeechService:
