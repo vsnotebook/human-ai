@@ -907,3 +907,30 @@ th {
         opacity: 0;
     }
 }
+
+.logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    color: #666;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.3s;
+    margin-left: 15px;
+}
+
+.logout-btn:hover {
+    background: #f5f5f5;
+    color: #dc3545;
+}
+
+.logout-btn i {
+    font-size: 18px;
+}
+
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
