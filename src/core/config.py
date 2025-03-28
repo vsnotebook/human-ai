@@ -1,7 +1,8 @@
 import os
-from pydantic import Field, RedisDsn,PostgresDsn
+from pydantic import Field, RedisDsn, PostgresDsn
 from pydantic_settings import BaseSettings
 from typing import Optional
+
 
 class Settings(BaseSettings):
     # 通用配置
@@ -32,14 +33,15 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = {
-            "dev": "envs/.env.dev",
-            "test": "envs/.env.test",
-            "prod": "envs/.env.prod",
+            "dev": "src/envs/.env.dev",
+            "test": "src/envs/.env.test",
+            "prod": "src/envs/.env.prod",
         }[os.getenv("ENV", "dev")]  # 根据 ENV 变量选择配置文件
         env_file_encoding = 'utf-8'
 
     def __init__(self, **values):
         super().__init__(**values)
+        print("运行环境：" + self.ENV)
         if self.PROXY_ENABLE:
             os.environ["http_proxy"] = "http://127.0.0.1:10808"
             os.environ["https_proxy"] = "http://127.0.0.1:10808"
@@ -51,13 +53,5 @@ class Settings(BaseSettings):
         )
         self.pg_dsn_URI = 'postgres://user:pass@localhost:5432/foobar'
 
+
 settings = Settings()  # 全局配置实例
-
-
-
-
-
-
-
-
-

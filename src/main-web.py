@@ -1,11 +1,12 @@
 import uvicorn
 from fastapi import FastAPI, Request
-from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware  # 添加这行
+from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
+
+from src.api.payment import router as payment_router  # 添加这行
 from src.api.speech import router as speech_router
 from src.api.user import router as user_router
-from src.api.payment import router as payment_router  # 添加这行
 from src.core.config import settings
 
 app = FastAPI()
@@ -36,7 +37,7 @@ app.add_middleware(
 )
 
 # 挂载静态文件目录
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory="src/static"), name="static")
 
 # 注册路由
 app.include_router(speech_router)

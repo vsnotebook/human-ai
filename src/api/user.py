@@ -1,19 +1,20 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
-from fastapi.templating import Jinja2Templates
+
+from app.core.template import templates
+from src.config.plans import SUBSCRIPTION_PLANS
+from src.services.firestore_service import FirestoreService
 from src.utils.auth import get_current_user
-from services.firestore_service import FirestoreService
-from config.plans import SUBSCRIPTION_PLANS
 
 router = APIRouter(prefix="/user")
-templates = Jinja2Templates(directory="templates")
+
 
 @router.get("/dashboard", response_class=HTMLResponse)
 async def user_dashboard(request: Request):
     user = await get_current_user(request)
     if not user:
         return RedirectResponse(url="/login", status_code=302)
-    
+
     usage_stats = await FirestoreService.get_user_usage_stats(user['id'])
     return templates.TemplateResponse(
         "user/dashboard.html",
@@ -25,12 +26,13 @@ async def user_dashboard(request: Request):
         }
     )
 
+
 @router.get("/subscriptions", response_class=HTMLResponse)
 async def user_subscriptions(request: Request):
     user = await get_current_user(request)
     if not user:
         return RedirectResponse(url="/login", status_code=302)
-    
+
     subscriptions = await FirestoreService.get_user_subscriptions(user['id'])
     return templates.TemplateResponse(
         "user/subscriptions.html",
@@ -42,12 +44,13 @@ async def user_subscriptions(request: Request):
         }
     )
 
+
 @router.get("/plans", response_class=HTMLResponse)
 async def subscription_plans(request: Request):
     user = await get_current_user(request)
     if not user:
         return RedirectResponse(url="/login", status_code=302)
-    
+
     return templates.TemplateResponse(
         "user/plans.html",
         {
@@ -57,12 +60,13 @@ async def subscription_plans(request: Request):
         }
     )
 
+
 @router.get("/orders", response_class=HTMLResponse)
 async def user_orders(request: Request):
     user = await get_current_user(request)
     if not user:
         return RedirectResponse(url="/login", status_code=302)
-    
+
     orders = await FirestoreService.get_user_orders(user['id'])
     return templates.TemplateResponse(
         "user/orders.html",
@@ -74,16 +78,17 @@ async def user_orders(request: Request):
         }
     )
 
+
 @router.get("/checkout", response_class=HTMLResponse)
 async def checkout(request: Request):
     user = await get_current_user(request)
     if not user:
         return RedirectResponse(url="/login", status_code=302)
-    
+
     plan_id = request.query_params.get("plan")
     if not plan_id or plan_id not in SUBSCRIPTION_PLANS:
         return RedirectResponse(url="/user/plans", status_code=302)
-    
+
     return templates.TemplateResponse(
         "user/checkout.html",
         {

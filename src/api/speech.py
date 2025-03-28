@@ -3,12 +3,13 @@ from fastapi import APIRouter, File, UploadFile, Form, Request, Response
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 
-from services.firestore_service import FirestoreService
-from services.speech_service import SpeechService
+from src.services.firestore_service import FirestoreService
+from src.services.speech_service import SpeechService
 from src.utils.auth import get_current_user
+from app.core.template import templates
 
 router = APIRouter()
-templates = Jinja2Templates(directory="templates")
+# templates = Jinja2Templates(directory="templates")
 
 @router.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
