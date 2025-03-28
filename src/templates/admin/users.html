@@ -67,35 +67,40 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">编辑用户</h5>
+                <h5 class="modal-title" id="modalTitle">编辑用户</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <form id="editUserForm">
+                    <input type="hidden" id="userId" name="userId">
                     <div class="mb-3">
                         <label class="form-label">用户名</label>
-                        <input type="text" class="form-control" name="username">
+                        <input type="text" class="form-control" id="username" name="username">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">邮箱</label>
-                        <input type="email" class="form-control" name="email">
+                        <input type="email" class="form-control" id="email" name="email">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">密码</label>
+                        <input type="password" class="form-control" id="password" name="password" placeholder="留空表示不修改">
                     </div>
                     <div class="mb-3">
                         <label class="form-label">角色</label>
-                        <select class="form-select" name="role">
+                        <select class="form-select" id="role" name="role">
                             <option value="user">普通用户</option>
                             <option value="admin">管理员</option>
                         </select>
                     </div>
                     <div class="mb-3">
                         <label class="form-label">试用次数</label>
-                        <input type="number" class="form-control" name="trial_count">
+                        <input type="number" class="form-control" id="trial_count" name="trial_count">
                     </div>
                 </form>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
-                <button type="button" class="btn btn-primary" onclick="saveUser()">保存</button>
+                <button type="button" class="btn btn-primary" id="saveUserBtn">保存</button>
             </div>
         </div>
     </div>
@@ -105,28 +110,133 @@
 
 {% block scripts %}
 <script>
-function editUser(userId) {
-    // 打开编辑模态框并加载用户数据
-    const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
-    // TODO: 加载用户数据
-    modal.show();
-}
+let currentUserId = null;
+let isNewUser = false;
 
-function deleteUser(userId) {
-    if (confirm('确定要删除此用户吗？')) {
-        // TODO: 调用删除用户 API
+// 编辑用户
+async function editUser(userId) {
+    isNewUser = false;
+    currentUserId = userId;
+    console.log(userId)
+    // 更新模态框标题
+    document.getElementById('modalTitle').textContent = '编辑用户';
+    document.getElementById('password').placeholder = '留空表示不修改';
+    
+    try {
+        // 获取用户数据
+        const response = await fetch(`/admin/users/${userId}`);
+        if (!response.ok) {
+            throw new Error('获取用户数据失败');
+        }
+        
+        const userData = await response.json();
+        
+        // 填充表单
+        document.getElementById('userId').value = userData.id;
+        document.getElementById('username').value = userData.username;
+        document.getElementById('email').value = userData.email;
+        document.getElementById('password').value = ''; // 密码不回显
+        document.getElementById('role').value = userData.role;
+        document.getElementById('trial_count').value = userData.trial_count;
+        
+        // 显示模态框
+        const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+        modal.show();
+    } catch (error) {
+        alert('获取用户数据失败: ' + error.message);
     }
 }
 
-function saveUser() {
-    // TODO: 保存用户数据
+// 删除用户
+async function deleteUser(userId) {
+    if (confirm('确定要删除此用户吗？此操作不可恢复！')) {
+        try {
+            const response = await fetch(`/admin/users/${userId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('删除用户失败');
+            }
+            
+            // 刷新页面
+            window.location.reload();
+        } catch (error) {
+            alert('删除用户失败: ' + error.message);
+        }
+    }
 }
 
+// 添加用户
 function addUser() {
-    const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
-    // 清空表单
+    isNewUser = true;
+    currentUserId = null;
+    
+    // 更新模态框标题
+    document.getElementById('modalTitle').textContent = '添加用户';
+    document.getElementById('password').placeholder = '请输入密码';
+    
+    // 重置表单
     document.getElementById('editUserForm').reset();
+    document.getElementById('userId').value = '';
+    
+    // 显示模态框
+    const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
     modal.show();
 }
+
+// 保存用户数据
+async function saveUser() {
+    // 获取表单数据
+    const formData = new FormData(document.getElementById('editUserForm'));
+    const userData = Object.fromEntries(formData.entries());
+    
+    // 如果密码为空且不是新用户，则删除密码字段
+    if (!isNewUser && !userData.password) {
+        delete userData.password;
+    }
+    
+    // 验证必填字段
+    if (!userData.username || !userData.email || (isNewUser && !userData.password)) {
+        alert('请填写必填字段');
+        return;
+    }
+    
+    try {
+        let url = '/admin/users';
+        let method = 'POST';
+        
+        if (!isNewUser) {
+            url = `/admin/users/${currentUserId}`;
+            method = 'PUT';
+        }
+        
+        const response = await fetch(url, {
+            method: method,
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(userData)
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || '保存用户失败');
+        }
+        
+        // 关闭模态框并刷新页面
+        const modal = bootstrap.Modal.getInstance(document.getElementById('editUserModal'));
+        modal.hide();
+        window.location.reload();
+    } catch (error) {
+        alert('保存用户失败: ' + error.message);
+    }
+}
+
+// 绑定保存按钮事件
+document.getElementById('saveUserBtn').addEventListener('click', saveUser);
 </script>
 {% endblock %}

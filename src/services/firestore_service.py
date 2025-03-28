@@ -268,3 +268,94 @@ class FirestoreService:
             return order.to_dict().get('status', 'pending')
         except Exception:
             return "error"
+
+    @staticmethod
+    async def get_user_by_id(user_id):
+        """根据ID获取用户信息"""
+        try:
+            user_ref = db.collection('users').document(user_id)
+            user = user_ref.get()
+            if not user.exists:
+                return None
+            
+            user_data = user.to_dict()
+            user_data['id'] = user_id
+            
+            # 确保所有字段都是可序列化的
+            for key, value in user_data.items():
+                if isinstance(value, bytes):
+                    user_data[key] = value.decode('utf-8', errors='replace')
+            
+            return user_data
+        except Exception as e:
+            print(f"获取用户失败: {str(e)}")
+            return None
+
+    @staticmethod
+    async def update_user(user_id, user_data):
+        """更新用户信息"""
+        try:
+            user_ref = db.collection('users').document(user_id)
+            user = user_ref.get()
+            if not user.exists:
+                return False
+            
+            # 如果包含密码，则加密
+            if 'password' in user_data and user_data['password']:
+                from werkzeug.security import generate_password_hash
+                user_data['password'] = generate_password_hash(user_data['password'])
+            
+            user_ref.update(user_data)
+            return True
+        except Exception as e:
+            print(f"更新用户失败: {str(e)}")
+            return False
+
+    @staticmethod
+    async def create_user_by_admin(username, email, password, role="user", trial_count=10):
+        """管理员创建用户"""
+        try:
+            # 检查用户名是否存在
+            users_ref = db.collection('users')
+            existing_user = users_ref.where('username', '==', username).get()
+            if len(existing_user) > 0:
+                return False
+            
+            # 检查邮箱是否存在
+            existing_email = users_ref.where('email', '==', email).get()
+            if len(existing_email) > 0:
+                return False
+            
+            # 创建用户
+            from werkzeug.security import generate_password_hash
+            from datetime import datetime
+            
+            user_data = {
+                'username': username,
+                'email': email,
+                'password': generate_password_hash(password),
+                'role': role,
+                'trial_count': trial_count,
+                'created_at': datetime.now()
+            }
+            
+            users_ref.add(user_data)
+            return True
+        except Exception as e:
+            print(f"创建用户失败: {str(e)}")
+            return False
+
+    @staticmethod
+    async def delete_user(user_id):
+        """删除用户"""
+        try:
+            user_ref = db.collection('users').document(user_id)
+            user = user_ref.get()
+            if not user.exists:
+                return False
+            
+            user_ref.delete()
+            return True
+        except Exception as e:
+            print(f"删除用户失败: {str(e)}")
+            return False
