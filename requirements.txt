@@ -16,3 +16,4 @@ wechatpy
 qrcode
 pillow
 redis
+pydantic-settings
