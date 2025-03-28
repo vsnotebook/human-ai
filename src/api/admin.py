@@ -3,6 +3,8 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
 
+from starlette.responses import RedirectResponse
+
 from src.services.firestore_service import FirestoreService
 from src.utils.http_session_util import get_current_user, admin_required
 from src.core.template import templates
@@ -56,8 +58,8 @@ async def update_user(user_id: str, user_data: UserUpdate, user = Depends(admin_
     return {"message": "用户更新成功"}
 
 # 创建用户
-@router.post("/api/admin/users")
-async def create_user(user_data: UserUpdate, user = Depends(admin_required)):
+@router.post("/users")
+async def create_user(user_data: UserUpdate):
     if not user_data.password:
         raise HTTPException(status_code=400, detail="新用户必须设置密码")
 
@@ -74,7 +76,7 @@ async def create_user(user_data: UserUpdate, user = Depends(admin_required)):
     return {"message": "用户创建成功"}
 
 # 删除用户
-@router.delete("/api/admin/users/{user_id}")
+@router.delete("/users/{user_id}")
 async def delete_user(user_id: str, user = Depends(admin_required)):
     result = await FirestoreService.delete_user(user_id)
     if not result:
