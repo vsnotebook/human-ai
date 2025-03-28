@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse, RedirectResponse
 from src.core.template import templates
 from src.config.plans import SUBSCRIPTION_PLANS
 from src.services.firestore_service import FirestoreService
-from src.utils.auth import get_current_user
+from src.utils.http_session_util import get_current_user
 
 router = APIRouter(prefix="/user")
 

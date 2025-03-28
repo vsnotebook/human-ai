@@ -1,16 +1,14 @@
 import uvicorn
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware  # 添加这行
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
-from src.api.payment import router as payment_router  # 添加这行
-from src.api.speech import router as speech_router
-from src.api.user import router as user_router
+from src.api import speech, user, admin, auth
+from src.api.payment import router as payment_router
 from src.core.config import settings
 
 app = FastAPI()
-
 
 def check_allowed_origin(origin: str, request: Request) -> bool:
     # 仅当请求路径为 /transcribe 且来源为 http://127.0.0.1:8080 时允许
@@ -29,10 +27,10 @@ app.add_middleware(
     allow_headers=["*"],  # 允许所有请求头
 )
 
-# 添加会话支持
+# 添加会话中间件
 app.add_middleware(
     SessionMiddleware,
-    secret_key="your-secret-key-here",
+    secret_key="your-secret-key-here",  # 建议从配置文件读取
     session_cookie="session"
 )
 
@@ -40,9 +38,11 @@ app.add_middleware(
 app.mount("/static", StaticFiles(directory="src/static"), name="static")
 
 # 注册路由
-app.include_router(speech_router)
-app.include_router(user_router)
-app.include_router(payment_router)  # 添加这行
+app.include_router(auth.router)
+app.include_router(speech.router)
+app.include_router(user.router)
+app.include_router(admin.router)
+app.include_router(payment_router)
 
 if __name__ == "__main__":
     uvicorn.run(app, host=settings.SERVER_HOST, port=int(settings.SERVER_PORT))

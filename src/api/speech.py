@@ -1,14 +1,11 @@
 from typing import Annotated
-from fastapi import APIRouter, File, UploadFile, Form, Request, Response
+from fastapi import APIRouter, File, UploadFile, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
-
-from src.services.firestore_service import FirestoreService
 from src.services.speech_service import SpeechService
-from src.utils.auth import get_current_user
+from src.utils.http_session_util import get_current_user
 from src.core.template import templates
 
 router = APIRouter()
-# templates = Jinja2Templates(directory="templates")
 
 @router.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
@@ -58,92 +55,3 @@ async def transcribe_audio(
 
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
-
-
-@router.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request):
-    return templates.TemplateResponse("login.html", {"request": request})
-
-@router.get("/register", response_class=HTMLResponse)
-async def register_page(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
-
-@router.post("/register")
-async def register(
-    request: Request,
-    username: str = Form(...),
-    email: str = Form(...),
-    password: str = Form(...)
-):
-    # if await FirestoreService.create_user(username, email, password):
-    if FirestoreService.create_user(username, email, password):
-        return RedirectResponse(url="/login", status_code=302)
-    return templates.TemplateResponse(
-        "register.html",
-        {
-            "request": request,
-            "error": "用户名或邮箱已存在"
-        }
-    )
-
-@router.get("/admin/users", response_class=HTMLResponse)
-async def admin_users_page(request: Request):
-    user = await get_current_user(request)
-    if not user or user.get('role') != 'admin':
-        return RedirectResponse(url="/", status_code=302)
-        
-    users = FirestoreService.get_all_users(user['id'])
-    return templates.TemplateResponse(
-        "admin/users.html",
-        {
-            "request": request,
-            "current_user": user,
-            "users": users
-        }
-    )
-
-@router.post("/login")
-async def login(
-    request: Request,
-    response: Response,
-    username: str = Form(...),
-    password: str = Form(...)
-):
-    user = FirestoreService.verify_user(username, password)
-    if user:
-        request.session["user"] = user
-        return RedirectResponse(url="/", status_code=302)
-    return templates.TemplateResponse(
-        "login.html",
-        {
-            "request": request,
-            "error": "用户名或密码错误"
-        }
-    )
-
-@router.get("/logout")
-async def logout(request: Request):
-    request.session.clear()
-    return RedirectResponse(url="/", status_code=302)
-
-
-@router.get("/admin/dashboard", response_class=HTMLResponse)
-async def admin_dashboard(request: Request):
-    user = await get_current_user(request)
-    if not user or user.get('role') != 'admin':
-        return RedirectResponse(url="/", status_code=302)
-    
-    # 获取统计数据
-    stats = await FirestoreService.get_dashboard_stats()
-    activities = await FirestoreService.get_recent_activities()
-    
-    return templates.TemplateResponse(
-        "admin/dashboard.html",
-        {
-            "request": request,
-            "current_user": user,
-            "active_page": "dashboard",
-            "stats": stats,
-            "activities": activities
-        }
-    )
