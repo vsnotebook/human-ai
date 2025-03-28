@@ -4,11 +4,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
-from src.api import speech, user, admin, auth
-from src.api.payment import router as payment_router
+from src.api import speech, user, admin, auth, profile, payment
 from src.core.config import settings
 
 app = FastAPI()
+
 
 def check_allowed_origin(origin: str, request: Request) -> bool:
     # 仅当请求路径为 /transcribe 且来源为 http://127.0.0.1:8080 时允许
@@ -42,7 +42,8 @@ app.include_router(auth.router)
 app.include_router(speech.router)
 app.include_router(user.router)
 app.include_router(admin.router)
-app.include_router(payment_router)
+app.include_router(payment.router)
+app.include_router(profile.router)
 
 if __name__ == "__main__":
     uvicorn.run(app, host=settings.SERVER_HOST, port=int(settings.SERVER_PORT))

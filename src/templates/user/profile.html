@@ -1,0 +1,95 @@
+{% extends "user/layout.html" %}
+
+{% block title %}个人中心{% endblock %}
+
+{% block breadcrumb %}
+<span>个人中心</span>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-stats">
+    <div class="stat-card">
+        <h3>账户余额</h3>
+        <div class="stat-value">¥{{ current_user.balance|default(0, true) }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>可用余额</h3>
+        <div class="stat-value">¥{{ current_user.balance|default(0, true) }}</div>
+    </div>
+    <div class="stat-card">
+        <h3>佣金余额</h3>
+        <div class="stat-value">¥0.00</div>
+    </div>
+</div>
+
+<div class="quick-actions">
+    <h2>账户管理</h2>
+    <div class="action-buttons">
+        <a href="#" class="action-btn" onclick="showRechargeModal(); return false;">
+            <i class="mdi mdi-wallet-plus"></i>
+            充值
+        </a>
+        <a href="#" class="action-btn" onclick="showWithdrawModal(); return false;">
+            <i class="mdi mdi-cash-multiple"></i>
+            佣金提现
+        </a>
+    </div>
+</div>
+
+<div class="password-card">
+    <h2><i class="mdi mdi-key"></i> 修改密码</h2>
+    <form method="post" action="/user/change-password">
+        <div class="form-group">
+            <label>旧密码</label>
+            <div class="input-wrapper">
+                <i class="mdi mdi-lock"></i>
+                <input type="password" name="current_password" placeholder="请输入旧密码" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>新密码</label>
+            <div class="input-wrapper">
+                <i class="mdi mdi-lock-plus"></i>
+                <input type="password" name="new_password" placeholder="请输入新密码" required>
+            </div>
+        </div>
+        <div class="form-group">
+            <label>确认新密码</label>
+            <div class="input-wrapper">
+                <i class="mdi mdi-lock-check"></i>
+                <input type="password" name="confirm_password" placeholder="请重复新密码" required>
+            </div>
+        </div>
+        <button type="submit" class="btn-submit">
+            <i class="mdi mdi-check"></i> 确认修改
+        </button>
+    </form>
+</div>
+{% if error %}
+<div class="alert alert-error">
+    <i class="mdi mdi-alert"></i>
+    {{ error }}
+</div>
+{% endif %}
+{% if success %}
+<div class="alert alert-success">
+    <i class="mdi mdi-check-circle"></i>
+    {{ success }}
+</div>
+{% endif %}
+
+<!-- 充值弹窗 -->
+<div id="rechargeModal" class="modal">
+    <!-- 弹窗内容保持不变 -->
+</div>
+
+<script>
+function showRechargeModal() {
+    document.getElementById('rechargeModal').style.display = 'flex';
+}
+
+function closeModal(modalId) {
+    document.getElementById(modalId).style.display = 'none';
+}
+</script>
+{% endblock %}

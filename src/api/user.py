@@ -1,9 +1,7 @@
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, Form, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
-
-from src.core.template import templates
-from src.config.plans import SUBSCRIPTION_PLANS
 from src.services.firestore_service import FirestoreService
+from src.core.template import templates
 from src.utils.http_session_util import get_current_user
 
 router = APIRouter(prefix="/user")
@@ -95,5 +93,108 @@ async def checkout(request: Request):
             "request": request,
             "current_user": user,
             "plan": SUBSCRIPTION_PLANS[plan_id]
+        }
+    )
+
+
+@router.get("/profile", response_class=HTMLResponse)
+async def profile_page(request: Request):
+    user = await get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    
+    return templates.TemplateResponse(
+        "user/profile.html",  # 修改模板路径
+        {
+            "request": request,
+            "current_user": user,
+            "active_page": "profile"
+        }
+    )
+
+@router.post("/change-password")
+async def change_password(
+    request: Request,
+    current_password: str = Form(...),
+    new_password: str = Form(...),
+    confirm_password: str = Form(...)
+):
+    user = await get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    
+    if new_password != confirm_password:
+        return templates.TemplateResponse(
+            "user/profile.html",
+            {
+                "request": request,
+                "current_user": user,
+                "active_page": "profile",
+                "error": "新密码与确认密码不匹配"
+            }
+        )
+    
+    # 验证当前密码
+    if not FirestoreService.verify_password(user['id'], current_password):
+        return templates.TemplateResponse(
+            "user/profile.html",
+            {
+                "request": request,
+                "current_user": user,
+                "active_page": "profile",
+                "error": "当前密码不正确"
+            }
+        )
+    
+    # 更新密码
+    if await FirestoreService.update_password(user['id'], new_password):
+        return templates.TemplateResponse(
+            "user/profile.html",
+            {
+                "request": request,
+                "current_user": user,
+                "active_page": "profile",
+                "success": "密码修改成功"
+            }
+        )
+    
+    return templates.TemplateResponse(
+        "user/profile.html",
+        {
+            "request": request,
+            "current_user": user,
+            "active_page": "profile",
+            "error": "密码修改失败，请稍后重试"
+        }
+    )
+
+@router.post("/recharge")
+async def recharge(
+    request: Request,
+    amount: int = Form(...)
+):
+    user = await get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    
+    # 处理充值逻辑
+    if await FirestoreService.add_user_balance(user['id'], amount):
+        return templates.TemplateResponse(
+            "user/profile.html",
+            {
+                "request": request,
+                "current_user": user,
+                "active_page": "profile",
+                "success": "充值成功"
+            }
+        )
+    
+    return templates.TemplateResponse(
+        "user/profile.html",
+        {
+            "request": request,
+            "current_user": user,
+            "active_page": "profile",
+            "error": "充值失败，请稍后重试"
         }
     )

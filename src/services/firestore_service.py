@@ -357,3 +357,83 @@ class FirestoreService:
         except Exception as e:
             print(f"删除用户失败: {str(e)}")
             return False
+
+    @staticmethod
+    def verify_password(user_id: str, password: str) -> bool:
+        """验证用户密码"""
+        try:
+            user_ref = db.collection('users').document(user_id)
+            user = user_ref.get()
+            if not user.exists:
+                return False
+            
+            user_data = user.to_dict()
+            
+            # 使用bcrypt验证密码
+            if 'password_hash' in user_data:
+                stored_hash = user_data['password_hash']
+                if isinstance(stored_hash, bytes):
+                    return bcrypt.checkpw(password.encode('utf-8'), stored_hash)
+            return False
+        except Exception as e:
+            print(f"验证密码失败: {str(e)}")
+            return False
+    
+    @staticmethod
+    async def update_password(user_id: str, new_password: str) -> bool:
+        """更新用户密码"""
+        try:
+            user_ref = db.collection('users').document(user_id)
+            user = user_ref.get()
+            if not user.exists:
+                return False
+            
+            # 使用bcrypt加密新密码
+            password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+            
+            # 更新密码
+            user_ref.update({
+                'password_hash': password_hash
+            })
+            return True
+        except Exception as e:
+            print(f"更新密码失败: {str(e)}")
+            return False
+    
+    @staticmethod
+    async def get_user_wallet(user_id: str) -> dict:
+        """获取用户钱包信息"""
+        try:
+            user_ref = db.collection('users').document(user_id)
+            user = user_ref.get()
+            if not user.exists:
+                return {"balance": 0}
+            
+            user_data = user.to_dict()
+            return {
+                "balance": user_data.get('balance', 0),
+                "remaining_minutes": user_data.get('remaining_minutes', 0),
+                "subscription_expiry": user_data.get('subscription_expiry', None)
+            }
+        except Exception as e:
+            print(f"获取钱包信息失败: {str(e)}")
+            return {"balance": 0}
+    
+    @staticmethod
+    async def get_user_transactions(user_id: str) -> list:
+        """获取用户交易记录"""
+        try:
+            transactions = db.collection('transactions').where('user_id', '==', user_id).order_by(
+                'created_at', direction=firestore.Query.DESCENDING
+            ).limit(20).get()
+            
+            return [{
+                'id': trans.id,
+                'amount': trans.to_dict().get('amount', 0),
+                'type': trans.to_dict().get('type', ''),
+                'description': trans.to_dict().get('description', ''),
+                'created_at': trans.to_dict().get('created_at', datetime.now())
+            } for trans in transactions]
+        except Exception as e:
+            print(f"获取交易记录失败: {str(e)}")
+            return []
