@@ -1,50 +1,76 @@
 {% extends "admin/layout.html" %}
 
-{% block title %}控制台{% endblock %}
-
-{% block breadcrumb %}
-<span>控制台</span>
-{% endblock %}
+{% block title %}数据概览{% endblock %}
 
 {% block content %}
-<div class="stats-grid">
-    <div class="stat-card">
-        <h3>总用户数</h3>
-        <div class="stat-value">{{ stats.total_users }}</div>
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="header-title">
+            <h2>数据概览</h2>
+        </div>
     </div>
-    <div class="stat-card">
-        <h3>今日转写次数</h3>
-        <div class="stat-value">{{ stats.today_transcriptions }}</div>
+    
+    <div class="content-body">
+        <!-- 统计卡片 -->
+        <div class="dashboard-stats">
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-users"></i>
+                </div>
+                <h3>总用户数</h3>
+                <div class="stat-value">{{ stats.total_users }}</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-microphone"></i>
+                </div>
+                <h3>今日转写次数</h3>
+                <div class="stat-value">{{ stats.today_transcriptions }}</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-eye"></i>
+                </div>
+                <h3>活跃订阅</h3>
+                <div class="stat-value">{{ stats.active_subscriptions }}</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-icon">
+                    <i class="fas fa-yen-sign"></i>
+                </div>
+                <h3>本月收入</h3>
+                <div class="stat-value">¥{{ stats.monthly_revenue }}</div>
+            </div>
+        </div>
+        
+        <!-- 最近活动 -->
+        <div class="card">
+            <div class="card-header">
+                最近活动
+            </div>
+            <div class="card-body">
+                <div class="activity-list">
+                    {% if activities %}
+                        {% for activity in activities %}
+                        <div class="activity-item">
+                            <div class="activity-icon">
+                                <i class="fas fa-{{ activity.icon }}"></i>
+                            </div>
+                            <div class="activity-content">
+                                <div class="activity-title">{{ activity.description }}</div>
+                                <div class="activity-time">{{ activity.time.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                        <p>暂无活动记录</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
     </div>
-    <div class="stat-card">
-        <h3>活跃订阅</h3>
-        <div class="stat-value">{{ stats.active_subscriptions }}</div>
-    </div>
-    <div class="stat-card">
-        <h3>本月收入</h3>
-        <div class="stat-value">¥{{ stats.monthly_revenue }}</div>
-    </div>
-</div>
-
-<div class="recent-activities">
-    <h2>最近活动</h2>
-    <table class="activity-table">
-        <thead>
-            <tr>
-                <th>用户</th>
-                <th>操作</th>
-                <th>时间</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for activity in activities %}
-            <tr>
-                <td>{{ activity.username }}</td>
-                <td>{{ activity.action }}</td>
-                <td>{{ activity.created_at }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
 </div>
 {% endblock %}

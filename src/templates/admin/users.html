@@ -1,47 +1,132 @@
-<!DOCTYPE html>
-<html lang="zh">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>用户管理 - 音频转写服务</title>
-    <link href="/static/style.css" rel="stylesheet" type="text/css" />
-</head>
-<body>
-    <div class="container">
-        <header class="admin-header">
-            <h1>用户管理</h1>
-            <a href="/" class="nav-btn">返回首页</a>
-        </header>
+{% extends "admin/layout.html" %}
 
-        <div class="users-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>用户名</th>
-                        <th>邮箱</th>
-                        <th>角色</th>
-                        <th>剩余试用次数</th>
-                        <th>注册时间</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for user in users %}
-                    <tr>
-                        <td>{{ user.username }}</td>
-                        <td>{{ user.email }}</td>
-                        <td>{{ user.role }}</td>
-                        <td>{{ user.trial_count }}</td>
-                        <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
-                        <td>
-                            <button onclick="editUser('{{ user.id }}')" class="btn-edit">编辑</button>
-                            <button onclick="deleteUser('{{ user.id }}')" class="btn-delete">删除</button>
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+{% block title %}用户管理{% endblock %}
+
+{% block content %}
+<div class="content-wrapper">
+    <div class="content-header">
+        <div class="header-title">
+            <h2>用户管理</h2>
+        </div>
+        <div class="header-actions">
+            <button class="btn-primary" onclick="addUser()">
+                <i class="fas fa-user-plus"></i> 添加用户
+            </button>
         </div>
     </div>
-</body>
-</html>
+
+    <div class="content-body">
+        <div class="card">
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table">
+                        <thead>
+                            <tr>
+                                <th>用户名</th>
+                                <th>邮箱</th>
+                                <th>角色</th>
+                                <th>剩余试用次数</th>
+                                <th>注册时间</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in users %}
+                            <tr>
+                                <td>{{ user.username }}</td>
+                                <td>{{ user.email }}</td>
+                                <td>
+                                    <span class="badge badge-{{ 'primary' if user.role == 'admin' else 'secondary' }}">
+                                        {{ user.role }}
+                                    </span>
+                                </td>
+                                <td>{{ user.trial_count }}</td>
+                                <td>{{ user.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                <td>
+                                    <div class="btn-group">
+                                        <button onclick="editUser('{{ user.id }}')" class="btn btn-sm btn-outline-primary">
+                                            <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button onclick="deleteUser('{{ user.id }}')" class="btn btn-sm btn-outline-danger">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- 编辑用户模态框 -->
+<div class="modal fade" id="editUserModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">编辑用户</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editUserForm">
+                    <div class="mb-3">
+                        <label class="form-label">用户名</label>
+                        <input type="text" class="form-control" name="username">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">邮箱</label>
+                        <input type="email" class="form-control" name="email">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">角色</label>
+                        <select class="form-select" name="role">
+                            <option value="user">普通用户</option>
+                            <option value="admin">管理员</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">试用次数</label>
+                        <input type="number" class="form-control" name="trial_count">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">取消</button>
+                <button type="button" class="btn btn-primary" onclick="saveUser()">保存</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function editUser(userId) {
+    // 打开编辑模态框并加载用户数据
+    const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+    // TODO: 加载用户数据
+    modal.show();
+}
+
+function deleteUser(userId) {
+    if (confirm('确定要删除此用户吗？')) {
+        // TODO: 调用删除用户 API
+    }
+}
+
+function saveUser() {
+    // TODO: 保存用户数据
+}
+
+function addUser() {
+    const modal = new bootstrap.Modal(document.getElementById('editUserModal'));
+    // 清空表单
+    document.getElementById('editUserForm').reset();
+    modal.show();
+}
+</script>
+{% endblock %}

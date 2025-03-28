@@ -3,54 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}管理后台{% endblock %} - 音频转写服务</title>
-    <link href="https://cdn.jsdelivr.net/npm/@mdi/font@6.5.95/css/materialdesignicons.min.css" rel="stylesheet">
-    <link href="/static/admin/style.css" rel="stylesheet">
+    <title>{% block title %}{% endblock %} - 后台管理</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="/static/css/admin.css" rel="stylesheet">
+    {% block head %}{% endblock %}
 </head>
 <body>
     <div class="admin-container">
+        <!-- 侧边栏 -->
         <aside class="sidebar">
             <div class="sidebar-header">
-                <h1>管理后台</h1>
+                <h3>管理后台</h3>
             </div>
             <nav class="sidebar-nav">
-                <a href="/admin/dashboard" class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
-                    <i class="mdi mdi-view-dashboard"></i>
-                    <span>控制台</span>
-                </a>
-                <a href="/admin/users" class="nav-item {% if active_page == 'users' %}active{% endif %}">
-                    <i class="mdi mdi-account-group"></i>
-                    <span>用户管理</span>
-                </a>
-                <a href="/admin/subscriptions" class="nav-item {% if active_page == 'subscriptions' %}active{% endif %}">
-                    <i class="mdi mdi-credit-card"></i>
-                    <span>订阅管理</span>
-                </a>
-                <a href="/admin/statistics" class="nav-item {% if active_page == 'statistics' %}active{% endif %}">
-                    <i class="mdi mdi-chart-bar"></i>
-                    <span>使用统计</span>
-                </a>
+                <ul>
+                    <li class="nav-item {% if active_page == 'dashboard' %}active{% endif %}">
+                        <a href="/admin/dashboard">
+                            <i class="fas fa-chart-line"></i>
+                            <span>数据概览</span>
+                        </a>
+                    </li>
+                    <li class="nav-item {% if active_page == 'users' %}active{% endif %}">
+                        <a href="/admin/users">
+                            <i class="fas fa-users"></i>
+                            <span>用户管理</span>
+                        </a>
+                    </li>
+                    <li class="nav-item {% if active_page == 'orders' %}active{% endif %}">
+                        <a href="/admin/orders">
+                            <i class="fas fa-shopping-cart"></i>
+                            <span>订单管理</span>
+                        </a>
+                    </li>
+                    <li class="nav-item {% if active_page == 'settings' %}active{% endif %}">
+                        <a href="/admin/settings">
+                            <i class="fas fa-cog"></i>
+                            <span>系统设置</span>
+                        </a>
+                    </li>
+                </ul>
             </nav>
         </aside>
 
+        <!-- 主内容区 -->
         <main class="main-content">
-            <header class="top-bar">
-                <div class="breadcrumb">
-                    {% block breadcrumb %}{% endblock %}
+            <!-- 顶部导航 -->
+            <header class="top-nav">
+                <div class="nav-left">
+                    <button id="sidebar-toggle" class="btn btn-link">
+                        <i class="fas fa-bars"></i>
+                    </button>
                 </div>
-                <div class="user-menu">
-                    <span>{{ current_user.username }}</span>
-                    <a href="/logout" class="logout-btn">
-                        <i class="mdi mdi-logout"></i>
-                        退出
-                    </a>
+                <div class="nav-right">
+                    <div class="dropdown">
+                        <button class="btn btn-link dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                            <i class="fas fa-user-circle"></i>
+                            {{ current_user.username }}
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="/"><i class="fas fa-home"></i> 返回首页</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="/logout"><i class="fas fa-sign-out-alt"></i> 退出登录</a></li>
+                        </ul>
+                    </div>
                 </div>
             </header>
 
+            <!-- 页面内容 -->
             <div class="content">
                 {% block content %}{% endblock %}
             </div>
         </main>
     </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // 侧边栏切换
+        document.getElementById('sidebar-toggle').addEventListener('click', function() {
+            document.querySelector('.sidebar').classList.toggle('show');
+        });
+        
+        // 初始化下拉菜单
+        var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
+        dropdownElementList.map(function (dropdownToggleEl) {
+            return new bootstrap.Dropdown(dropdownToggleEl);
+        });
+    </script>
+    {% block scripts %}{% endblock %}
 </body>
 </html>
