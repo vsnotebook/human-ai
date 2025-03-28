@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Form, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse  # 添加 JSONResponse
 
+# from src.config.payment_config import SUBSCRIPTION_PLANS
+from src.config.plans import SUBSCRIPTION_PLANS
 from src.models.user import User
 from src.services.firestore_service import FirestoreService
 from src.core.template import templates
@@ -80,24 +82,24 @@ async def user_orders(request: Request):
     )
 
 
-# @router.get("/checkout", response_class=HTMLResponse)
-# async def checkout(request: Request):
-#     user = await get_current_user(request)
-#     if not user:
-#         return RedirectResponse(url="/login", status_code=302)
-#
-#     plan_id = request.query_params.get("plan")
-#     if not plan_id or plan_id not in SUBSCRIPTION_PLANS:
-#         return RedirectResponse(url="/user/plans", status_code=302)
-#
-#     return templates.TemplateResponse(
-#         "user/checkout.html",
-#         {
-#             "request": request,
-#             "current_user": user,
-#             "plan": SUBSCRIPTION_PLANS[plan_id]
-#         }
-#     )
+@router.get("/checkout", response_class=HTMLResponse)
+async def checkout(request: Request):
+    user = await get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+
+    plan_id = request.query_params.get("plan")
+    if not plan_id or plan_id not in SUBSCRIPTION_PLANS:
+        return RedirectResponse(url="/user/plans", status_code=302)
+
+    return templates.TemplateResponse(
+        "user/checkout.html",
+        {
+            "request": request,
+            "current_user": user,
+            "plan": SUBSCRIPTION_PLANS[plan_id]
+        }
+    )
 
 
 @router.get("/profile", response_class=HTMLResponse)

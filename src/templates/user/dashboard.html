@@ -3,32 +3,50 @@
 {% block title %}用户中心{% endblock %}
 
 {% block content %}
-<div class="dashboard-stats">
-    <div class="stat-card">
-        <h3>剩余转写时长</h3>
-        <div class="stat-value">{{ stats.remaining_minutes }}分钟</div>
+<div class="dashboard-container">
+    <div class="section-title">
+        <h2><i class="mdi mdi-chart-box-outline"></i> 账户概览</h2>
     </div>
-    <div class="stat-card">
-        <h3>已使用时长</h3>
-        <div class="stat-value">{{ stats.total_used_minutes }}分钟</div>
+    
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <div class="stat-icon"><i class="mdi mdi-clock-outline"></i></div>
+            <div class="stat-info">
+                <h3>剩余转写时长</h3>
+                <div class="stat-value">{{ stats.remaining_minutes }}分钟</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="mdi mdi-clock-check-outline"></i></div>
+            <div class="stat-info">
+                <h3>已使用时长</h3>
+                <div class="stat-value">{{ stats.total_used_minutes }}分钟</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="mdi mdi-counter"></i></div>
+            <div class="stat-info">
+                <h3>剩余试用次数</h3>
+                <div class="stat-value">{{ stats.trial_count }}次</div>
+            </div>
+        </div>
     </div>
-    <div class="stat-card">
-        <h3>剩余试用次数</h3>
-        <div class="stat-value">{{ stats.trial_count }}次</div>
-    </div>
-</div>
 
-<div class="quick-actions">
-    <h2>快捷操作</h2>
-    <div class="action-buttons">
-        <a href="/transcribe-audio" class="action-btn">
-            <i class="mdi mdi-microphone"></i>
-            开始转写
-        </a>
-        <a href="/user/plans" class="action-btn">
-            <i class="mdi mdi-cart"></i>
-            购买订阅
-        </a>
+    <div class="section-title">
+        <h2><i class="mdi mdi-lightning-bolt"></i> 快捷操作</h2>
+    </div>
+    
+    <div class="quick-actions">
+        <div class="action-buttons">
+            <a href="/transcribe-audio" class="action-btn">
+                <i class="mdi mdi-microphone"></i>
+                <span>开始转写</span>
+            </a>
+            <a href="/user/plans" class="action-btn">
+                <i class="mdi mdi-cart"></i>
+                <span>购买订阅</span>
+            </a>
+        </div>
     </div>
 </div>
 {% endblock %}
