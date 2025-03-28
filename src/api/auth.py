@@ -38,18 +38,22 @@ async def login(
     username: str = Form(...),
     password: str = Form(...)
 ):
-    # 密码验证在FirestoreService中处理
     user = FirestoreService.verify_user(username, password)
-    if user:
-        request.session["user"] = user
-        return RedirectResponse(url="/", status_code=302)
-    return templates.TemplateResponse(
-        "login.html",
-        {
-            "request": request,
-            "error": "用户名或密码错误"
-        }
-    )
+    # user = await FirestoreService.authenticate_user(username, password)
+    if not user:
+        return templates.TemplateResponse(
+            "auth/login.html",
+            {"request": request, "error": "用户名或密码错误"}
+        )
+
+    # 设置session
+    request.session["user"] = user
+
+    # 根据用户角色重定向到不同页面
+    if user.get('role') == 'admin':
+        return RedirectResponse(url="/admin/dashboard", status_code=302)
+    else:
+        return RedirectResponse(url="/user/dashboard", status_code=302)
 
 @router.get("/logout")
 async def logout(request: Request):

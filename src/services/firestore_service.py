@@ -1,10 +1,8 @@
-import hashlib
-import os
 import uuid
-import bcrypt
 from datetime import datetime
 from datetime import timedelta
 
+import bcrypt
 from google.cloud import firestore
 from google.cloud.firestore import Client
 
@@ -49,7 +47,7 @@ class FirestoreService:
 
         for user in users:
             user_data = user.to_dict()
-            
+
             # 使用bcrypt验证密码
             if 'password_hash' in user_data:
                 # 处理新的bcrypt格式
@@ -59,7 +57,7 @@ class FirestoreService:
                 else:
                     # 兼容旧格式密码（如果有）
                     is_valid = False
-                
+
                 if is_valid:
                     return {
                         'id': user.id,
@@ -275,15 +273,15 @@ class FirestoreService:
             user = user_ref.get()
             if not user.exists:
                 return None
-            
+
             user_data = user.to_dict()
             user_data['id'] = user_id
-            
+
             # 确保所有字段都是可序列化的
             for key, value in user_data.items():
                 if isinstance(value, bytes):
                     user_data[key] = value.decode('utf-8', errors='replace')
-            
+
             return user_data
         except Exception as e:
             print(f"获取用户失败: {str(e)}")
@@ -297,13 +295,13 @@ class FirestoreService:
             user = user_ref.get()
             if not user.exists:
                 return False
-            
+
             # 如果包含密码，则使用bcrypt加密
             if 'password' in user_data and user_data['password']:
                 password_hash = bcrypt.hashpw(user_data['password'].encode('utf-8'), bcrypt.gensalt())
                 user_data['password_hash'] = password_hash
                 del user_data['password']  # 删除明文密码
-            
+
             user_ref.update(user_data)
             return True
         except Exception as e:
@@ -319,15 +317,15 @@ class FirestoreService:
             existing_user = users_ref.where('username', '==', username).get()
             if len(existing_user) > 0:
                 return False
-            
+
             # 检查邮箱是否存在
             existing_email = users_ref.where('email', '==', email).get()
             if len(existing_email) > 0:
                 return False
-            
+
             # 使用bcrypt加密密码
             password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-            
+
             user_data = {
                 'username': username,
                 'email': email,
@@ -336,7 +334,7 @@ class FirestoreService:
                 'trial_count': trial_count,
                 'created_at': datetime.now()
             }
-            
+
             users_ref.add(user_data)
             return True
         except Exception as e:
@@ -351,7 +349,7 @@ class FirestoreService:
             user = user_ref.get()
             if not user.exists:
                 return False
-            
+
             user_ref.delete()
             return True
         except Exception as e:
@@ -366,9 +364,9 @@ class FirestoreService:
             user = user_ref.get()
             if not user.exists:
                 return False
-            
+
             user_data = user.to_dict()
-            
+
             # 使用bcrypt验证密码
             if 'password_hash' in user_data:
                 stored_hash = user_data['password_hash']
@@ -378,7 +376,7 @@ class FirestoreService:
         except Exception as e:
             print(f"验证密码失败: {str(e)}")
             return False
-    
+
     @staticmethod
     async def update_password(user_id: str, new_password: str) -> bool:
         """更新用户密码"""
@@ -387,10 +385,10 @@ class FirestoreService:
             user = user_ref.get()
             if not user.exists:
                 return False
-            
+
             # 使用bcrypt加密新密码
             password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
-            
+
             # 更新密码
             user_ref.update({
                 'password_hash': password_hash
@@ -399,7 +397,7 @@ class FirestoreService:
         except Exception as e:
             print(f"更新密码失败: {str(e)}")
             return False
-    
+
     @staticmethod
     async def get_user_wallet(user_id: str) -> dict:
         """获取用户钱包信息"""
@@ -408,7 +406,7 @@ class FirestoreService:
             user = user_ref.get()
             if not user.exists:
                 return {"balance": 0}
-            
+
             user_data = user.to_dict()
             return {
                 "balance": user_data.get('balance', 0),
@@ -418,7 +416,7 @@ class FirestoreService:
         except Exception as e:
             print(f"获取钱包信息失败: {str(e)}")
             return {"balance": 0}
-    
+
     @staticmethod
     async def get_user_transactions(user_id: str) -> list:
         """获取用户交易记录"""
@@ -426,7 +424,7 @@ class FirestoreService:
             transactions = db.collection('transactions').where('user_id', '==', user_id).order_by(
                 'created_at', direction=firestore.Query.DESCENDING
             ).limit(20).get()
-            
+
             return [{
                 'id': trans.id,
                 'amount': trans.to_dict().get('amount', 0),
