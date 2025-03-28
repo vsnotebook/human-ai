@@ -754,8 +754,8 @@ th {
     border-radius: 10px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     margin-top: 20px;
-    margin-left: auto;
-    margin-right: 20px;
+    margin-left: 20px;
+    margin-right: auto;
     max-width: 600px;
 }
 
@@ -837,4 +837,73 @@ th {
 
 .password-card .btn-submit:hover {
     background: var(--secondary-color);
+}
+
+/* 提示框样式 */
+.toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    visibility: hidden;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: all 0.3s ease;
+    z-index: 2000;
+}
+
+.toast.show {
+    visibility: visible;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.toast-content {
+    display: flex;
+    align-items: center;
+    background: white;
+    padding: 16px 24px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    min-width: 300px;
+}
+
+.toast-icon {
+    font-size: 24px;
+    margin-right: 12px;
+}
+
+.toast.success .toast-icon {
+    color: var(--primary-color);
+}
+
+.toast.error .toast-icon {
+    color: #dc3545;
+}
+
+.toast-message {
+    color: #333;
+    font-size: 16px;
+}
+
+/* 动画效果 */
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideOut {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+    to {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
 }
