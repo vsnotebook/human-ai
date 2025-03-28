@@ -1,0 +1,103 @@
+:root {
+    --primary-color: #4CAF50;
+    --secondary-color: #388E3C;
+    --text-color: #333;
+    --bg-color: #f5f5f5;
+    --sidebar-width: 250px;
+    --header-height: 60px;
+}
+
+.user-container {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* 主内容区域 */
+.main-content {
+    flex: 1;
+    margin-left: var(--sidebar-width);
+    background: var(--bg-color);
+}
+
+.top-bar {
+    height: var(--header-height);
+    background: white;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* 通用卡片样式 */
+.card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+}
+
+/* 通用按钮样式 */
+.btn-primary, .btn-outline {
+    padding: 10px 20px;
+    border-radius: 5px;
+    text-decoration: none;
+    transition: all 0.3s;
+    display: inline-block;
+    text-align: center;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--secondary-color);
+}
+
+.btn-outline {
+    border: 1px solid var(--primary-color);
+    color: var(--primary-color);
+    background: transparent;
+}
+
+.btn-outline:hover {
+    background: rgba(76, 175, 80, 0.1);
+}
+
+/* 响应式基础设置 */
+@media (max-width: 768px) {
+    .main-content {
+        margin-left: 0;
+    }
+}
+
+/* 用户菜单 */
+.user-menu {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.logout-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    color: #666;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: all 0.3s;
+    margin-left: 15px;
+}
+
+.logout-btn:hover {
+    background: #f5f5f5;
+    color: #dc3545;
+}
+
+.logout-btn i {
+    font-size: 18px;
+}
