@@ -56,6 +56,7 @@ class UserUpdate(BaseModel):
 # 更新用户
 @router.put("/users/{user_id}")
 async def update_user(user_id: str, user_data: UserUpdate, user=Depends(admin_required)):
+    # 直接传递用户数据，密码加密在FirestoreService中处理
     result = await FirestoreService.update_user(user_id, user_data.dict(exclude_unset=True))
     if not result:
         raise HTTPException(status_code=404, detail="用户不存在或更新失败")
@@ -68,6 +69,7 @@ async def create_user(user_data: UserUpdate, user=Depends(admin_required)):
     if not user_data.password:
         raise HTTPException(status_code=400, detail="新用户必须设置密码")
 
+    # 密码加密在FirestoreService中处理
     result = await FirestoreService.create_user_by_admin(
         username=user_data.username,
         email=user_data.email,

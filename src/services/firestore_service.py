@@ -1,6 +1,7 @@
 import hashlib
 import os
 import uuid
+import bcrypt
 from datetime import datetime
 from datetime import timedelta
 
@@ -26,21 +27,14 @@ class FirestoreService:
         if users_ref.where('email', '==', email).get():
             return False
 
-        # 密码加盐哈希
-        salt = os.urandom(32)
-        password_hash = hashlib.pbkdf2_hmac(
-            'sha256',
-            password.encode('utf-8'),
-            salt,
-            100000
-        )
+        # 使用bcrypt加密密码
+        password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
 
         # 创建用户文档
         users_ref.add({
             'username': username,
             'email': email,
             'password_hash': password_hash,
-            'salt': salt,
             'role': role,
             'trial_count': 10,
             'trial_seconds': 60,
@@ -55,22 +49,26 @@ class FirestoreService:
 
         for user in users:
             user_data = user.to_dict()
-            password_hash = hashlib.pbkdf2_hmac(
-                'sha256',
-                password.encode('utf-8'),
-                user_data['salt'],
-                100000
-            )
-
-            if password_hash == user_data['password_hash']:
-                return {
-                    'id': user.id,
-                    'username': user_data['username'],
-                    'email': user_data['email'],
-                    'role': user_data.get('role', 'user'),  # 确保返回角色信息
-                    'trial_count': user_data.get('trial_count', 10),
-                    'trial_seconds': user_data.get('trial_seconds', 60)
-                }
+            
+            # 使用bcrypt验证密码
+            if 'password_hash' in user_data:
+                # 处理新的bcrypt格式
+                stored_hash = user_data['password_hash']
+                if isinstance(stored_hash, bytes):
+                    is_valid = bcrypt.checkpw(password.encode('utf-8'), stored_hash)
+                else:
+                    # 兼容旧格式密码（如果有）
+                    is_valid = False
+                
+                if is_valid:
+                    return {
+                        'id': user.id,
+                        'username': user_data['username'],
+                        'email': user_data['email'],
+                        'role': user_data.get('role', 'user'),
+                        'trial_count': user_data.get('trial_count', 10),
+                        'trial_seconds': user_data.get('trial_seconds', 60)
+                    }
         return None
 
     @staticmethod
@@ -300,10 +298,11 @@ class FirestoreService:
             if not user.exists:
                 return False
             
-            # 如果包含密码，则加密
+            # 如果包含密码，则使用bcrypt加密
             if 'password' in user_data and user_data['password']:
-                from werkzeug.security import generate_password_hash
-                user_data['password'] = generate_password_hash(user_data['password'])
+                password_hash = bcrypt.hashpw(user_data['password'].encode('utf-8'), bcrypt.gensalt())
+                user_data['password_hash'] = password_hash
+                del user_data['password']  # 删除明文密码
             
             user_ref.update(user_data)
             return True
@@ -326,14 +325,13 @@ class FirestoreService:
             if len(existing_email) > 0:
                 return False
             
-            # 创建用户
-            from werkzeug.security import generate_password_hash
-            from datetime import datetime
+            # 使用bcrypt加密密码
+            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
             
             user_data = {
                 'username': username,
                 'email': email,
-                'password': generate_password_hash(password),
+                'password_hash': password_hash,
                 'role': role,
                 'trial_count': trial_count,
                 'created_at': datetime.now()

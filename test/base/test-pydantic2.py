@@ -34,7 +34,7 @@ class Settings(BaseSettings):
             "dev": "D:/vs-program/google/py/web-cloud/src/envs/.env.dev",
             "test": "D:/vs-program/google/py/web-cloud/src/envs/.env.test",
             "prod": "D:/vs-program/google/py/web-cloud/src/envs/.env.prod",
-        }[os.getenv("ENV", "prod")]  # 根据 ENV 变量选择配置文件
+        }[os.getenv("ENV", "dev")]  # 根据 ENV 变量选择配置文件
         env_file_encoding = 'utf-8'
 
     def __init__(self, **values):

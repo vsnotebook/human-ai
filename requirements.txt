@@ -18,3 +18,5 @@ pillow
 redis
 pydantic-settings
 pydantic[email]
+bcrypt
+

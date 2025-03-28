@@ -20,6 +20,7 @@ async def register(
     email: str = Form(...),
     password: str = Form(...)
 ):
+    # 密码加密在FirestoreService中处理
     if FirestoreService.create_user(username, email, password):
         return RedirectResponse(url="/login", status_code=302)
     return templates.TemplateResponse(
@@ -37,6 +38,7 @@ async def login(
     username: str = Form(...),
     password: str = Form(...)
 ):
+    # 密码验证在FirestoreService中处理
     user = FirestoreService.verify_user(username, password)
     if user:
         request.session["user"] = user
