@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 
-from app.core.template import templates
+from src.core.template import templates
 from src.config.plans import SUBSCRIPTION_PLANS
 from src.services.firestore_service import FirestoreService
 from src.utils.auth import get_current_user

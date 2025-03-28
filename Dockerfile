@@ -13,5 +13,5 @@ RUN pip install --trusted-host pypi.python.org -r requirements.txt
 # Copy the rest of the working directory contents into the container at /app
 COPY . .
 
-# Run app.py when the container launches
-ENTRYPOINT ["python", "src.main.py"]
+# Run app with module mode when the container launches
+ENTRYPOINT ["python", "-m", "src.main-web"]
