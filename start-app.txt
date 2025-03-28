@@ -1,0 +1,8 @@
+
+uvicorn src.main_web:app --reload
+uvicorn src.main_web:app --reload --port 8080
+uvicorn src.main_web:app --reload --host 0.0.0.0 --port 8080
+uvicorn src.main_web:app --reload --host 127.0.0.1 --port 8080
+
+
+127.0.0.1:8000

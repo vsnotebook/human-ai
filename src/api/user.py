@@ -64,6 +64,7 @@ async def subscription_plans(request: Request):
 @router.get("/orders", response_class=HTMLResponse)
 async def user_orders(request: Request):
     user = await get_current_user(request)
+    print("==================================3")
     if not user:
         return RedirectResponse(url="/login", status_code=302)
 
