@@ -2,9 +2,7 @@ from google.cloud.speech_v2.types import cloud_speech
 from src.config.language_config import LANGUAGE_CONFIG
 
 from google.cloud import speech_v2 as speech
-from google.oauth2 import service_account
-from src.env import PROJECT_ID, CREDENTIALS_PATH
-
+from src.core.config import settings
 
 class SpeechService:
     @staticmethod
@@ -39,7 +37,7 @@ class SpeechService:
         )
 
         request = cloud_speech.RecognizeRequest(
-            recognizer=f"projects/{PROJECT_ID}/locations/{region}/recognizers/_",
+            recognizer=f"projects/{settings.PROJECT_ID}/locations/{region}/recognizers/_",
             config=config,
             content=audio_content,
         )

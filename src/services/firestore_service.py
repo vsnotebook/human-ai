@@ -8,9 +8,9 @@ from google.cloud import firestore
 from google.cloud.firestore import Client
 
 from src.config.plans import SUBSCRIPTION_PLANS
-from src.env import PROJECT_ID
+from src.core.config import settings
 
-db: Client = firestore.Client(project=PROJECT_ID)
+db: Client = firestore.Client(project=settings.PROJECT_ID)
 
 
 class FirestoreService:

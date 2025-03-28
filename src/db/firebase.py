@@ -5,9 +5,9 @@
 from google.cloud import firestore
 from google.cloud.firestore import Client
 
-from src.env import PROJECT_ID
+from src.core.config import settings
 
-db: Client = firestore.Client(project=PROJECT_ID)
+db: Client = firestore.Client(project=settings.PROJECT_ID)
 
 # def init_firebase():
 #     """初始化 Firebase 连接"""

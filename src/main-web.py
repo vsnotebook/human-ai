@@ -6,7 +6,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from src.api.speech import router as speech_router
 from src.api.user import router as user_router
 from src.api.payment import router as payment_router  # 添加这行
-from src.env import SERVER_HOST, SERVER_PORT
+from src.core.config import settings
 
 app = FastAPI()
 
@@ -44,4 +44,4 @@ app.include_router(user_router)
 app.include_router(payment_router)  # 添加这行
 
 if __name__ == "__main__":
-    uvicorn.run(app, host=SERVER_HOST, port=SERVER_PORT)
+    uvicorn.run(app, host=settings.SERVER_HOST, port=int(settings.SERVER_PORT))
