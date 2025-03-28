@@ -19,7 +19,9 @@
     background: var(--bg-color);
 }
 
-.top-bar {
+/* 顶部导航栏样式增强 */
+/* 顶部导航栏样式 */
+.top-nav {
     height: var(--header-height);
     background: white;
     display: flex;
@@ -27,6 +29,90 @@
     justify-content: space-between;
     padding: 0 20px;
     box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+/* 顶部导航栏右侧按钮组 */
+.top-nav-buttons {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.nav-btn {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s;
+}
+
+.nav-btn i {
+    margin-right: 8px;
+    font-size: 16px;
+}
+
+.home-btn {
+    background-color: #f0f0f0;
+    color: var(--text-color);
+}
+
+.home-btn:hover {
+    background-color: #e0e0e0;
+}
+
+.logout-btn {
+    background-color: #ffebee;
+    color: #d32f2f;
+}
+
+.logout-btn:hover {
+    background-color: #ffcdd2;
+}
+
+/* 用户信息显示 */
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.user-info i {
+    font-size: 20px;
+    color: var(--primary-color);
+}
+
+/* 响应式调整 */
+@media (max-width: 768px) {
+    .nav-btn span {
+        display: none;
+    }
+    
+    .nav-btn {
+        padding: 8px;
+    }
+    
+    .nav-btn i {
+        margin-right: 0;
+    }
+    
+    .user-info span {
+        display: none;
+    }
 }
 
 /* 通用卡片样式 */

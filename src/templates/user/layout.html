@@ -62,16 +62,18 @@
                     </div>
                 </div>
                 <div class="nav-right">
-                    <div class="dropdown">
-                        <button class="btn btn-link dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                            <i class="mdi mdi-account-circle"></i>
-                            {{ current_user.username }}
-                        </button>
-                        <ul class="dropdown-menu dropdown-menu-end">
-                            <li><a class="dropdown-item" href="/"><i class="mdi mdi-home"></i> 返回首页</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="/logout"><i class="mdi mdi-logout"></i> 退出登录</a></li>
-                        </ul>
+                    <!-- 将返回首页和退出登录改为直接可见的按钮 -->
+                    <div class="top-nav-buttons">
+                        <a href="/" class="nav-btn home-btn">
+                            <i class="mdi mdi-home"></i>返回首页
+                        </a>
+                        <a href="/logout" class="nav-btn logout-btn">
+                            <i class="mdi mdi-logout"></i>退出登录
+                        </a>
+                    </div>
+                    <div class="user-info">
+                        <i class="mdi mdi-account-circle"></i>
+                        {{ current_user.username }}
                     </div>
                 </div>
             </header>
@@ -87,12 +89,6 @@
         // 侧边栏切换
         document.getElementById('sidebar-toggle').addEventListener('click', function() {
             document.querySelector('.sidebar').classList.toggle('show');
-        });
-        
-        // 初始化下拉菜单
-        var dropdownElementList = [].slice.call(document.querySelectorAll('.dropdown-toggle'));
-        dropdownElementList.map(function (dropdownToggleEl) {
-            return new bootstrap.Dropdown(dropdownToggleEl);
         });
     </script>
     {% block scripts %}{% endblock %}
