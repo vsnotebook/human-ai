@@ -11,7 +11,7 @@ async def login_page(request: Request):
 
 @router.get("/register", response_class=HTMLResponse)
 async def register_page(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
+    return templates.TemplateResponse("auth/register.html", {"request": request})
 
 @router.post("/register")
 async def register(
@@ -24,7 +24,7 @@ async def register(
     if FirestoreService.create_user(username, email, password):
         return RedirectResponse(url="/login", status_code=302)
     return templates.TemplateResponse(
-        "register.html",
+        "auth/register.html",
         {
             "request": request,
             "error": "用户名或邮箱已存在"
