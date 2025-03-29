@@ -30,8 +30,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 const paymentData = await response.json();
                 
                 // 显示支付二维码
-                qrcodeLarge.src = paymentData.qr_code;
-                overlay.style.display = 'flex';
+                if (qrcodeLarge && paymentData.qr_code) {
+                    qrcodeLarge.src = paymentData.qr_code;
+                    if (overlay) {
+                        overlay.style.display = 'flex';
+                    }
+                }
                 
                 // 开始轮询支付状态
                 startPollingOrderStatus(paymentData.order_id);
@@ -41,13 +45,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
-    // 关闭弹窗
-    closeModal.addEventListener('click', () => {
-        overlay.style.display = 'none';
-        if (paymentInterval) {
-            clearInterval(paymentInterval);
-        }
-    });
+    // 关闭弹窗 - 添加空值检查
+    if (closeModal) {
+        closeModal.addEventListener('click', () => {
+            if (overlay) {
+                overlay.style.display = 'none';
+            }
+            if (paymentInterval) {
+                clearInterval(paymentInterval);
+            }
+        });
+    }
 
     // 轮询订单状态
     function startPollingOrderStatus(orderId) {
@@ -61,7 +69,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 const data = await response.json();
                 
                 if (data.status === 'paid') {
-                    paymentResult.textContent = '支付成功！正在跳转...';
+                    if (paymentResult) {
+                        paymentResult.textContent = '支付成功！正在跳转...';
+                    }
                     clearInterval(paymentInterval);
                     setTimeout(() => {
                         window.location.href = '/user/subscriptions';
@@ -70,6 +80,6 @@ document.addEventListener('DOMContentLoaded', function() {
             } catch (error) {
                 console.error('检查支付状态失败：', error);
             }
-        }, 3000);
+        }, 30000);
     }
 });

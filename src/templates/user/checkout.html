@@ -39,30 +39,43 @@
         </div>
     </div>
 
-    <div class="payment-overlay">
-        <div class="payment-modal">
-            <span class="close-modal">&times;</span>
-            <img id="payment-qrcode-large" src="" alt="支付二维码">
-            <div class="payment-status">
-                <p>请使用手机扫描二维码完成支付</p>
-                <p id="payment-result" class="success-message"></p>
+    <!-- 支付弹窗 -->
+    <div id="payment-modal" class="payment-modal-overlay">
+        <div class="payment-modal-content">
+            <div class="payment-modal-header">
+                <h3>请扫码支付</h3>
+                <span class="payment-modal-close">&times;</span>
+            </div>
+            <div class="payment-modal-body">
+                <div class="payment-qrcode-container">
+                    <img id="payment-qrcode" src="" alt="支付二维码">
+                </div>
+                <div class="payment-info">
+                    <div class="payment-amount">¥<span id="payment-price">{{ plan.price }}</span></div>
+                    <div class="payment-method-info">
+                        <img id="payment-method-icon" src="" alt="支付方式">
+                        <span id="payment-method-name"></span>
+                    </div>
+                    <div class="payment-tips">
+                        <p>请使用<span id="payment-app-name"></span>扫一扫</p>
+                        <p>扫描二维码完成支付</p>
+                    </div>
+                </div>
+                <div class="payment-status">
+                    <div class="payment-loading">
+                        <div class="spinner"></div>
+                        <span>等待支付...</span>
+                    </div>
+                    <div class="payment-success hidden">
+                        <i class="payment-success-icon"></i>
+                        <span>支付成功！正在跳转...</span>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
-    <div class="payment-qrcode hidden">
-        <div class="qrcode-container">
-            <img id="qrcode" src="" alt="支付二维码">
-            <p>请使用手机扫码支付</p>
-        </div>
-        <button class="cancel-payment">取消支付</button>
-    </div>
-
-    <div class="stripe-form hidden">
-        <div id="stripe-card-element"></div>
-        <button id="stripe-submit">确认支付</button>
-    </div>
 </div>
-
-<script src="https://js.stripe.com/v3/"></script>
+<!--暂时不用海外支付-->
+<!--<script src="https://js.stripe.com/v3/"></script>-->
 <script src="/static/js/checkout.js"></script>
 {% endblock %}
