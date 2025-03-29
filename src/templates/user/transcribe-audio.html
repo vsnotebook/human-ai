@@ -186,12 +186,23 @@
             document.getElementById('transcription-progress').style.display = 'none';
             document.getElementById('transcription-result').style.display = 'block';
             
-            // 显示转写结果
-            document.getElementById('result-text').textContent = data.transcription;
+            // 处理转写结果：删除空格，将最后一个逗号改为句号
+            let transcription = data.transcription || '';
+            
+            // 删除所有空格
+            transcription = transcription.replace(/\s+/g, '');
+            
+            // 如果最后一个字符是逗号，替换为句号
+            if (transcription.endsWith('，') || transcription.endsWith(',')) {
+                transcription = transcription.slice(0, -1) + '。';
+            }
+            
+            // 显示处理后的转写结果
+            document.getElementById('result-text').textContent = transcription;
             
             // 设置复制按钮功能
             document.getElementById('copy-result').addEventListener('click', function() {
-                navigator.clipboard.writeText(data.transcription)
+                navigator.clipboard.writeText(transcription)
                     .then(() => {
                         // 显示复制成功提示
                         const btn = this;
@@ -206,7 +217,7 @@
             
             // 设置下载按钮功能
             document.getElementById('download-result').addEventListener('click', function() {
-                const blob = new Blob([data.transcription], {type: 'text/plain'});
+                const blob = new Blob([transcription], {type: 'text/plain'});
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
