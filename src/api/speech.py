@@ -25,7 +25,7 @@ async def upload_page(request: Request):
         return RedirectResponse(url="/login", status_code=302)
     
     return templates.TemplateResponse(
-        "transcribe-audio.html",
+        "user/transcribe-audio.html",
         {
             "request": request,
             "current_user": user,
