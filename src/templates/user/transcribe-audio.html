@@ -187,15 +187,21 @@
             document.getElementById('transcription-progress').style.display = 'none';
             document.getElementById('transcription-result').style.display = 'block';
             
-            // 处理转写结果：删除空格，将最后一个逗号改为句号
+            // 处理转写结果
             let transcription = data.transcription || '';
             
-            // 删除所有空格
-            transcription = transcription.replace(/\s+/g, '');
+            // 获取当前选择的语言
+            const selectedLanguage = document.getElementById('language_code').value;
             
-            // 如果最后一个字符是逗号，替换为句号
-            if (transcription.endsWith('，') || transcription.endsWith(',')) {
-                transcription = transcription.slice(0, -1) + '。';
+            // 只有中文才进行特殊处理
+            if (selectedLanguage === 'zh-CN') {
+                // 删除所有空格
+                transcription = transcription.replace(/\s+/g, '');
+                
+                // 如果最后一个字符是逗号，替换为句号
+                if (transcription.endsWith('，') || transcription.endsWith(',')) {
+                    transcription = transcription.slice(0, -1) + '。';
+                }
             }
             
             // 显示处理后的转写结果
