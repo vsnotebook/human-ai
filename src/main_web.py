@@ -31,7 +31,8 @@ app.add_middleware(
 app.add_middleware(
     SessionMiddleware,
     secret_key="your-secret-key-here",  # 建议从配置文件读取
-    session_cookie="session"
+    session_cookie="session",
+    # max_age=60,  # 会话过期时间，单位为秒（这里设置为1分钟。单位是秒）。默认是2周。
 )
 
 # 挂载静态文件目录
