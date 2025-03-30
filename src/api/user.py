@@ -46,6 +46,38 @@ async def user_subscriptions(request: Request):
         }
     )
 
+@router.get("/asr", response_class=HTMLResponse)
+async def subscription_plans(request: Request):
+    user = await get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+
+    return templates.TemplateResponse(
+        "user/asr.html",
+        {
+            "request": request,
+            "current_user": user,
+            "active_page": "plans"
+        }
+    )
+
+
+@router.get("/tts", response_class=HTMLResponse)
+async def subscription_plans(request: Request):
+    user = await get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+
+    return templates.TemplateResponse(
+        "user/tts.html",
+        {
+            "request": request,
+            "current_user": user,
+            "active_page": "plans"
+        }
+    )
+
+
 
 @router.get("/plans", response_class=HTMLResponse)
 async def subscription_plans(request: Request):

@@ -1,0 +1,249 @@
+{% extends "user/layout.html" %}
+
+{% block title %}音频转写服务{% endblock %}
+
+{% block head %}
+{{ super() }}
+<link rel="stylesheet" href="/static/css/transcribe.css">
+{% endblock %}
+
+{% block content %}
+<div class="transcribe-container">
+    <div class="section-title">
+        <h2><i class="mdi mdi-microphone"></i> 音频转写</h2>
+        <p class="subtitle">选择音频文件和语言开始转写</p>
+    </div>
+
+    {% if current_user.is_authenticated %}
+        <div class="user-info card">
+            <div class="user-info-content">
+                <div class="info-item">
+                    <i class="mdi mdi-clock-outline info-icon"></i>
+                    <div class="info-text">
+                        <span class="info-label">剩余可用时长</span>
+                        <span class="info-value">{{ remaining_minutes }}分钟</span>
+                    </div>
+                </div>
+                
+                {% if subscription %}
+                <div class="info-item">
+                    <i class="mdi mdi-account-check-outline info-icon"></i>
+                    <div class="info-text">
+                        <span class="info-label">当前订阅</span>
+                        <span class="info-value">{{ subscription.plan_type }} (有效期至 {{ subscription.end_date.strftime('%Y-%m-%d') }})</span>
+                    </div>
+                </div>
+                {% else %}
+                <div class="info-item">
+                    <i class="mdi mdi-gift-outline info-icon"></i>
+                    <div class="info-text">
+                        <span class="info-label">免费试用</span>
+                        <span class="info-value">剩余{{ trial_count }}次 (总计{{ trial_seconds }}秒)</span>
+                    </div>
+                </div>
+                <a href="/subscription" class="upgrade-btn"><i class="mdi mdi-arrow-up-bold-circle-outline"></i> 升级订阅</a>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+<!--        <div class="auth-buttons">-->
+<!--            <a href="/login" class="login-btn">登录</a>-->
+<!--            <a href="/register" class="register-btn">注册</a>-->
+<!--        </div>-->
+    {% endif %}
+
+    <!-- 保持原有的表单部分，但修改为id而不是action -->
+    <div class="upload-container card">
+        <form id="transcribe-form" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="file"><i class="mdi mdi-file-music-outline"></i> 选择音频文件</label>
+                <div class="file-input-wrapper">
+                    <input type="file" name="file" id="file" accept="audio/*" required>
+                    <div class="file-input-custom">
+                        <span id="file-name">未选择文件</span>
+                        <button type="button" class="browse-btn">浏览</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="language_code"><i class="mdi mdi-translate"></i> 选择语言</label>
+                <div class="select-wrapper">
+                    <select name="language_code" id="language_code" required>
+                        <option value="zh-CN">中文（简体）</option>
+                        <option value="my-MM">缅甸语</option>
+                        <option value="en-US">English (United States)</option>
+                        <option value="ja-JP">日本語</option>
+                        <option value="ko-KR">한국어</option>
+                        <option value="fr-FR">Français</option>
+                        <option value="de-DE">Deutsch</option>
+                    </select>
+                    <i class="mdi mdi-chevron-down select-arrow"></i>
+                </div>
+            </div>
+
+            <input type="hidden" name="model" id="model" value="long">
+
+            <button type="submit" class="submit-button"><i class="mdi mdi-play"></i> 开始转写</button>
+        </form>
+    </div>
+    
+    <!-- 添加转写进度和结果显示区域 -->
+    <div id="transcription-progress" class="transcription-progress card" style="display: none;">
+        <div class="progress-indicator">
+            <div class="spinner"></div>
+            <span>正在处理您的音频，请稍候...</span>
+        </div>
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: 0%"></div>
+        </div>
+        <div class="progress-text">0%</div>
+    </div>
+    
+    <div id="transcription-result" class="transcription-result card" style="display: none;">
+        <div class="result-header">
+            <h3><i class="mdi mdi-text-box-check-outline"></i> 转写结果</h3>
+            <div class="result-actions">
+                <button id="copy-result" class="action-btn small">
+                    <i class="mdi mdi-content-copy"></i> 复制
+                </button>
+                <button id="download-result" class="action-btn small">
+                    <i class="mdi mdi-download"></i> 下载
+                </button>
+            </div>
+        </div>
+        <div class="result-content">
+            <pre id="result-text"></pre>
+        </div>
+    </div>
+</div>
+
+<!-- 添加订阅提醒弹窗 -->
+<div id="subscription-reminder" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3><i class="mdi mdi-alert-circle-outline"></i> 免费试用即将用完</h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div class="modal-body">
+            <p>建议订阅会员以继续使用服务</p>
+            <div class="modal-buttons">
+                <a href="/subscription" class="primary-btn"><i class="mdi mdi-cart-outline"></i> 查看订阅方案</a>
+                <button class="secondary-btn" onclick="closeModal()">稍后再说</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.getElementById('language_code').addEventListener('change', function() {
+        const languageModels = {
+            'zh-CN': 'long',
+            'en-US': 'latest_long',
+            'ja-JP': 'long',
+            'ko-KR': 'long',
+            'fr-FR': 'long',
+            'de-DE': 'long'
+        };
+        document.getElementById('model').value = languageModels[this.value] || 'long';
+    });
+    
+    // 文件选择显示文件名
+    document.getElementById('file').addEventListener('change', function() {
+        const fileName = this.files[0] ? this.files[0].name : '未选择文件';
+        document.getElementById('file-name').textContent = fileName;
+    });
+    
+    // 点击浏览按钮触发文件选择
+    document.querySelector('.browse-btn').addEventListener('click', function() {
+        document.getElementById('file').click();
+    });
+    
+    // 添加表单提交处理
+    document.getElementById('transcribe-form').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        // 显示进度区域，隐藏结果区域
+        document.getElementById('transcription-progress').style.display = 'block';
+        document.getElementById('transcription-result').style.display = 'none';
+        
+        // 创建FormData对象
+        const formData = new FormData(this);
+        
+        // 发送AJAX请求
+        fetch('/transcribe', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('转写请求失败');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log(data);
+            // 隐藏进度区域，显示结果区域
+            document.getElementById('transcription-progress').style.display = 'none';
+            document.getElementById('transcription-result').style.display = 'block';
+            
+            // 处理转写结果
+            let transcription = data.transcription || '';
+            
+            // 获取当前选择的语言
+            const selectedLanguage = document.getElementById('language_code').value;
+            
+            // 只有中文才进行特殊处理
+            if (selectedLanguage === 'zh-CN') {
+                // 删除所有空格
+                transcription = transcription.replace(/\s+/g, '');
+                
+                // 如果最后一个字符是逗号，替换为句号
+                if (transcription.endsWith('，') || transcription.endsWith(',')) {
+                    transcription = transcription.slice(0, -1) + '。';
+                }
+            }
+            
+            // 显示处理后的转写结果
+            document.getElementById('result-text').textContent = transcription;
+            
+            // 设置复制按钮功能
+            document.getElementById('copy-result').addEventListener('click', function() {
+                navigator.clipboard.writeText(transcription)
+                    .then(() => {
+                        // 显示复制成功提示
+                        const btn = this;
+                        const originalText = btn.innerHTML;
+                        btn.innerHTML = '<i class="mdi mdi-check"></i> 已复制';
+                        setTimeout(() => {
+                            btn.innerHTML = originalText;
+                        }, 2000);
+                    })
+                    .catch(err => console.error('复制失败:', err));
+            });
+            
+            // 设置下载按钮功能
+            document.getElementById('download-result').addEventListener('click', function() {
+                const blob = new Blob([transcription], {type: 'text/plain'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'transcription-result.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        })
+        .catch(error => {
+            console.error('转写错误:', error);
+            document.getElementById('transcription-progress').style.display = 'none';
+            alert('转写过程中发生错误: ' + error.message);
+        });
+    });
+    
+    function closeModal() {
+        document.getElementById('subscription-reminder').style.display = 'none';
+    }
+</script>
+{% endblock %}
