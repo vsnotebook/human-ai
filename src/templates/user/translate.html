@@ -1,0 +1,329 @@
+{% extends "user/layout.html" %}
+
+{% block title %}文本翻译服务{% endblock %}
+
+{% block head %}
+{{ super() }}
+<style>
+    .translate-container {
+        max-width: 1000px;
+        margin: 0 auto;
+    }
+    
+    .section-title {
+        margin-bottom: 20px;
+        text-align: center;
+    }
+    
+    .section-title h2 {
+        font-size: 24px;
+        color: #333;
+        margin-bottom: 5px;
+    }
+    
+    .section-title .subtitle {
+        color: #666;
+        font-size: 16px;
+    }
+    
+    .translate-form {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .text-areas {
+        display: flex;
+        gap: 20px;
+    }
+    
+    @media (max-width: 768px) {
+        .text-areas {
+            flex-direction: column;
+        }
+    }
+    
+    .text-column {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .text-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 10px;
+    }
+    
+    .language-select {
+        position: relative;
+        min-width: 120px;
+    }
+    
+    .language-select select {
+        width: 100%;
+        padding: 8px 30px 8px 10px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        appearance: none;
+        background-color: white;
+    }
+    
+    .language-select .select-arrow {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        pointer-events: none;
+    }
+    
+    textarea {
+        width: 100%;
+        height: 200px;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        resize: vertical;
+        font-size: 16px;
+    }
+    
+    .action-buttons {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+    }
+    
+    .action-btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .translate-btn {
+        background-color: #4285f4;
+        color: white;
+    }
+    
+    .translate-btn:hover {
+        background-color: #3367d6;
+    }
+    
+    .swap-btn {
+        background-color: #f1f3f4;
+        color: #5f6368;
+    }
+    
+    .swap-btn:hover {
+        background-color: #e8eaed;
+    }
+    
+    .copy-btn {
+        background-color: transparent;
+        color: #5f6368;
+        border: 1px solid #ddd;
+    }
+    
+    .copy-btn:hover {
+        background-color: #f1f3f4;
+    }
+    
+    .card {
+        background-color: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="translate-container">
+    <div class="section-title">
+        <h2><i class="mdi mdi-translate"></i> 文本翻译</h2>
+        <p class="subtitle">输入文本并选择语言进行翻译</p>
+    </div>
+
+    <div class="card">
+        <div class="translate-form">
+            <div class="text-areas">
+                <div class="text-column">
+                    <div class="text-header">
+                        <div class="language-select">
+                            <select id="source-language">
+                                <option value="auto">自动检测</option>
+                                <option value="zh-CN">中文（简体）</option>
+                                <option value="en">英语</option>
+                                <option value="my">缅甸语</option>
+                                <option value="ja">日语</option>
+                                <option value="ko">韩语</option>
+                                <option value="fr">法语</option>
+                                <option value="de">德语</option>
+                            </select>
+                            <i class="mdi mdi-chevron-down select-arrow"></i>
+                        </div>
+                        <button class="copy-btn action-btn" id="copy-source">
+                            <i class="mdi mdi-content-copy"></i>
+                        </button>
+                    </div>
+                    <textarea id="source-text" placeholder="请输入要翻译的文本..."></textarea>
+                </div>
+                
+                <div class="text-column">
+                    <div class="text-header">
+                        <div class="language-select">
+                            <select id="target-language">
+                                <option value="zh-CN">中文（简体）</option>
+                                <option value="en">英语</option>
+                                <option value="my" selected>缅甸语</option>
+                                <option value="ja">日语</option>
+                                <option value="ko">韩语</option>
+                                <option value="fr">法语</option>
+                                <option value="de">德语</option>
+                            </select>
+                            <i class="mdi mdi-chevron-down select-arrow"></i>
+                        </div>
+                        <button class="copy-btn action-btn" id="copy-target">
+                            <i class="mdi mdi-content-copy"></i>
+                        </button>
+                    </div>
+                    <textarea id="target-text" placeholder="翻译结果将显示在这里..." readonly></textarea>
+                </div>
+            </div>
+            
+            <div class="action-buttons">
+                <button class="swap-btn action-btn" id="swap-languages">
+                    <i class="mdi mdi-swap-horizontal"></i> 交换语言
+                </button>
+                <button class="translate-btn action-btn" id="translate-button">
+                    <i class="mdi mdi-translate"></i> 翻译
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sourceText = document.getElementById('source-text');
+        const targetText = document.getElementById('target-text');
+        const sourceLanguage = document.getElementById('source-language');
+        const targetLanguage = document.getElementById('target-language');
+        const translateButton = document.getElementById('translate-button');
+        const swapButton = document.getElementById('swap-languages');
+        const copySourceButton = document.getElementById('copy-source');
+        const copyTargetButton = document.getElementById('copy-target');
+        
+        // 翻译功能
+        translateButton.addEventListener('click', async function() {
+            const text = sourceText.value.trim();
+            if (!text) {
+                alert('请输入要翻译的文本');
+                return;
+            }
+            
+            const sourceLang = sourceLanguage.value;
+            const targetLang = targetLanguage.value;
+            
+            // 显示加载状态
+            const originalButtonText = translateButton.innerHTML;
+            translateButton.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> 翻译中...';
+            translateButton.disabled = true;
+            
+            try {
+                const response = await fetch('/api/translate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        source: sourceLang,
+                        target: targetLang
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('翻译请求失败');
+                }
+                
+                const data = await response.json();
+                targetText.value = data.translatedText;
+                
+            } catch (error) {
+                console.error('翻译错误:', error);
+                alert('翻译失败: ' + error.message);
+            } finally {
+                // 恢复按钮状态
+                translateButton.innerHTML = originalButtonText;
+                translateButton.disabled = false;
+            }
+        });
+        
+        // 交换语言
+        swapButton.addEventListener('click', function() {
+            // 不交换自动检测
+            if (sourceLanguage.value === 'auto') {
+                alert('自动检测语言不能交换');
+                return;
+            }
+            
+            // 交换语言选择
+            const tempLang = sourceLanguage.value;
+            sourceLanguage.value = targetLanguage.value;
+            targetLanguage.value = tempLang;
+            
+            // 交换文本内容
+            const tempText = sourceText.value;
+            sourceText.value = targetText.value;
+            targetText.value = tempText;
+        });
+        
+        // 复制源文本
+        copySourceButton.addEventListener('click', function() {
+            copyToClipboard(sourceText.value, copySourceButton);
+        });
+        
+        // 复制目标文本
+        copyTargetButton.addEventListener('click', function() {
+            copyToClipboard(targetText.value, copyTargetButton);
+        });
+        
+        // 复制到剪贴板函数
+        function copyToClipboard(text, button) {
+            if (!text) return;
+            
+            navigator.clipboard.writeText(text)
+                .then(() => {
+                    const originalHTML = button.innerHTML;
+                    button.innerHTML = '<i class="mdi mdi-check"></i>';
+                    setTimeout(() => {
+                        button.innerHTML = originalHTML;
+                    }, 2000);
+                })
+                .catch(err => {
+                    console.error('复制失败:', err);
+                });
+        }
+        
+        // 添加旋转动画
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes spin {
+                from { transform: rotate(0deg); }
+                to { transform: rotate(360deg); }
+            }
+            .mdi-loading {
+                animation: spin 1s infinite linear;
+            }
+        `;
+        document.head.appendChild(style);
+    });
+</script>
+{% endblock %}

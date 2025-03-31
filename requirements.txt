@@ -21,3 +21,4 @@ pydantic[email]
 bcrypt
 pymongo[srv]
 google-cloud-texttospeech
+google-cloud-translate
