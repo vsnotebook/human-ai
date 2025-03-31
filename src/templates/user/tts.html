@@ -1,6 +1,6 @@
 {% extends "user/layout.html" %}
 
-{% block title %}音频转写服务{% endblock %}
+{% block title %}文本转语音服务{% endblock %}
 
 {% block head %}
 {{ super() }}
@@ -10,40 +10,13 @@
 {% block content %}
 <div class="transcribe-container">
     <div class="section-title">
-        <h2><i class="mdi mdi-microphone"></i> 音频转写</h2>
-        <p class="subtitle">选择音频文件和语言开始转写</p>
+        <h2><i class="mdi mdi-text-to-speech"></i> 文本转语音</h2>
+        <p class="subtitle">输入文本并选择语言生成语音</p>
     </div>
 
     {% if current_user.is_authenticated %}
         <div class="user-info card">
-            <div class="user-info-content">
-                <div class="info-item">
-                    <i class="mdi mdi-clock-outline info-icon"></i>
-                    <div class="info-text">
-                        <span class="info-label">剩余可用时长</span>
-                        <span class="info-value">{{ remaining_minutes }}分钟</span>
-                    </div>
-                </div>
-                
-                {% if subscription %}
-                <div class="info-item">
-                    <i class="mdi mdi-account-check-outline info-icon"></i>
-                    <div class="info-text">
-                        <span class="info-label">当前订阅</span>
-                        <span class="info-value">{{ subscription.plan_type }} (有效期至 {{ subscription.end_date.strftime('%Y-%m-%d') }})</span>
-                    </div>
-                </div>
-                {% else %}
-                <div class="info-item">
-                    <i class="mdi mdi-gift-outline info-icon"></i>
-                    <div class="info-text">
-                        <span class="info-label">免费试用</span>
-                        <span class="info-value">剩余{{ trial_count }}次 (总计{{ trial_seconds }}秒)</span>
-                    </div>
-                </div>
-                <a href="/subscription" class="upgrade-btn"><i class="mdi mdi-arrow-up-bold-circle-outline"></i> 升级订阅</a>
-                {% endif %}
-            </div>
+
         </div>
     {% else %}
 <!--        <div class="auth-buttons">-->
@@ -52,18 +25,12 @@
 <!--        </div>-->
     {% endif %}
 
-    <!-- 保持原有的表单部分，但修改为id而不是action -->
+    <!-- 文本输入和语音合成表单 -->
     <div class="upload-container card">
-        <form id="transcribe-form" enctype="multipart/form-data">
+        <form id="tts-form">
             <div class="form-group">
-                <label for="file"><i class="mdi mdi-file-music-outline"></i> 选择音频文件</label>
-                <div class="file-input-wrapper">
-                    <input type="file" name="file" id="file" accept="audio/*" required>
-                    <div class="file-input-custom">
-                        <span id="file-name">未选择文件</span>
-                        <button type="button" class="browse-btn">浏览</button>
-                    </div>
-                </div>
+                <label for="text-input"><i class="mdi mdi-text"></i> 输入文本</label>
+                <textarea id="text-input" placeholder="请输入要转换为语音的文本..." required></textarea>
             </div>
 
             <div class="form-group">
@@ -82,168 +49,135 @@
                 </div>
             </div>
 
-            <input type="hidden" name="model" id="model" value="long">
-
-            <button type="submit" class="submit-button"><i class="mdi mdi-play"></i> 开始转写</button>
+            <button type="submit" class="submit-button"><i class="mdi mdi-play"></i> 生成语音</button>
         </form>
     </div>
     
-    <!-- 添加转写进度和结果显示区域 -->
-    <div id="transcription-progress" class="transcription-progress card" style="display: none;">
-        <div class="progress-indicator">
-            <div class="spinner"></div>
-            <span>正在处理您的音频，请稍候...</span>
-        </div>
-        <div class="progress-bar">
-            <div class="progress-fill" style="width: 0%"></div>
-        </div>
-        <div class="progress-text">0%</div>
-    </div>
-    
-    <div id="transcription-result" class="transcription-result card" style="display: none;">
+    <!-- 语音播放区域 -->
+    <div id="tts-result" class="transcription-result card" style="display: none;">
         <div class="result-header">
-            <h3><i class="mdi mdi-text-box-check-outline"></i> 转写结果</h3>
-            <div class="result-actions">
-                <button id="copy-result" class="action-btn small">
-                    <i class="mdi mdi-content-copy"></i> 复制
-                </button>
-                <button id="download-result" class="action-btn small">
-                    <i class="mdi mdi-download"></i> 下载
-                </button>
-            </div>
+            <h3><i class="mdi mdi-volume-high"></i> 语音播放</h3>
         </div>
         <div class="result-content">
-            <pre id="result-text"></pre>
-        </div>
-    </div>
-</div>
-
-<!-- 添加订阅提醒弹窗 -->
-<div id="subscription-reminder" class="modal">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h3><i class="mdi mdi-alert-circle-outline"></i> 免费试用即将用完</h3>
-            <button class="modal-close" onclick="closeModal()">&times;</button>
-        </div>
-        <div class="modal-body">
-            <p>建议订阅会员以继续使用服务</p>
-            <div class="modal-buttons">
-                <a href="/subscription" class="primary-btn"><i class="mdi mdi-cart-outline"></i> 查看订阅方案</a>
-                <button class="secondary-btn" onclick="closeModal()">稍后再说</button>
-            </div>
+            <audio id="audioPlayer" controls style="width: 100%;"></audio>
         </div>
     </div>
 </div>
 
 <script>
-    document.getElementById('language_code').addEventListener('change', function() {
-        const languageModels = {
-            'zh-CN': 'long',
-            'en-US': 'latest_long',
-            'ja-JP': 'long',
-            'ko-KR': 'long',
-            'fr-FR': 'long',
-            'de-DE': 'long'
-        };
-        document.getElementById('model').value = languageModels[this.value] || 'long';
-    });
-    
-    // 文件选择显示文件名
-    document.getElementById('file').addEventListener('change', function() {
-        const fileName = this.files[0] ? this.files[0].name : '未选择文件';
-        document.getElementById('file-name').textContent = fileName;
-    });
-    
-    // 点击浏览按钮触发文件选择
-    document.querySelector('.browse-btn').addEventListener('click', function() {
-        document.getElementById('file').click();
-    });
-    
-    // 添加表单提交处理
-    document.getElementById('transcribe-form').addEventListener('submit', function(e) {
+    document.getElementById('tts-form').addEventListener('submit', async function(e) {
         e.preventDefault();
         
-        // 显示进度区域，隐藏结果区域
-        document.getElementById('transcription-progress').style.display = 'block';
-        document.getElementById('transcription-result').style.display = 'none';
+        const text = document.getElementById('text-input').value;
+        const languageCode = document.getElementById('language_code').value;
         
-        // 创建FormData对象
-        const formData = new FormData(this);
-        
-        // 发送AJAX请求
-        fetch('/transcribe', {
-            method: 'POST',
-            body: formData
-        })
-        .then(response => {
+        if (!text.trim()) {
+            alert('请输入要转换的文本');
+            return;
+        }
+
+        try {
+            // 显示加载状态
+            const submitButton = this.querySelector('.submit-button');
+            const originalButtonText = submitButton.innerHTML;
+            submitButton.innerHTML = '<i class="mdi mdi-loading mdi-spin"></i> 处理中...';
+            submitButton.disabled = true;
+            
+            // 准备请求数据
+            const formData = new FormData();
+            formData.append('text', text);
+            
+            // 根据语言选择对应的语音
+            const voiceMap = {
+                'zh-CN': 'zh-CN-XiaoxiaoNeural',
+                'my-MM': 'my-MM-ThihaNeural',
+                'en-US': 'en-US-JennyNeural',
+                'ja-JP': 'ja-JP-NanamiNeural',
+                'ko-KR': 'ko-KR-SunHiNeural',
+                'fr-FR': 'fr-FR-DeniseNeural',
+                'de-DE': 'de-DE-KatjaNeural'
+            };
+            
+            formData.append('voice', voiceMap[languageCode] || 'zh-CN-XiaoxiaoNeural');
+            formData.append('rate', '+0%');
+            formData.append('pitch', '+0Hz');
+            formData.append('volume', '+0%');
+
+            // 发送合成请求
+            const response = await fetch('https://tts.51685168.xyz/api/synthesize', {
+                method: 'POST',
+                body: formData
+            });
+
             if (!response.ok) {
-                throw new Error('转写请求失败');
+                throw new Error('语音合成请求失败');
             }
-            return response.json();
-        })
-        .then(data => {
-            console.log(data);
-            // 隐藏进度区域，显示结果区域
-            document.getElementById('transcription-progress').style.display = 'none';
-            document.getElementById('transcription-result').style.display = 'block';
-            
-            // 处理转写结果
-            let transcription = data.transcription || '';
-            
-            // 获取当前选择的语言
-            const selectedLanguage = document.getElementById('language_code').value;
-            
-            // 只有中文才进行特殊处理
-            if (selectedLanguage === 'zh-CN') {
-                // 删除所有空格
-                transcription = transcription.replace(/\s+/g, '');
-                
-                // 如果最后一个字符是逗号，替换为句号
-                if (transcription.endsWith('，') || transcription.endsWith(',')) {
-                    transcription = transcription.slice(0, -1) + '。';
+
+            const result = await response.json();
+
+            if (result.status === 'success') {
+                // 获取音频文件
+                const audioResponse = await fetch(`https://tts.51685168.xyz${result.download_url}`);
+                if (!audioResponse.ok) {
+                    throw new Error('音频下载失败');
                 }
+
+                const blob = await audioResponse.blob();
+                const audioUrl = URL.createObjectURL(blob);
+
+                // 播放音频
+                const audioPlayer = document.getElementById('audioPlayer');
+                audioPlayer.src = audioUrl;
+                document.getElementById('tts-result').style.display = 'block';
+                audioPlayer.play();
+            } else {
+                throw new Error(result.message || '语音合成失败');
             }
             
-            // 显示处理后的转写结果
-            document.getElementById('result-text').textContent = transcription;
+            // 恢复按钮状态
+            submitButton.innerHTML = originalButtonText;
+            submitButton.disabled = false;
             
-            // 设置复制按钮功能
-            document.getElementById('copy-result').addEventListener('click', function() {
-                navigator.clipboard.writeText(transcription)
-                    .then(() => {
-                        // 显示复制成功提示
-                        const btn = this;
-                        const originalText = btn.innerHTML;
-                        btn.innerHTML = '<i class="mdi mdi-check"></i> 已复制';
-                        setTimeout(() => {
-                            btn.innerHTML = originalText;
-                        }, 2000);
-                    })
-                    .catch(err => console.error('复制失败:', err));
-            });
+        } catch (error) {
+            console.error('语音合成错误:', error);
+            alert('语音合成失败：' + error.message);
             
-            // 设置下载按钮功能
-            document.getElementById('download-result').addEventListener('click', function() {
-                const blob = new Blob([transcription], {type: 'text/plain'});
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'transcription-result.txt';
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-            });
-        })
-        .catch(error => {
-            console.error('转写错误:', error);
-            document.getElementById('transcription-progress').style.display = 'none';
-            alert('转写过程中发生错误: ' + error.message);
-        });
+            // 恢复按钮状态
+            const submitButton = this.querySelector('.submit-button');
+            submitButton.innerHTML = '<i class="mdi mdi-play"></i> 生成语音';
+            submitButton.disabled = false;
+        }
     });
-    
-    function closeModal() {
-        document.getElementById('subscription-reminder').style.display = 'none';
-    }
 </script>
+
+<style>
+    textarea {
+        width: 100%;
+        height: 150px;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        resize: vertical;
+        font-size: 16px;
+        margin-bottom: 15px;
+    }
+    
+    .mdi-loading {
+        animation: spin 1s infinite linear;
+    }
+    
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    #tts-result {
+        margin-top: 20px;
+    }
+    
+    .submit-button:disabled {
+        background-color: #cccccc;
+        cursor: not-allowed;
+    }
+</style>
 {% endblock %}

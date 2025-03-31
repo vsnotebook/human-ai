@@ -20,3 +20,4 @@ pydantic-settings
 pydantic[email]
 bcrypt
 pymongo[srv]
+google-cloud-texttospeech
