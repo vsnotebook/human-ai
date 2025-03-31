@@ -56,6 +56,20 @@
 
 
 
+我在用户中心侧边栏点击”语音转文本“，在content区域确实是asr.html页面。 但是左边侧栏的被选择的亮色确实“购买订阅”。
+
+#layout.html 我在用户中心侧边栏点击”语音转文本“，在content区域确实是asr.html页面。 但是左边侧栏的被选择的亮色确实“购买订阅”。
+主要修改：
+1. 将"语音转文本"菜单项的条件从 active_page == 'subscriptions' 改为 active_page == 'asr'
+2. 同时，您需要确保在 Flask 路由处理函数中正确设置 active_page 变量。在渲染 asr.html 的路由中应该有：
+
+
+
+
+
+
+
+
 
 
 

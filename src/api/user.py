@@ -57,7 +57,7 @@ async def subscription_plans(request: Request):
         {
             "request": request,
             "current_user": user,
-            "active_page": "plans"
+            "active_page": "asr"
         }
     )
 
@@ -73,7 +73,7 @@ async def subscription_plans(request: Request):
         {
             "request": request,
             "current_user": user,
-            "active_page": "plans"
+            "active_page": "tts"
         }
     )
 
