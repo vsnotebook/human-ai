@@ -1,0 +1,96 @@
+/* 录音相关样式 */
+.input-method-toggle {
+    display: flex;
+    margin-bottom: 20px;
+    gap: 10px;
+}
+
+.toggle-btn {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    background: #f5f5f5;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.toggle-btn.active {
+    background: #007bff;
+    color: white;
+    border-color: #0056b3;
+}
+
+.record-container {
+    text-align: center;
+    padding: 20px;
+}
+
+.record-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.record-btn {
+    padding: 10px 20px;
+    border-radius: 50px;
+    border: none;
+    background: #dc3545;
+    color: white;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.record-btn:hover {
+    background: #c82333;
+}
+
+.recording-time {
+    font-size: 1.2em;
+    font-weight: bold;
+    color: #dc3545;
+}
+
+.recording-status {
+    margin-top: 10px;
+    color: #666;
+}
+
+#recordedAudio {
+    width: 100%;
+    margin-top: 20px;
+}
+
+/* 录音波形动画 */
+.recording-indicator {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    height: 30px;
+    margin: 10px 0;
+}
+
+.recording-indicator.active {
+    display: flex;
+}
+
+.recording-indicator span {
+    width: 3px;
+    height: 100%;
+    background-color: #dc3545;
+    animation: wave 1s ease-in-out infinite;
+}
+
+.recording-indicator span:nth-child(2) { animation-delay: 0.1s; }
+.recording-indicator span:nth-child(3) { animation-delay: 0.2s; }
+.recording-indicator span:nth-child(4) { animation-delay: 0.3s; }
+.recording-indicator span:nth-child(5) { animation-delay: 0.4s; }
+
+@keyframes wave {
+    0%, 100% { transform: scaleY(0.3); }
+    50% { transform: scaleY(1); }
+}

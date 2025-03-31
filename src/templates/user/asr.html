@@ -5,6 +5,7 @@
 {% block head %}
 {{ super() }}
 <link rel="stylesheet" href="/static/css/transcribe.css">
+<link rel="stylesheet" href="/static/user/stt.css">
 {% endblock %}
 
 {% block content %}
@@ -54,6 +55,32 @@
 
     <!-- 保持原有的表单部分，但修改为id而不是action -->
     <div class="upload-container card">
+        <!-- 添加录音/上传切换按钮 -->
+        <div class="input-method-toggle">
+            <button type="button" class="toggle-btn active" data-method="upload">
+                <i class="mdi mdi-file-upload"></i> 上传文件
+            </button>
+            <button type="button" class="toggle-btn" data-method="record">
+                <i class="mdi mdi-microphone"></i> 录音
+            </button>
+        </div>
+    
+        <!-- 录音界面 -->
+        <div id="record-container" class="record-container" style="display: none;">
+            <div class="record-controls">
+                <button type="button" id="startRecord" class="record-btn">
+                    <i class="mdi mdi-record"></i> 开始录音
+                </button>
+                <button type="button" id="stopRecord" class="record-btn" style="display: none;">
+                    <i class="mdi mdi-stop"></i> 停止录音
+                </button>
+                <div id="recordingTime" class="recording-time" style="display: none;">00:00</div>
+            </div>
+            <div id="recordingStatus" class="recording-status"></div>
+            <audio id="recordedAudio" controls style="display: none;"></audio>
+        </div>
+    
+        <!-- 原有的文件上传表单 -->
         <form id="transcribe-form" enctype="multipart/form-data">
             <div class="form-group">
                 <label for="file"><i class="mdi mdi-file-music-outline"></i> 选择音频文件</label>
@@ -246,4 +273,175 @@
         document.getElementById('subscription-reminder').style.display = 'none';
     }
 </script>
+
+<!-- 在script部分添加录音相关的JavaScript代码 -->
+<script>
+    // ... 保持原有的代码 ...
+
+    // 录音相关变量
+    let mediaRecorder;
+    let audioChunks = [];
+    let recordingTimer;
+    let startTime;
+
+    // 切换录音/上传方式
+    document.querySelectorAll('.toggle-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.toggle-btn').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            
+            if (this.dataset.method === 'record') {
+                document.getElementById('record-container').style.display = 'block';
+                document.getElementById('transcribe-form').style.display = 'none';
+            } else {
+                document.getElementById('record-container').style.display = 'none';
+                document.getElementById('transcribe-form').style.display = 'block';
+            }
+        });
+    });
+
+    // 开始录音
+    document.getElementById('startRecord').addEventListener('click', async () => {
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            mediaRecorder = new MediaRecorder(stream);
+            audioChunks = [];
+
+            mediaRecorder.ondataavailable = (event) => {
+                audioChunks.push(event.data);
+            };
+
+            mediaRecorder.onstop = () => {
+                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                const audioUrl = URL.createObjectURL(audioBlob);
+                const audio = document.getElementById('recordedAudio');
+                audio.src = audioUrl;
+                audio.style.display = 'block';
+
+                // 创建文件对象并添加到FormData
+                const file = new File([audioBlob], 'recording.wav', { type: 'audio/wav' });
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('language_code', document.getElementById('language_code').value);
+                formData.append('model', document.getElementById('model').value);
+
+                // 发送录音文件到服务器
+                submitTranscription(formData);
+            };
+
+            mediaRecorder.start();
+            startTime = Date.now();
+            updateRecordingTime();
+            
+            document.getElementById('startRecord').style.display = 'none';
+            document.getElementById('stopRecord').style.display = 'inline-block';
+            document.getElementById('recordingTime').style.display = 'inline-block';
+            document.getElementById('recordingStatus').textContent = '正在录音...';
+            
+        } catch (err) {
+            console.error('录音失败:', err);
+            alert('无法访问麦克风，请确保已授予录音权限。');
+        }
+    });
+
+    // 停止录音
+    document.getElementById('stopRecord').addEventListener('click', () => {
+        if (mediaRecorder && mediaRecorder.state === 'recording') {
+            mediaRecorder.stop();
+            mediaRecorder.stream.getTracks().forEach(track => track.stop());
+            clearInterval(recordingTimer);
+            
+            document.getElementById('startRecord').style.display = 'inline-block';
+            document.getElementById('stopRecord').style.display = 'none';
+            document.getElementById('recordingStatus').textContent = '录音已完成';
+        }
+    });
+
+    // 更新录音时间显示
+    function updateRecordingTime() {
+        recordingTimer = setInterval(() => {
+            const duration = Math.floor((Date.now() - startTime) / 1000);
+            const minutes = Math.floor(duration / 60).toString().padStart(2, '0');
+            const seconds = (duration % 60).toString().padStart(2, '0');
+            document.getElementById('recordingTime').textContent = `${minutes}:${seconds}`;
+        }, 1000);
+    }
+
+    // 提取原有的提交转写逻辑为单独的函数
+    function submitTranscription(formData) {
+        document.getElementById('transcription-progress').style.display = 'block';
+        document.getElementById('transcription-result').style.display = 'none';
+        
+        fetch('/transcribe', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('转写请求失败');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log(data);
+            // 隐藏进度区域，显示结果区域
+            document.getElementById('transcription-progress').style.display = 'none';
+            document.getElementById('transcription-result').style.display = 'block';
+
+            // 处理转写结果
+            let transcription = data.transcription || '';
+
+            // 获取当前选择的语言
+            const selectedLanguage = document.getElementById('language_code').value;
+
+            // 只有中文才进行特殊处理
+            if (selectedLanguage === 'zh-CN') {
+                // 删除所有空格
+                transcription = transcription.replace(/\s+/g, '');
+
+                // 如果最后一个字符是逗号，替换为句号
+                if (transcription.endsWith('，') || transcription.endsWith(',')) {
+                    transcription = transcription.slice(0, -1) + '。';
+                }
+            }
+
+            // 显示处理后的转写结果
+            document.getElementById('result-text').textContent = transcription;
+
+            // 设置复制按钮功能
+            document.getElementById('copy-result').addEventListener('click', function() {
+                navigator.clipboard.writeText(transcription)
+                    .then(() => {
+                        // 显示复制成功提示
+                        const btn = this;
+                        const originalText = btn.innerHTML;
+                        btn.innerHTML = '<i class="mdi mdi-check"></i> 已复制';
+                        setTimeout(() => {
+                            btn.innerHTML = originalText;
+                        }, 2000);
+                    })
+                    .catch(err => console.error('复制失败:', err));
+            });
+
+            // 设置下载按钮功能
+            document.getElementById('download-result').addEventListener('click', function() {
+                const blob = new Blob([transcription], {type: 'text/plain'});
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'transcription-result.txt';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            });
+        })
+        .catch(error => {
+            console.error('转写错误:', error);
+            document.getElementById('transcription-progress').style.display = 'none';
+            alert('转写过程中发生错误: ' + error.message);
+        });
+    }
+</script>
+
 {% endblock %}
