@@ -19,4 +19,4 @@ COPY . .
 
 # Run app with module mode when the container launches
 #ENTRYPOINT ["python", "-m", "src.main-web", "--env", "production"]
-ENTRYPOINT ["python", "-m", "src.main-web"]
+ENTRYPOINT ["python", "-m", "src.main_web"]
