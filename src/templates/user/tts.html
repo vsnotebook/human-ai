@@ -86,11 +86,12 @@
             // 准备请求数据
             const formData = new FormData();
             formData.append('text', text);
-            
+
+            // my-MM-NilarNeural my-MM-ThihaNeural
             // 根据语言选择对应的语音
             const voiceMap = {
                 'zh-CN': 'zh-CN-XiaoxiaoNeural',
-                'my-MM': 'my-MM-ThihaNeural',
+                'my-MM': 'my-MM-NilarNeural',
                 'en-US': 'en-US-JennyNeural',
                 'ja-JP': 'ja-JP-NanamiNeural',
                 'ko-KR': 'ko-KR-SunHiNeural',
