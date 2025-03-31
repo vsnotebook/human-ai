@@ -1,0 +1,55 @@
+使用的是fastapi框架。在侧边栏添加文本翻译功能。用户输入文本，选择语言，点击翻译。就调用后台翻译接口。后台接口代码参考如下：def translate_text(target: str, text: str) -> dict:
+
+"""Translates text into the target language.
+
+Target must be an ISO 639-1 language code.
+
+See https://g.co/cloud/translate/v2/translate-reference#supported_languages
+
+"""
+
+from google.cloud import translate_v2 as translate
+
+translate_client = translate.Client()
+
+if isinstance(text, bytes):
+
+text = text.decode("utf-8")
+
+# Text can also be a sequence of strings, in which case this method
+
+# will return a sequence of results for each text.
+
+result = translate_client.translate(text, target_language=target)
+
+print("Text: {}".format(result["input"]))
+
+print("Translation: {}".format(result["translatedText"]))
+
+print("Detected source language: {}".format(result["detectedSourceLanguage"]))
+
+return result
+
+text_cn = "针对多胎家庭的奖励，当然主要是集中在好宣传和做政绩的三胎上面，至于能不能阻断生育率下降"
+
+text_my = "ကလေးများစွာရှိသော မိသားစုများအတွက် ဆုလာဘ်များသည် လူသိရှင်ကြားနှင့် နိုင်ငံရေးအောင်မြင်မှုများအတွက် ကောင်းမွန်သည့် တတိယမြောက်ကလေးအပေါ် အဓိကအာရုံစိုက်ပါသည်။ မွေးဖွားနှုန်း ကျဆင်းမှုကို ရပ်တန့်နိုင်သလား၊"
+
+translate_text("my",text_cn)
+
+translate_text("zh-CN",text_my)
+
+
+
+# 上面已经将文本翻译组好了。继续在侧边栏添加一个语音翻译的功能。页面可以参考 #asr.html页面。
+用户在侧边栏点击语音翻译。出现类似asr.html页面。
+用户上传音频文件或者直接麦克风录音，然后上传文件。
+后台收到音频文件。调用语音识别接口转录出文本。
+后台将转录的文本调用翻译接口进行翻译。
+后台将翻译的结果作为参数调用文本转语音接口。
+后台将翻译的结果和翻译的语音都返回给前端。
+
+
+
+
+
+
