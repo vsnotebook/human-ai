@@ -2,3 +2,21 @@
 2、首页添加一些更多的描述，可以参考 https://speechgen.io/zh/
 3、主要识别缅甸、泰国等东南亚国家的语言。
 
+首页参考网址：
+https://www.voiceflow.com/
+https://www.speakeasy.com/
+https://www.iflyrec.com/
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -4,43 +4,282 @@
 
 {% block content %}
 <div class="orders-container">
-    <h2>订单记录</h2>
+    <h2 class="page-title">订单记录</h2>
     {% if orders %}
-        <div class="orders-table">
-            <table>
-                <thead>
-                    <tr>
-                        <th>订单号</th>
-                        <th>套餐名称</th>
-                        <th>金额</th>
-                        <th>状态</th>
-                        <th>创建时间</th>
-                        <th>操作</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for order in orders %}
-                    <tr>
-                        <td>{{ order.id }}</td>
-                        <td>{{ order.plan_name }}</td>
-                        <td>¥{{ order.amount }}</td>
-                        <td><span class="status {{ order.status }}">{{ order.status }}</span></td>
-                        <td>{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
-                        <td>
-                            {% if order.status == 'pending' %}
-                            <a href="/user/checkout?order_id={{ order.id }}" class="btn-pay">继续支付</a>
-                            {% endif %}
-                        </td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+        <div class="orders-wrapper">
+            <div class="orders-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>订单号</th>
+                            <th>套餐名称</th>
+                            <th>金额</th>
+                            <th>状态</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for order in orders %}
+                        <tr>
+                            <td data-label="订单号">{{ order.id }}</td>
+                            <td data-label="套餐名称">{{ order.plan_name }}</td>
+                            <td data-label="金额">¥{{ order.amount }}</td>
+                            <td data-label="状态"><span class="status-badge status-{{ order.status }}">{{ order.status }}</span></td>
+                            <td data-label="创建时间">{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                            <td data-label="操作">
+                                {% if order.status == 'pending' %}
+                                <a href="/user/checkout?order_id={{ order.id }}" class="btn-pay">继续支付</a>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 移动端卡片视图 -->
+            <div class="orders-cards">
+                {% for order in orders %}
+                <div class="order-card">
+                    <div class="order-card-header">
+                        <span class="order-id">订单号: {{ order.id }}</span>
+                        <span class="status-badge status-{{ order.status }}">{{ order.status }}</span>
+                    </div>
+                    <div class="order-card-body">
+                        <div class="order-detail">
+                            <span class="detail-label">套餐名称:</span>
+                            <span class="detail-value">{{ order.plan_name }}</span>
+                        </div>
+                        <div class="order-detail">
+                            <span class="detail-label">金额:</span>
+                            <span class="detail-value">¥{{ order.amount }}</span>
+                        </div>
+                        <div class="order-detail">
+                            <span class="detail-label">创建时间:</span>
+                            <span class="detail-value">{{ order.created_at.strftime('%Y-%m-%d %H:%M') }}</span>
+                        </div>
+                    </div>
+                    <div class="order-card-footer">
+                        {% if order.status == 'pending' %}
+                        <a href="/user/checkout?order_id={{ order.id }}" class="btn-pay">继续支付</a>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
         </div>
     {% else %}
         <div class="empty-state">
-            <p>暂无订单记录</p>
+            <div class="empty-icon">
+                <i class="fas fa-file-invoice"></i>
+            </div>
+            <h3>暂无订单记录</h3>
+            <p>您还没有任何订单，立即选择套餐开始使用吧</p>
             <a href="/user/plans" class="primary-btn">浏览套餐</a>
         </div>
     {% endif %}
 </div>
+
+<style>
+    .orders-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+    }
+    
+    .page-title {
+        margin-bottom: 30px;
+        font-size: 24px;
+        color: #333;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 15px;
+    }
+    
+    /* 表格样式 */
+    .orders-table {
+        width: 100%;
+        overflow-x: auto;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        border-radius: 8px;
+        background: #fff;
+    }
+    
+    .orders-table table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .orders-table th {
+        background-color: #f8f9fa;
+        padding: 15px;
+        text-align: left;
+        font-weight: 600;
+        color: #495057;
+        border-bottom: 2px solid #e9ecef;
+    }
+    
+    .orders-table td {
+        padding: 15px;
+        border-bottom: 1px solid #e9ecef;
+        color: #495057;
+    }
+    
+    .orders-table tr:last-child td {
+        border-bottom: none;
+    }
+    
+    .orders-table tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    /* 状态标签 */
+    .status-badge {
+        display: inline-block;
+        padding: 6px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 500;
+        text-transform: uppercase;
+    }
+    
+    .status-pending {
+        background-color: #fff8e1;
+        color: #ff9800;
+    }
+    
+    .status-paid {
+        background-color: #e8f5e9;
+        color: #4caf50;
+    }
+    
+    .status-cancelled {
+        background-color: #ffebee;
+        color: #f44336;
+    }
+    
+    /* 按钮样式 */
+    .btn-pay {
+        display: inline-block;
+        padding: 8px 16px;
+        background-color: #4285f4;
+        color: white;
+        border-radius: 4px;
+        text-decoration: none;
+        font-size: 14px;
+        transition: background-color 0.3s;
+    }
+    
+    .btn-pay:hover {
+        background-color: #3367d6;
+    }
+    
+    /* 空状态样式 */
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .empty-icon {
+        font-size: 48px;
+        color: #ccc;
+        margin-bottom: 20px;
+    }
+    
+    .empty-state h3 {
+        font-size: 20px;
+        margin-bottom: 10px;
+        color: #333;
+    }
+    
+    .empty-state p {
+        color: #666;
+        margin-bottom: 25px;
+    }
+    
+    .primary-btn {
+        display: inline-block;
+        padding: 10px 24px;
+        background-color: #4285f4;
+        color: white;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background-color 0.3s;
+    }
+    
+    .primary-btn:hover {
+        background-color: #3367d6;
+    }
+    
+    /* 移动端卡片视图 */
+    .orders-cards {
+        display: none;
+    }
+    
+    .order-card {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        margin-bottom: 15px;
+        overflow: hidden;
+    }
+    
+    .order-card-header {
+        padding: 15px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .order-id {
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .order-card-body {
+        padding: 15px;
+    }
+    
+    .order-detail {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+    
+    .detail-label {
+        color: #6c757d;
+    }
+    
+    .detail-value {
+        font-weight: 500;
+        color: #212529;
+    }
+    
+    .order-card-footer {
+        padding: 15px;
+        border-top: 1px solid #e9ecef;
+        text-align: right;
+    }
+    
+    /* 响应式设计 */
+    @media (max-width: 768px) {
+        .orders-table {
+            display: none;
+        }
+        
+        .orders-cards {
+            display: block;
+        }
+        
+        .page-title {
+            font-size: 20px;
+        }
+    }
+</style>
 {% endblock %}
