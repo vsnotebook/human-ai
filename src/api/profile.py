@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Form, Request, Depends, HTTPException
 from fastapi.responses import HTMLResponse, RedirectResponse
-from src.services.firestore_service import FirestoreService
+# from src.services.firestore_service import FirestoreService as DBService
+from src.services.mongodb_service import MongoDBService as DBService
+
 from src.core.template import templates
 from src.utils.http_session_util import get_current_user
 
@@ -59,7 +61,7 @@ async def change_password(
         )
     
     # 验证当前密码
-    if not FirestoreService.verify_password(user['id'], current_password):
+    if not DBService.verify_password(user['id'], current_password):
         return templates.TemplateResponse(
             "profile/change_password.html",
             {
@@ -71,7 +73,7 @@ async def change_password(
         )
     
     # 更新密码
-    if await FirestoreService.update_password(user['id'], new_password):
+    if await DBService.update_password(user['id'], new_password):
         return templates.TemplateResponse(
             "profile/change_password.html",
             {
@@ -98,8 +100,8 @@ async def wallet_page(request: Request):
     if not user:
         return RedirectResponse(url="/login", status_code=302)
     
-    wallet_info = await FirestoreService.get_user_wallet(user['id'])
-    transactions = await FirestoreService.get_user_transactions(user['id'])
+    wallet_info = await DBService.get_user_wallet(user['id'])
+    transactions = await DBService.get_user_transactions(user['id'])
     
     return templates.TemplateResponse(
         "profile/wallet.html",

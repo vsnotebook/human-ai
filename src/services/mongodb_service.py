@@ -3,6 +3,7 @@ from datetime import datetime
 from datetime import timedelta
 
 import bcrypt
+from bson import ObjectId
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 
@@ -70,7 +71,7 @@ class MongoDBService:
 
     @staticmethod
     def get_all_users(admin_id: str):
-        admin = db.users.find_one({'_id': admin_id})
+        admin = db.users.find_one({'_id': ObjectId(admin_id)})
         if not admin or admin['role'] != 'admin':
             return None
 
@@ -127,7 +128,7 @@ class MongoDBService:
     @staticmethod
     async def get_user_usage_stats(user_id: str):
         try:
-            user = db.users.find_one({'_id': user_id})
+            user = db.users.find_one({'_id': ObjectId(user_id)})
             if not user:
                 return None
 
@@ -172,7 +173,7 @@ class MongoDBService:
                 return False
 
             # 更新用户订阅信息
-            user = db.users.find_one({'_id': user_id})
+            user = db.users.find_one({'_id': ObjectId(user_id)})
             if not user:
                 return False
 
@@ -187,7 +188,7 @@ class MongoDBService:
 
             # 更新用户数据
             db.users.update_one(
-                {'_id': user_id},
+                {'_id': ObjectId(user_id)},
                 {
                     '$set': {
                         'remaining_minutes': current_minutes + order['minutes'],
@@ -225,7 +226,7 @@ class MongoDBService:
     @staticmethod
     async def get_user_by_id(user_id):
         try:
-            user = db.users.find_one({'_id': user_id})
+            user = db.users.find_one({'_id': ObjectId(user_id)})
             if not user:
                 return None
 
@@ -252,7 +253,7 @@ class MongoDBService:
                 del user_data['password']
 
             result = db.users.update_one(
-                {'_id': user_id},
+                {'_id': ObjectId(user_id)},
                 {'$set': user_data}
             )
             return result.modified_count > 0
@@ -263,7 +264,7 @@ class MongoDBService:
     @staticmethod
     async def get_user_wallet(user_id: str) -> dict:
         try:
-            user = db.users.find_one({'_id': user_id})
+            user = db.users.find_one({'_id': ObjectId(user_id)})
             if not user:
                 return {"balance": 0}
 
