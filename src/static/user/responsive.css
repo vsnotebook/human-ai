@@ -1,0 +1,93 @@
+/* 响应式布局样式 */
+
+/* 遮罩层基础样式 */
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 998;
+}
+
+/* 手机端样式 (≤768px) */
+@media (max-width: 768px) {
+    /* 侧边栏样式 */
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 999;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        width: 280px;
+    }
+
+    .sidebar.show {
+        transform: translateX(0);
+    }
+
+    .sidebar-overlay.show {
+        display: block;
+    }
+
+    /* 禁止侧边栏显示时页面滚动 */
+    body.sidebar-open {
+        overflow: hidden;
+    }
+
+    /* 顶部导航栏适配 */
+    .top-nav {
+        padding: 0.5rem;
+    }
+
+    .nav-right {
+        flex-direction: column;
+        align-items: flex-end;
+    }
+
+    .top-nav-buttons {
+        margin-bottom: 0.5rem;
+    }
+
+    .nav-btn {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.875rem;
+    }
+
+    /* 内容区域适配 */
+    .content {
+        padding: 1rem;
+    }
+}
+
+/* PC端样式 (>768px) */
+@media (min-width: 769px) {
+    .sidebar {
+        position: relative;
+        transform: none !important;
+        width: 250px;
+    }
+
+    #sidebar-toggle {
+        display: none;
+    }
+
+    .main-content {
+        margin-left: 0;
+    }
+}
+
+/* 通用响应式调整 */
+@media (max-width: 576px) {
+    .user-info span {
+        display: none;
+    }
+
+    .nav-btn span {
+        display: none;
+    }
+}

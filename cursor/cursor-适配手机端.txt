@@ -1,0 +1,14 @@
+
+PC端侧边栏可见。当使用手机打开用户中心的时候，侧边栏不见了。
+优化页面，适配手机端和PC端。只是用来导入css库的。适配手机端的css库，可以放到base.css或者sidebar.css或者新建一个css
+
+
+dashboard.html 当切换为手机时候，侧边栏看不见了。优化页面，适配手机端和PC端。
+- 调整侧边栏在手机端的显示
+- 优化统计卡片的响应式布局
+- 添加必要的媒体查询样式
+
+还是看不到。 做成点击<button id="sidebar-toggle" class="btn btn-link">
+                        <i class="mdi mdi-menu"></i>
+                    </button> 这个按钮，就看见侧边栏。 这是最好的。
+

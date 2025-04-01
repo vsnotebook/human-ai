@@ -1,0 +1,4 @@
+我来帮你创建一个与 FirestoreService 完全对应的 MongoDBService 类。这样可以方便数据库的切换。
+
+```python
+```
