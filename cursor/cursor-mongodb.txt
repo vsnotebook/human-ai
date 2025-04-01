@@ -2,3 +2,4 @@
 
 ```python
 ```
+MongoDBService 类中缺少了一些在 FirestoreService 中存在的函数。我将补充这些缺失的函数，确保与 FirestoreService 完全对应。

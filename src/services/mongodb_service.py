@@ -294,3 +294,109 @@ class MongoDBService:
         except Exception as e:
             print(f"获取交易记录失败: {str(e)}")
             return []
+
+    @staticmethod
+    async def get_user_subscriptions(user_id: str):
+        try:
+            subs = list(db.subscriptions.find({'user_id': user_id}))
+            return [{
+                'id': str(sub.get('_id')),
+                'plan_name': sub.get('plan_name'),
+                'minutes': sub.get('minutes'),
+                'start_date': sub.get('start_date'),
+                'end_date': sub.get('end_date'),
+                'status': sub.get('status')
+            } for sub in subs]
+        except Exception:
+            return []
+
+    @staticmethod
+    async def get_user_orders(user_id: str):
+        try:
+            orders = list(db.orders.find({'user_id': user_id}))
+            return [{
+                'id': str(order.get('_id')),
+                'plan_name': order.get('plan_name'),
+                'amount': order.get('amount'),
+                'status': order.get('status'),
+                'created_at': order.get('created_at')
+            } for order in orders]
+        except Exception:
+            return []
+
+    @staticmethod
+    async def create_user_by_admin(username, email, password, role="user", trial_count=10):
+        """管理员创建用户"""
+        try:
+            # 检查用户名是否存在
+            existing_user = db.users.find_one({'username': username})
+            if existing_user:
+                return False
+
+            # 检查邮箱是否存在
+            existing_email = db.users.find_one({'email': email})
+            if existing_email:
+                return False
+
+            # 使用bcrypt加密密码
+            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+            user_data = {
+                'username': username,
+                'email': email,
+                'password_hash': password_hash,
+                'role': role,
+                'trial_count': trial_count,
+                'created_at': datetime.now()
+            }
+
+            db.users.insert_one(user_data)
+            return True
+        except Exception as e:
+            print(f"创建用户失败: {str(e)}")
+            return False
+
+    @staticmethod
+    async def delete_user(user_id):
+        """删除用户"""
+        try:
+            result = db.users.delete_one({'_id': user_id})
+            return result.deleted_count > 0
+        except Exception as e:
+            print(f"删除用户失败: {str(e)}")
+            return False
+
+    @staticmethod
+    def verify_password(user_id: str, password: str) -> bool:
+        """验证用户密码"""
+        try:
+            user = db.users.find_one({'_id': user_id})
+            if not user:
+                return False
+
+            # 使用bcrypt验证密码
+            if 'password_hash' in user:
+                stored_hash = user['password_hash']
+                if isinstance(stored_hash, bytes):
+                    return bcrypt.checkpw(password.encode('utf-8'), stored_hash)
+            return False
+        except Exception as e:
+            print(f"验证密码失败: {str(e)}")
+            return False
+
+    @staticmethod
+    async def update_password(user_id: str, new_password: str) -> bool:
+        """更新用户密码"""
+        try:
+            # 使用bcrypt加密新密码
+            password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+
+            # 更新密码
+            result = db.users.update_one(
+                {'_id': user_id},
+                {'$set': {'password_hash': password_hash}}
+            )
+            return result.modified_count > 0
+        except Exception as e:
+            print(f"更新密码失败: {str(e)}")
+            return False

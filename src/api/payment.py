@@ -1,7 +1,8 @@
 from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import JSONResponse
 from src.services.payment_service import PaymentService
-from src.services.firestore_service import FirestoreService
+# from src.services.firestore_service import FirestoreService as DBService
+from src.services.mongodb_service import MongoDBService as DBService
 from src.utils.http_session_util import get_current_user
 
 router = APIRouter(prefix="/payment")
@@ -18,7 +19,7 @@ async def create_payment(request: Request):
         plan_id = data.get("plan_id")
         
         # 创建订单
-        order = await FirestoreService.create_order(user["id"], plan_id)
+        order = await DBService.create_order(user["id"], plan_id)
         
         # 生成支付二维码
         if payment_method == "wechat":
@@ -47,10 +48,10 @@ async def check_payment_status(order_id: str, request: Request):
         if not user:
             raise HTTPException(status_code=401, detail="未登录")
         
-        status = await FirestoreService.get_order_status(order_id)
+        status = await DBService.get_order_status(order_id)
         if status == "paid":
             # 激活订阅
-            await FirestoreService.activate_subscription(user["id"], order_id)
+            await DBService.activate_subscription(user["id"], order_id)
             
         return JSONResponse({"status": status})
         
