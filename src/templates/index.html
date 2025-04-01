@@ -1,11 +1,14 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="zh">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>语音识别服务</title>
+    <title>智能语音识别与转写服务</title>
     <link rel="icon" type="image/x-icon" href="/static/images/favicon.ico">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="/static/style.css" rel="stylesheet" type="text/css" />
+    <link href="/static/home.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
     <div class="container">
@@ -29,36 +32,203 @@
             </nav>
         </header>
 
-        <!-- 保持原有的主要内容不变 -->
-        <main>
-            <section class="features">
-                <h2>主要特点</h2>
-                <div class="feature-grid">
-                    <div class="feature-item">
-                        <h3>多语言支持</h3>
-                        <p>支持中文、英语、日语等多种语言的识别</p>
+        <!-- 新增的英雄区域 -->
+        <section class="hero">
+            <div class="hero-content">
+                <h1>将语音转为文字，轻松高效</h1>
+                <p>专业的AI语音识别服务，特别优化支持缅甸语、泰语等东南亚语言</p>
+                <div class="hero-buttons">
+                    <a href="/register" class="primary-btn">免费试用</a>
+                    <a href="#how-it-works" class="secondary-btn">了解更多</a>
+                </div>
+            </div>
+<!--            <div class="hero-image">-->
+<!--                <img src="/static/images/hero-image.png" alt="语音识别示意图">-->
+<!--            </div>-->
+        </section>
+
+        <!-- 主要特点部分 -->
+        <section class="features" id="features">
+            <h2>主要特点</h2>
+            <div class="feature-grid">
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-globe icon-globe"></i></div>
+                    <h3>东南亚语言专家</h3>
+                    <p>专为缅甸语、泰语、越南语、老挝语等东南亚语言优化，识别准确率行业领先</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-check-square icon-accuracy"></i></div>
+                    <h3>高精度识别</h3>
+                    <p>采用先进的AI模型，提供超过95%的识别准确率</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-hourglass-half icon-speed"></i></div>
+                    <h3>快速处理</h3>
+                    <p>实时处理音频文件，1小时的音频最快10分钟内完成转写</p>
+                </div>
+                <div class="feature-item">
+                    <div class="feature-icon"><i class="fas fa-hands-helping icon-easy"></i></div>
+                    <h3>易于使用</h3>
+                    <p>简单的操作界面，无需技术背景，轻松完成音频转写</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 使用流程部分 -->
+        <section class="how-it-works" id="how-it-works">
+            <h2>如何使用</h2>
+            <div class="steps">
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <h3>上传音频</h3>
+                    <p>支持MP3、WAV、M4A等多种格式，最大支持500MB</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <h3>选择语言</h3>
+                    <p>选择音频对应的语言，我们支持缅甸语、泰语等多种东南亚语言</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <h3>开始转写</h3>
+                    <p>点击开始，AI将自动处理您的音频并转写为文本</p>
+                </div>
+                <div class="step">
+                    <div class="step-number">4</div>
+                    <h3>获取结果</h3>
+                    <p>转写完成后，您可以下载、编辑或分享转写结果</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 支持的语言 -->
+        <section class="languages">
+            <h2>支持的语言</h2>
+            <div class="language-grid">
+                <div class="language-item">
+                    <div class="language-flag">🇲🇲</div>
+                    <h3>缅甸语</h3>
+                </div>
+                <div class="language-item">
+                    <div class="language-flag">🇹🇭</div>
+                    <h3>泰语</h3>
+                </div>
+                <div class="language-item">
+                    <div class="language-flag">🇻🇳</div>
+                    <h3>越南语</h3>
+                </div>
+                <div class="language-item">
+                    <div class="language-flag">🇱🇦</div>
+                    <h3>老挝语</h3>
+                </div>
+                <div class="language-item">
+                    <div class="language-flag">🇨🇳</div>
+                    <h3>中文</h3>
+                </div>
+                <div class="language-item">
+                    <div class="language-flag">🇺🇸</div>
+                    <h3>英语</h3>
+                </div>
+            </div>
+        </section>
+
+        <!-- 价格方案 -->
+        <section class="pricing">
+            <h2>价格方案</h2>
+            <div class="pricing-grid">
+                <div class="pricing-item">
+                    <div class="pricing-header">
+                        <h3>基础版</h3>
+                        <div class="price">¥99<span>/月</span></div>
                     </div>
-                    <div class="feature-item">
-                        <h3>高精度识别</h3>
-                        <p>采用先进的AI模型，提供准确的识别结果</p>
+                    <ul class="pricing-features">
+                        <li>每月10小时转写额度</li>
+                        <li>支持所有语言</li>
+                        <li>基础转写功能</li>
+                        <li>标准客户支持</li>
+                    </ul>
+                    <a href="/register" class="pricing-btn">开始使用</a>
+                </div>
+                <div class="pricing-item featured">
+                    <div class="pricing-header">
+                        <h3>专业版</h3>
+                        <div class="price">¥299<span>/月</span></div>
                     </div>
-                    <div class="feature-item">
-                        <h3>快速处理</h3>
-                        <p>实时处理音频文件，快速返回文字结果</p>
+                    <ul class="pricing-features">
+                        <li>每月50小时转写额度</li>
+                        <li>支持所有语言</li>
+                        <li>高级转写功能</li>
+                        <li>优先客户支持</li>
+                        <li>多人协作</li>
+                    </ul>
+                    <a href="/register" class="pricing-btn">开始使用</a>
+                </div>
+                <div class="pricing-item">
+                    <div class="pricing-header">
+                        <h3>企业版</h3>
+                        <div class="price">联系我们</div>
                     </div>
-                    <div class="feature-item">
-                        <h3>易于使用</h3>
-                        <p>简单的操作界面，轻松完成音频转写</p>
+                    <ul class="pricing-features">
+                        <li>无限转写额度</li>
+                        <li>支持所有语言</li>
+                        <li>全部高级功能</li>
+                        <li>专属客户经理</li>
+                        <li>API集成</li>
+                        <li>定制化解决方案</li>
+                    </ul>
+                    <a href="/contact" class="pricing-btn">联系我们</a>
+                </div>
+            </div>
+        </section>
+
+        <!-- 号召性用语 -->
+        <section class="cta">
+            <h2>开始使用</h2>
+            <p>立即体验专业的语音识别服务，特别优化支持东南亚语言</p>
+            <div class="cta-buttons">
+                <a href="/register" class="cta-button primary">免费试用</a>
+                <a href="/contact" class="cta-button secondary">联系我们</a>
+            </div>
+        </section>
+
+        <!-- 页脚 -->
+        <footer class="main-footer">
+            <div class="footer-content">
+                <div class="footer-logo">
+                    <h3>智能语音识别服务</h3>
+                    <p>专业的语音转写解决方案</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>产品</h4>
+                        <ul>
+                            <li><a href="/features">功能</a></li>
+                            <li><a href="/pricing">价格</a></li>
+                            <li><a href="/api">API</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>公司</h4>
+                        <ul>
+                            <li><a href="/about">关于我们</a></li>
+                            <li><a href="/contact">联系我们</a></li>
+                            <li><a href="/blog">博客</a></li>
+                        </ul>
+                    </div>
+                    <div class="footer-column">
+                        <h4>支持</h4>
+                        <ul>
+                            <li><a href="/help">帮助中心</a></li>
+                            <li><a href="/faq">常见问题</a></li>
+                            <li><a href="/privacy">隐私政策</a></li>
+                        </ul>
                     </div>
                 </div>
-            </section>
-
-            <section class="cta">
-                <h2>开始使用</h2>
-                <p>立即体验专业的语音识别服务</p>
-                <a href="/transcribe-audio" class="cta-button">开始转写</a>
-            </section>
-        </main>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2023 智能语音识别服务. 保留所有权利.</p>
+            </div>
+        </footer>
     </div>
 </body>
 </html>
