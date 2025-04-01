@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Form, Request, Response
 from fastapi.responses import HTMLResponse, RedirectResponse
-from src.services.firestore_service import FirestoreService
+# from src.services.firestore_service import FirestoreService as DBService
+from src.services.mongodb_service import MongoDBService as DBService
 from src.core.template import templates
 
 router = APIRouter()
@@ -21,7 +22,7 @@ async def register(
     password: str = Form(...)
 ):
     # 密码加密在FirestoreService中处理
-    if FirestoreService.create_user(username, email, password):
+    if DBService.create_user(username, email, password):
         return RedirectResponse(url="/login", status_code=302)
     return templates.TemplateResponse(
         "auth/register.html",
@@ -38,7 +39,7 @@ async def login(
     username: str = Form(...),
     password: str = Form(...)
 ):
-    user = FirestoreService.verify_user(username, password)
+    user = DBService.verify_user(username, password)
     # user = await FirestoreService.authenticate_user(username, password)
     if not user:
         return templates.TemplateResponse(

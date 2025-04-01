@@ -4,7 +4,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse  # �
 # from src.config.payment_config import SUBSCRIPTION_PLANS
 from src.config.plans import SUBSCRIPTION_PLANS
 from src.models.user import User
-from src.services.firestore_service import FirestoreService
+# from src.services.firestore_service import FirestoreService as dbService
+from src.services.mongodb_service import MongoDBService as DBService
 from src.core.template import templates
 from src.utils.http_session_util import get_current_user
 
@@ -17,7 +18,7 @@ async def user_dashboard(request: Request):
     if not user:
         return RedirectResponse(url="/login", status_code=302)
 
-    usage_stats = await FirestoreService.get_user_usage_stats(user['id'])
+    usage_stats = await DBService.get_user_usage_stats(user['id'])
     return templates.TemplateResponse(
         "user/dashboard.html",
         {
@@ -35,7 +36,7 @@ async def user_subscriptions(request: Request):
     if not user:
         return RedirectResponse(url="/login", status_code=302)
 
-    subscriptions = await FirestoreService.get_user_subscriptions(user['id'])
+    subscriptions = await DBService.get_user_subscriptions(user['id'])
     return templates.TemplateResponse(
         "user/subscriptions.html",
         {
@@ -102,7 +103,7 @@ async def user_orders(request: Request):
     if not user:
         return RedirectResponse(url="/login", status_code=302)
 
-    orders = await FirestoreService.get_user_orders(user['id'])
+    orders = await DBService.get_user_orders(user['id'])
     return templates.TemplateResponse(
         "user/orders.html",
         {
@@ -168,14 +169,14 @@ async def change_password(
         })
 
     # 验证当前密码
-    if not FirestoreService.verify_password(user['id'], current_password):
+    if not DBService.verify_password(user['id'], current_password):
         return JSONResponse(content={
             "success": False,
             "error": "当前密码不正确"
         })
 
     # 更新密码
-    if await FirestoreService.update_password(user['id'], new_password):
+    if await DBService.update_password(user['id'], new_password):
         return JSONResponse(content={
             "success": True,
             "message": "密码修改成功"
@@ -197,7 +198,7 @@ async def recharge(
         return RedirectResponse(url="/login", status_code=302)
 
     # 处理充值逻辑
-    if await FirestoreService.add_user_balance(user['id'], amount):
+    if await DBService.add_user_balance(user['id'], amount):
         return templates.TemplateResponse(
             "user/profile.html",
             {
