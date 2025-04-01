@@ -314,7 +314,7 @@ class MongoDBService:
     @staticmethod
     async def get_user_orders(user_id: str):
         try:
-            orders = list(db.orders.find({'user_id': user_id}))
+            orders = list(db.orders.find({'user_id': ObjectId(user_id)}))
             return [{
                 'id': str(order.get('_id')),
                 'plan_name': order.get('plan_name'),
@@ -361,7 +361,7 @@ class MongoDBService:
     async def delete_user(user_id):
         """删除用户"""
         try:
-            result = db.users.delete_one({'_id': user_id})
+            result = db.users.delete_one({'_id': ObjectId(user_id)})
             return result.deleted_count > 0
         except Exception as e:
             print(f"删除用户失败: {str(e)}")
@@ -371,7 +371,7 @@ class MongoDBService:
     def verify_password(user_id: str, password: str) -> bool:
         """验证用户密码"""
         try:
-            user = db.users.find_one({'_id': user_id})
+            user = db.users.find_one({'_id': ObjectId(user_id)})
             if not user:
                 return False
 
@@ -394,7 +394,7 @@ class MongoDBService:
 
             # 更新密码
             result = db.users.update_one(
-                {'_id': user_id},
+                {'_id': ObjectId(user_id)},
                 {'$set': {'password_hash': password_hash}}
             )
             return result.modified_count > 0
