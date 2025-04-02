@@ -64,14 +64,18 @@ async def voice_translate_api(
             # 1. 调用语音识别API
             audio_content = await file.read()
             transcription = await SpeechService.transcribe(audio_content, source_language)
+            print("语音识别完成：" + transcription)
 
 
             # 2. 调用翻译API
             translation = translate_text(target_language, transcription,
                                          source_language.split('-')[0] if '-' in source_language else source_language)
+            print("语音翻译完成：" + translation["translatedText"])
+
 
             # 3. 调用文本转语音API
             audio_url = text_to_speech(translation["translatedText"], target_language)
+            print("文本转语音完成：" + audio_url)
 
             # 返回结果
             return {
