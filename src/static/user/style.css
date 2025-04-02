@@ -5,3 +5,47 @@
 @import url('subscription.css');
 @import url('profile.css');
 @import url('responsive.css');
+
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .top-nav {
+        padding: 0.75rem;
+        height: auto;
+        min-height: 60px;
+        flex-wrap: nowrap;
+    }
+
+    .nav-right {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .top-nav-buttons {
+        display: flex;
+        gap: 0.25rem;
+    }
+
+    .nav-btn {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.85rem;
+    }
+
+    .nav-btn i {
+        font-size: 1rem;
+    }
+
+    .user-info {
+        font-size: 0.85rem;
+    }
+
+    .user-info i {
+        font-size: 1rem;
+    }
+
+    .breadcrumb {
+        font-size: 0.9rem;
+    }
+}
