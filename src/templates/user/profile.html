@@ -2,68 +2,87 @@
 
 {% block title %}个人中心{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="/static/css/user/profile.css">
+{% endblock %}
+
 {% block breadcrumb %}
 <span>个人中心</span>
 {% endblock %}
 
 {% block content %}
-<div class="dashboard-stats">
-    <div class="stat-card">
-        <h3>账户余额</h3>
-        <div class="stat-value">¥{{ current_user.balance|default(0, true) }}</div>
+<div class="profile-container">
+    <div class="dashboard-stats">
+        <div class="stat-card">
+            <h3>账户余额</h3>
+            <div class="stat-value">¥{{ current_user.balance|default(0, true) }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>可用余额</h3>
+            <div class="stat-value">¥{{ current_user.balance|default(0, true) }}</div>
+        </div>
+        <div class="stat-card">
+            <h3>佣金余额</h3>
+            <div class="stat-value">¥0.00</div>
+        </div>
     </div>
-    <div class="stat-card">
-        <h3>可用余额</h3>
-        <div class="stat-value">¥{{ current_user.balance|default(0, true) }}</div>
-    </div>
-    <div class="stat-card">
-        <h3>佣金余额</h3>
-        <div class="stat-value">¥0.00</div>
-    </div>
-</div>
 
-<div class="quick-actions">
-    <h2>账户管理</h2>
-    <div class="action-buttons">
-        <a href="#" class="action-btn" onclick="showRechargeModal(); return false;">
-            <i class="mdi mdi-wallet-plus"></i>
-            充值
-        </a>
-        <a href="#" class="action-btn" onclick="showWithdrawModal(); return false;">
-            <i class="mdi mdi-cash-multiple"></i>
-            佣金提现
-        </a>
+    <div class="quick-actions">
+        <h2>账户管理</h2>
+        <div class="action-buttons">
+            <a href="#" class="action-btn" onclick="showRechargeModal(); return false;">
+                <i class="mdi mdi-wallet-plus"></i>
+                充值
+            </a>
+            <a href="#" class="action-btn" onclick="showWithdrawModal(); return false;">
+                <i class="mdi mdi-cash-multiple"></i>
+                佣金提现
+            </a>
+        </div>
     </div>
-</div>
 
-<div class="password-card">
-    <h2><i class="mdi mdi-key"></i> 修改密码</h2>
-    <form method="post" action="/user/change-password" id="passwordForm">
-        <div class="form-group">
-            <label>旧密码</label>
-            <div class="input-wrapper">
-                <i class="mdi mdi-lock"></i>
-                <input type="password" name="current_password" placeholder="请输入旧密码" required>
+    <div class="password-card">
+        <h2><i class="mdi mdi-key"></i> 修改密码</h2>
+        <form method="post" action="/user/change-password" id="passwordForm">
+            <div class="form-group">
+                <label>旧密码</label>
+                <div class="input-wrapper">
+                    <i class="mdi mdi-lock"></i>
+                    <input type="password" name="current_password" placeholder="请输入旧密码" required>
+                </div>
             </div>
-        </div>
-        <div class="form-group">
-            <label>新密码</label>
-            <div class="input-wrapper">
-                <i class="mdi mdi-lock-plus"></i>
-                <input type="password" name="new_password" placeholder="请输入新密码" required>
+            <div class="form-group">
+                <label>新密码</label>
+                <div class="input-wrapper">
+                    <i class="mdi mdi-lock-plus"></i>
+                    <input type="password" name="new_password" placeholder="请输入新密码" required>
+                </div>
             </div>
-        </div>
-        <div class="form-group">
-            <label>确认新密码</label>
-            <div class="input-wrapper">
-                <i class="mdi mdi-lock-check"></i>
-                <input type="password" name="confirm_password" placeholder="请重复新密码" required>
+            <div class="form-group">
+                <label>确认新密码</label>
+                <div class="input-wrapper">
+                    <i class="mdi mdi-lock-check"></i>
+                    <input type="password" name="confirm_password" placeholder="请重复新密码" required>
+                </div>
             </div>
-        </div>
-        <button type="submit" class="btn-submit">
-            <i class="mdi mdi-check"></i> 确认修改
-        </button>
-    </form>
+            <button type="submit" class="btn-submit">
+                <i class="mdi mdi-check"></i> 确认修改
+            </button>
+        </form>
+    </div>
+
+    {% if error %}
+    <div class="alert alert-error">
+        <i class="mdi mdi-alert"></i>
+        {{ error }}
+    </div>
+    {% endif %}
+    {% if success %}
+    <div class="alert alert-success">
+        <i class="mdi mdi-check-circle"></i>
+        {{ success }}
+    </div>
+    {% endif %}
 </div>
 
 <!-- 添加提示框 -->
@@ -74,85 +93,63 @@
     </div>
 </div>
 
-<script>
-function showRechargeModal() {
-    document.getElementById('rechargeModal').style.display = 'flex';
-}
-
-function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-}
-
-// 添加提示框相关函数
-function showToast(message, type = 'success') {
-    const toast = document.getElementById('toast');
-    const icon = toast.querySelector('.toast-icon');
-    const messageEl = toast.querySelector('.toast-message');
-    
-    icon.className = 'toast-icon mdi ' + (type === 'success' ? 'mdi-check-circle' : 'mdi-alert');
-    messageEl.textContent = message;
-    toast.className = `toast show ${type}`;
-    
-    setTimeout(() => {
-        toast.className = 'toast';
-    }, 3000);
-}
-
-// 处理表单提交
-document.getElementById('passwordForm').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const form = e.target;
-    const formData = new FormData(form);
-    console.log('============');
-
-    try {
-        const response = await fetch(form.action, {
-            method: 'POST',
-            body: formData
-        });
-
-        console.log('============2');
-
-        const result = await response.json();
-        console.log('============3');
-        console.log(result);
-        
-        if (result.success) {
-            showToast('密码修改成功！');
-            form.reset();
-        } else {
-            showToast(result.error || '密码修改失败，请重试', 'error');
-        }
-    } catch (error) {
-        showToast('系统错误，请稍后重试', 'error');
-    }
-});
-</script>
-{% if error %}
-<div class="alert alert-error">
-    <i class="mdi mdi-alert"></i>
-    {{ error }}
-</div>
-{% endif %}
-{% if success %}
-<div class="alert alert-success">
-    <i class="mdi mdi-check-circle"></i>
-    {{ success }}
-</div>
-{% endif %}
-
 <!-- 充值弹窗 -->
 <div id="rechargeModal" class="modal">
     <!-- 弹窗内容保持不变 -->
 </div>
 
-<script>
-function showRechargeModal() {
-    document.getElementById('rechargeModal').style.display = 'flex';
-}
 
-function closeModal(modalId) {
-    document.getElementById(modalId).style.display = 'none';
-}
+<script>
+    function showRechargeModal() {
+        showToast('充值功能暂不支持', 'error');
+    }
+
+    function showWithdrawModal() {
+        showToast('提现功能即将上线', 'error');
+    }
+
+    function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+    }
+
+    // 添加提示框相关函数
+    function showToast(message, type = 'success') {
+        const toast = document.getElementById('toast');
+        const icon = toast.querySelector('.toast-icon');
+        const messageEl = toast.querySelector('.toast-message');
+
+        icon.className = 'toast-icon mdi ' + (type === 'success' ? 'mdi-check-circle' : 'mdi-alert');
+        messageEl.textContent = message;
+        toast.className = `toast show ${type}`;
+
+        setTimeout(() => {
+            toast.className = 'toast';
+        }, 3000);
+    }
+
+    // 处理表单提交
+    document.getElementById('passwordForm').addEventListener('submit', async (e) => {
+        e.preventDefault();
+        const form = e.target;
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: formData
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                showToast('密码修改成功！');
+                form.reset();
+            } else {
+                showToast(result.error || '密码修改失败，请重试', 'error');
+            }
+        } catch (error) {
+            showToast('系统错误，请稍后重试', 'error');
+        }
+    });
 </script>
 {% endblock %}
