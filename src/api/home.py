@@ -72,15 +72,21 @@ async def transcribe_audio(
                 status_code=400,
             )
 
+        # 获取文件名
+        file_name = file.filename
+        
         audio_content = await file.read()
         
-        # 传递用户ID以便扣除余额
-        transcription = await SpeechService.transcribe_by_userid(audio_content, language_code, user.get("id"))
+        # 传递用户ID以便扣除余额并记录使用情况
+        transcription = await SpeechService.transcribe_by_userid(audio_content, language_code, user.get("id"), file_name)
         print(transcription)
         
         # 获取更新后的用户信息
-        # updated_user = await get_current_user(request, force_refresh=True)
         updated_user = await get_current_user(request)
+        
+        # 从user_balance表获取最新的ASR余额
+        # balance = db.user_balance.find_one({"user_id": user.get("id")})
+        # remaining_seconds = balance.get("asr_balance", 0) if balance else 0
 
         return {
             "transcription": transcription,

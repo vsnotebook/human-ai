@@ -10,6 +10,9 @@
 home.py voice_translate.py speech_service.py 用户点击语音识别的时候，扣除用户的语音识别时长余额。扣除的数量是上传音频文件的时长。
 
 
+home.py voice_translate.py speech_service.py使用SpeechService.transcribe_by_userid 语音识别,需要将相关信息记录日志。包含，语音识别文件名称、语音识别文件名对应的时长、文本翻译字符数、文本合成字符数等
+我需要修改 voice_translate.py 文件，添加日志记录功能，记录语音识别文件名称、时长、文本翻译字符数和文本合成字符数等信息。
 
-
+```python
+```
 

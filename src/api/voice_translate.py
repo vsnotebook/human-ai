@@ -66,9 +66,12 @@ async def voice_translate_api(
                 )
 
             # 1. 调用语音识别API
+            # 获取文件名
+            file_name = file.filename
+
             audio_content = await file.read()
             # 传递用户ID以便扣除余额
-            transcription = await SpeechService.transcribe_by_userid(audio_content, source_language, user.get("id"))
+            transcription = await SpeechService.transcribe_by_userid(audio_content, source_language, user.get("id"), file_name)
             print("语音识别完成：" + transcription)
 
             # 2. 调用翻译API
