@@ -1,13 +1,30 @@
-from google.cloud.speech_v2.types import cloud_speech
-from src.config.language_config import LANGUAGE_CONFIG
-
 from google.cloud import speech_v2 as speech
+from google.cloud.speech_v2.types import cloud_speech
+
+from src.config.language_config import LANGUAGE_CONFIG
 from src.core.config import settings
 from src.services.user_service import UserService
 
+
 class SpeechService:
+
     @staticmethod
-    async def transcribe(audio_content: bytes, language_code: str, user_id: str = None) -> str:
+    async def transcribe_by_userid(audio_content: bytes, language_code: str, user_id: str = None) -> str:
+        if not user_id:
+            print("用户ID为空")
+            raise ValueError("系统错误")
+
+        # 如果提供了用户ID，则扣除用户的语音识别时长余额
+        # 获取音频时长
+        audio_duration = await UserService.get_audio_duration(audio_content)
+        # 扣除用户余额
+        await UserService.deduct_audio_time(user_id, audio_duration)
+
+        transcription = await SpeechService.transcribe(audio_content, language_code)
+        return transcription
+
+    @staticmethod
+    async def transcribe(audio_content: bytes, language_code: str) -> str:
         # 获取语言对应的区域
         # language_settings = LANGUAGE_CONFIG.get(language_code, {
         #     "name": "English (United States)",
@@ -17,11 +34,6 @@ class SpeechService:
         # })
 
         # 如果提供了用户ID，则扣除用户的语音识别时长余额
-        if user_id:
-            # 获取音频时长
-            audio_duration = await UserService.get_audio_duration(audio_content)
-            # 扣除用户余额
-            await UserService.deduct_audio_time(user_id, audio_duration)
 
         language_settings = LANGUAGE_CONFIG.get(language_code)
 

@@ -75,7 +75,7 @@ async def transcribe_audio(
         audio_content = await file.read()
         
         # 传递用户ID以便扣除余额
-        transcription = await SpeechService.transcribe(audio_content, language_code, user.get("id"))
+        transcription = await SpeechService.transcribe_by_userid(audio_content, language_code, user.get("id"))
         print(transcription)
         
         # 获取更新后的用户信息
