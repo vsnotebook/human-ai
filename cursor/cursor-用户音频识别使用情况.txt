@@ -13,6 +13,26 @@ home.py voice_translate.py speech_service.py 用户点击语音识别的时候�
 home.py voice_translate.py speech_service.py使用SpeechService.transcribe_by_userid 语音识别,需要将相关信息记录日志。包含，语音识别文件名称、语音识别文件名对应的时长、文本翻译字符数、文本合成字符数等
 我需要修改 voice_translate.py 文件，添加日志记录功能，记录语音识别文件名称、时长、文本翻译字符数和文本合成字符数等信息。
 
-```python
-```
+不要用估算的方式。在前端将录音的AAC 格式转换为wav格式。
+不能根据文件名的后缀来判断。假定音频文件名称的后缀都是.bin。通过音频文件的头信息来判断
+
+在前端将录音生成的音频格式转换为wav格式。
+主要改动：
+
+1. 设置录音参数：单声道、16kHz采样率、16位采样大小
+2. 使用opus编码器进行录音
+3. 添加了将AudioBuffer转换为WAV格式的函数
+4. 在录音停止时，将录音数据转换为WAV格式后再发送到服务器
+这样修改后，录音的音频将以WAV格式发送到服务器，格式为：
+
+- 编码：PCM
+- 采样率：16kHz
+- 位深：16位
+- 声道：单声道
+这些参数与Google Speech-to-Text API的推荐配置相匹配。
+
+
+
+
+
 

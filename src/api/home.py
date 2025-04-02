@@ -94,6 +94,8 @@ async def transcribe_audio(
         }
 
     except ValueError as e:
+        print(str(e))
         return JSONResponse(content={"error": str(e)}, status_code=400)
     except Exception as e:
+        print(str(e))
         return JSONResponse(content={"error": str(e)}, status_code=500)
