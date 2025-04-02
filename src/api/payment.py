@@ -53,6 +53,11 @@ async def check_payment_status(order_id: str, request: Request):
             # 激活订阅
             await DBService.activate_subscription(user["id"], order_id)
             
+            # 获取订单详情，更新用户余额
+            order_details = await DBService.get_order_details(order_id)
+            if order_details:
+                await DBService.update_user_balance(user["id"], order_details["plan_id"])
+            
         return JSONResponse({"status": status})
         
     except Exception as e:
