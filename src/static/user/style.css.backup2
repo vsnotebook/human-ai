@@ -1,0 +1,138 @@
+/* 导入所有分离的CSS文件 */
+@import url('base.css');
+@import url('sidebar.css');
+@import url('dashboard.css');
+@import url('subscription.css');
+@import url('profile.css');
+@import url('responsive.css');
+
+/* 顶部导航栏样式 */
+.top-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: #fff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.nav-left {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.nav-right {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.top-nav-buttons {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
+    text-decoration: none;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+}
+
+.home-btn {
+    background: #f0f2f5;
+    color: #333;
+}
+
+.home-btn:hover {
+    background: #e4e6e9;
+    color: #333;
+}
+
+.logout-btn {
+    background: #dc3545;
+    color: #fff;
+}
+
+.logout-btn:hover {
+    background: #c82333;
+    color: #fff;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: #333;
+    font-size: 0.9rem;
+}
+
+.user-info i {
+    font-size: 1.2rem;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+    .top-nav {
+        padding: 0.75rem;
+        height: auto;
+        min-height: 60px;
+        flex-wrap: nowrap;
+    }
+
+    .nav-right {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 0.5rem;
+    }
+
+    .top-nav-buttons {
+        display: flex;
+        gap: 0.25rem;
+    }
+
+    .nav-btn {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.85rem;
+    }
+
+    .nav-btn i {
+        font-size: 1rem;
+    }
+
+    .user-info {
+        font-size: 0.85rem;
+    }
+
+    .user-info i {
+        font-size: 1rem;
+    }
+
+    .breadcrumb {
+        font-size: 0.9rem;
+    }
+}
+
+/* 超小屏幕适配 */
+@media (max-width: 480px) {
+    .nav-right {
+        gap: 0.25rem;
+    }
+
+    .nav-btn {
+        padding: 0.35rem 0.6rem;
+    }
+
+    .user-info span {
+        display: none;
+    }
+}
