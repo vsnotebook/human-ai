@@ -17,6 +17,7 @@ client = MongoClient(uri, server_api=ServerApi('1'))
 db = client.voice_workshop
 
 class MongoDBService:
+    c_db = client.voice_workshop
     @staticmethod
     def create_user(username: str, email: str, password: str, role: str = "user") -> bool:
         users_collection = db.users
@@ -124,21 +125,6 @@ class MongoDBService:
             } for activity in activities]
         except Exception:
             return []
-
-    @staticmethod
-    async def get_user_usage_stats(user_id: str):
-        try:
-            user = db.users.find_one({'_id': ObjectId(user_id)})
-            if not user:
-                return None
-
-            return {
-                'remaining_minutes': user.get('remaining_minutes', 0),
-                'total_used_minutes': user.get('total_used_minutes', 0),
-                'trial_count': user.get('trial_count', 0)
-            }
-        except Exception:
-            return None
 
     @staticmethod
     async def create_order(user_id: str, plan_id: str):
@@ -401,3 +387,119 @@ class MongoDBService:
         except Exception as e:
             print(f"更新密码失败: {str(e)}")
             return False
+
+    # 在适当的位置添加以下方法
+    
+    @classmethod
+    async def create_user_balance(cls, user_id, initial_balance=None):
+        """创建用户余额记录，包含初始赠送额度"""
+        if initial_balance is None:
+            initial_balance = {
+                "asr_balance": 60,  # 1分钟语音识别 (单位:秒)
+                "tts_balance": 500,  # 500个字符合成
+                "text_translation_balance": 0,
+                "voice_translation_balance": 0
+            }
+        
+        balance_data = {
+            "user_id": user_id,
+            **initial_balance,
+            "created_at": datetime.now(),
+            "updated_at": datetime.now()
+        }
+        
+        cls.c_db.user_balance.insert_one(balance_data)
+        return balance_data
+    
+    @classmethod
+    async def get_user_usage_stats(cls, user_id):
+        """获取用户使用统计和余额信息"""
+        # 获取原有的使用统计
+        stats = {
+            "total_used_minutes": 0,
+            "remaining_minutes": 0,
+            "trial_count": 0
+        }
+        
+        # 获取用户余额信息
+        balance = cls.c_db.user_balance.find_one({"user_id": user_id})
+        if not balance:
+            # 如果没有余额记录，创建一个新的
+            balance = await cls.create_user_balance(user_id)
+        
+        # 合并余额信息到统计数据中
+        stats.update({
+            "asr_balance": balance.get("asr_balance", 0),
+            "tts_balance": balance.get("tts_balance", 0),
+            "text_translation_balance": balance.get("text_translation_balance", 0),
+            "voice_translation_balance": balance.get("voice_translation_balance", 0)
+        })
+        
+        return stats
+
+    @staticmethod
+    async def get_user_usage_stats2(user_id: str):
+        try:
+            user = db.users.find_one({'_id': ObjectId(user_id)})
+            if not user:
+                return None
+
+            return {
+                'remaining_minutes': user.get('remaining_minutes', 0),
+                'total_used_minutes': user.get('total_used_minutes', 0),
+                'trial_count': user.get('trial_count', 0)
+            }
+        except Exception:
+            return None
+    
+    @classmethod
+    async def update_user_balance(cls, user_id, plan_id):
+        """根据购买的套餐更新用户余额"""
+        # 获取套餐详情
+        plan = SUBSCRIPTION_PLANS.get(plan_id)
+        if not plan:
+            return False
+        
+        # 获取当前余额
+        current_balance = await cls.get_user_balance(user_id)
+        
+        # 根据套餐类型更新相应的余额
+        updates = {}
+        if "asr_minutes" in plan:
+            updates["asr_balance"] = current_balance.get("asr_balance", 0) + (plan["asr_minutes"] * 60)
+        
+        if "tts_characters" in plan:
+            updates["tts_balance"] = current_balance.get("tts_balance", 0) + plan["tts_characters"]
+        
+        if "text_translation_count" in plan:
+            updates["text_translation_balance"] = current_balance.get("text_translation_balance", 0) + plan["text_translation_count"]
+        
+        if "voice_translation_minutes" in plan:
+            updates["voice_translation_balance"] = current_balance.get("voice_translation_balance", 0) + (plan["voice_translation_minutes"] * 60)
+        
+        if updates:
+            updates["updated_at"] = datetime.now()
+            await cls.c_db.user_balance.update_one(
+                {"user_id": user_id},
+                {"$set": updates}
+            )
+            return True
+        
+        return False
+    
+    @classmethod
+    async def get_order_details(cls, order_id):
+        """获取订单详情"""
+        order = await cls.c_db.orders.find_one({"id": order_id})
+        return order
+    
+    @classmethod
+    async def register_user(cls, username, email, password_hash):
+        """注册用户并创建初始余额"""
+        # 现有的用户注册代码
+        user_id = 1# ... 获取新创建的用户ID
+        
+        # 创建用户余额记录
+        await cls.create_user_balance(user_id)
+        
+        return user_id

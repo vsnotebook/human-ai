@@ -21,9 +21,18 @@ async def register(
     email: str = Form(...),
     password: str = Form(...)
 ):
-    # 密码加密在FirestoreService中处理
-    if DBService.create_user(username, email, password):
+    # 创建用户并初始化余额
+    user_id = DBService.create_user(username, email, password)
+    if user_id:
+        # 创建用户余额记录，包含赠送额度
+        await DBService.create_user_balance(user_id, {
+            "asr_balance": 60,  # 赠送1分钟语音识别 (单位:秒)
+            "tts_balance": 500,  # 赠送500个字符合成
+            "text_translation_balance": 0,
+            "voice_translation_balance": 0
+        })
         return RedirectResponse(url="/login", status_code=302)
+    
     return templates.TemplateResponse(
         "auth/register.html",
         {

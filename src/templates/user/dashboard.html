@@ -10,12 +10,35 @@
     
     <div class="dashboard-stats">
         <div class="stat-card">
-            <div class="stat-icon"><i class="mdi mdi-clock-outline"></i></div>
+            <div class="stat-icon"><i class="mdi mdi-microphone"></i></div>
             <div class="stat-info">
-                <h3>剩余转写时长</h3>
-                <div class="stat-value">{{ stats.remaining_minutes }}分钟</div>
+                <h3>语音识别余额</h3>
+                <div class="stat-value">{{ stats.asr_balance|default(0)|int // 60 }}分钟 {{ stats.asr_balance|default(0)|int % 60 }}秒</div>
             </div>
         </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="mdi mdi-text-to-speech"></i></div>
+            <div class="stat-info">
+                <h3>语音合成余额</h3>
+                <div class="stat-value">{{ stats.tts_balance|default(0)|int }}字符</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="mdi mdi-translate"></i></div>
+            <div class="stat-info">
+                <h3>文本翻译余额</h3>
+                <div class="stat-value">{{ stats.text_translation_balance|default(0)|int }}次</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon"><i class="mdi mdi-voice"></i></div>
+            <div class="stat-info">
+                <h3>语音翻译余额</h3>
+                <div class="stat-value">{{ stats.voice_translation_balance|default(0)|int // 60 }}分钟 {{ stats.voice_translation_balance|default(0)|int % 60 }}秒</div>
+            </div>
+        </div>
+        
+        <!-- 保留原有的使用统计信息 -->
         <div class="stat-card">
             <div class="stat-icon"><i class="mdi mdi-clock-check-outline"></i></div>
             <div class="stat-info">

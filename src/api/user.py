@@ -151,6 +151,26 @@ async def profile_page(request: Request):
     )
 
 
+@router.get("/balance", response_class=HTMLResponse)
+async def user_balance(request: Request):
+    user = await get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+
+    # 获取用户余额信息
+    balance = await DBService.get_user_balance(user['id'])
+    
+    return templates.TemplateResponse(
+        "user/balance.html",
+        {
+            "request": request,
+            "current_user": user,
+            "active_page": "balance",
+            "balance": balance
+        }
+    )
+
+
 @router.post("/change-password")
 async def change_password(
         request: Request,
