@@ -314,7 +314,7 @@ class MongoDBService:
     @staticmethod
     async def get_user_orders(user_id: str):
         try:
-            orders = list(db.orders.find({'user_id': ObjectId(user_id)}))
+            orders = list(db.orders.find({'user_id': user_id}))
             return [{
                 'id': str(order.get('_id')),
                 'plan_name': order.get('plan_name'),
