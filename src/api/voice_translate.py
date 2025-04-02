@@ -43,53 +43,62 @@ async def voice_translate_page(request: Request, current_user=Depends(get_curren
 
 @router.post("/voice-translate")
 async def voice_translate_api(
+        request: Request,
         file: UploadFile = File(...),
         source_language: str = Form(...),
         target_language: str = Form(...),
         model: str = Form("long")
 ):
     try:
-        # 保存上传的文件到临时目录
-        # temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".wav")
-        # temp_file_path = temp_file.name
+        # 获取当前用户
+        user = await get_current_user(request)
+        if not user:
+            return JSONResponse(
+                content={"error": "用户未登录，请先登录"},
+                status_code=401,
+            )
 
         try:
-
             if not file.content_type.startswith("audio/"):
                 return JSONResponse(
-                    content={"error": "Invalid file type. Only audio files are allowed."},
+                    content={"error": "无效的文件类型。只允许音频文件。"},
                     status_code=400,
                 )
 
             # 1. 调用语音识别API
             audio_content = await file.read()
-            transcription = await SpeechService.transcribe(audio_content, source_language)
+            # 传递用户ID以便扣除余额
+            transcription = await SpeechService.transcribe(audio_content, source_language, user.get("_id"))
             print("语音识别完成：" + transcription)
-
 
             # 2. 调用翻译API
             translation = translate_text(target_language, transcription,
                                          source_language.split('-')[0] if '-' in source_language else source_language)
             print("语音翻译完成：" + translation["translatedText"])
 
-
             # 3. 调用文本转语音API
             audio_url = text_to_speech(translation["translatedText"], target_language)
             print("文本转语音完成：" + audio_url)
+
+            # 获取更新后的用户信息
+            # updated_user = await get_current_user(request, force_refresh=True)
+            updated_user = await get_current_user(request)
 
             # 返回结果
             return {
                 "transcription": transcription,
                 "translation": translation["translatedText"],
                 "detected_language": translation.get("detectedSourceLanguage", ""),
-                "audio_url": audio_url
+                "audio_url": audio_url,
+                "remaining_seconds": updated_user.get("remaining_audio_seconds", 0)
             }
 
         finally:
             # 清理临时文件
-            # os.unlink(temp_file_path)
             pass
 
+    except ValueError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

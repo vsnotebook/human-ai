@@ -52,21 +52,42 @@ async def upload_page(request: Request):
 
 @router.post("/transcribe")
 async def transcribe_audio(
+        request: Request,
         file: UploadFile = File(...),
         language_code: Annotated[str, Form()] = "en-US",
         model: Annotated[str, Form()] = "latest_long",
 ):
     try:
+        # 获取当前用户
+        user = await get_current_user(request)
+        if not user:
+            return JSONResponse(
+                content={"error": "用户未登录，请先登录"},
+                status_code=401,
+            )
+
         if not file.content_type.startswith("audio/"):
             return JSONResponse(
-                content={"error": "Invalid file type. Only audio files are allowed."},
+                content={"error": "无效的文件类型。只允许音频文件。"},
                 status_code=400,
             )
 
         audio_content = await file.read()
-        transcription = await SpeechService.transcribe(audio_content, language_code)
+        
+        # 传递用户ID以便扣除余额
+        transcription = await SpeechService.transcribe(audio_content, language_code, user.get("id"))
         print(transcription)
-        return {"transcription": transcription}
+        
+        # 获取更新后的用户信息
+        # updated_user = await get_current_user(request, force_refresh=True)
+        updated_user = await get_current_user(request)
 
+        return {
+            "transcription": transcription,
+            "remaining_seconds": updated_user.get("remaining_audio_seconds", 0)
+        }
+
+    except ValueError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
     except Exception as e:
         return JSONResponse(content={"error": str(e)}, status_code=500)
