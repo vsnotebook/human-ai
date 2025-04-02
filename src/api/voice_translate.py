@@ -192,7 +192,7 @@ def text_to_speech(text: str, language_code: str) -> str:
 
     try:
         # 发送TTS请求，禁用SSL验证
-        # base_url = "http://tts.51685168.xyz"
+        audio_base_url = "https://tts.51685168.xyz"
         base_url = "http://47.120.55.3:5000"
         synthesize_url = f"{base_url}/api/synthesize"
         response = requests.post(
@@ -210,7 +210,7 @@ def text_to_speech(text: str, language_code: str) -> str:
         if result["status"] != "success":
             raise Exception(result.get("message", "语音合成失败"))
 
-        audio_url = f"{base_url}{result['download_url']}"
+        audio_url = f"{audio_base_url}{result['download_url']}"
         print(audio_url)
         # 返回音频URL
         return audio_url

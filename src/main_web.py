@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
-from src.api import speech, user, admin, auth, profile, payment, translate, voice_translate
+from src.api import home, user, admin, auth, profile, payment, translate, voice_translate
 from src.core.config import settings
 
 app = FastAPI()
@@ -40,7 +40,7 @@ app.mount("/static", StaticFiles(directory="src/static"), name="static")
 
 # 注册路由
 app.include_router(auth.router)
-app.include_router(speech.router)
+app.include_router(home.router)
 app.include_router(user.router)
 app.include_router(admin.router)
 app.include_router(payment.router)
