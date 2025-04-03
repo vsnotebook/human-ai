@@ -1,8 +1,9 @@
+import logging
 import os
 from pydantic import Field, RedisDsn, PostgresDsn
 from pydantic_settings import BaseSettings
 from typing import Optional
-
+logger = logging.getLogger("fastapi")
 
 class Settings(BaseSettings):
     # 通用配置
@@ -41,7 +42,13 @@ class Settings(BaseSettings):
 
     def __init__(self, **values):
         super().__init__(**values)
-        print("运行环境：" + self.APP_ENV)
+        print("运行环境：-1" + self.APP_ENV)
+        GOOGLE_CLIENT_ID = os.environ.get("_GOOGLE_CLIENT_ID", "")
+        a = "bbbbbb--0" + GOOGLE_CLIENT_ID + "--aaa"
+        logger.info(a)
+        print.info(a)
+        print(GOOGLE_CLIENT_ID)
+        print("运行环境-2：" + self.APP_ENV)
         if self.PROXY_ENABLE:
             os.environ["http_proxy"] = "http://127.0.0.1:10808"
             os.environ["https_proxy"] = "http://127.0.0.1:10808"
