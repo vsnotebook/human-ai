@@ -168,8 +168,10 @@ async def google_login(
     try:
         print("---------------------------------------")
         print(GOOGLE_CLIENT_ID)
-        logger.info("---------------------------------------")
-        logger.info(GOOGLE_CLIENT_ID)
+        logger.info("---------------------------------------1")
+        a="bbbbbb--0"+GOOGLE_CLIENT_ID+"--aaa"
+        logger.info(a)
+        logger.info("---------------------------------------2")
         # 验证 Google token
         idinfo = id_token.verify_oauth2_token(
             credential,
