@@ -94,3 +94,9 @@
     0%, 100% { transform: scaleY(0.3); }
     50% { transform: scaleY(1); }
 }
+
+.file-format-hint {
+        margin-top: 8px;
+        font-size: 0.9em;
+        color: #666;
+}

@@ -5,11 +5,60 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>注册 - 音频转写服务</title>
     <link href="/static/style.css" rel="stylesheet" type="text/css" />
+    <style>
+        .google-auth {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .loading-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+        }
+
+        .loading-spinner {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+        }
+
+        .or-divider {
+            margin: 20px 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .or-divider::before,
+        .or-divider::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            width: 45%;
+            height: 1px;
+            background-color: #ddd;
+        }
+
+        .or-divider::before { left: 0; }
+        .or-divider::after { right: 0; }
+    </style>
 </head>
 <body>
     <div class="container">
         <div class="auth-container">
             <h1>注册账号</h1>
+            {% if request.query_params.get('message') == 'trial_exceeded' %}
+            <div class="info-message">
+                您已使用完免费试用次数。注册即可获得额外10分钟转写额度！
+            </div>
+            {% endif %}
             {% if error %}
             <div class="error-message">
                 {{ error }}
@@ -30,6 +79,75 @@
                 </div>
                 <button type="submit" class="submit-button">注册</button>
             </form>
+
+            <!-- 添加 Google 注册按钮 -->
+            <div class="google-auth">
+                <div id="g_id_onload"
+                     data-client_id="686418751121-6aeqgmeelmt3r4c292anb7l6e2l58lmt.apps.googleusercontent.com"
+                     data-callback="handleGoogleRegister"
+                     data-auto_prompt="false">
+                </div>
+                <div class="g_id_signin"
+                     data-type="standard"
+                     data-size="large"
+                     data-theme="outline"
+                     data-text="使用谷歌账号注册"
+                     data-shape="rectangular"
+                     data-logo_alignment="left">
+                </div>
+            </div>
+
+            <!-- 添加 Google Sign-In API -->
+            <script src="https://accounts.google.com/gsi/client" async defer></script>
+            <script>
+                function handleGoogleRegister(response) {
+                    console.log('Google response:', response);
+                    
+                    const formData = new FormData();
+                    formData.append('credential', response.credential);
+                    
+                    console.log('Sending request to /google-register');
+                    
+                    fetch('/google-register', {  // 使用相对路径
+                        method: 'POST',
+                        headers: {
+                            'Accept': 'application/json',
+                        },
+                        body: formData
+                    }).then(response => {
+                        console.log('Response received:', response);
+                        if (!response.ok) {
+                            return response.json().then(error => {
+                                console.log('=======================1')
+                                console.log(error)
+                                if (error.detail === "400: 该邮箱已被注册") {
+                                    console.log('=======================2')
+                                    window.location.href = '/login';
+                                    return;
+                                }
+                                console.log('=======================3')
+                                throw new Error(error.detail || '注册失败');
+                            });
+                        }
+                        return response.json();
+                    }).then(data => {
+                        console.log('Data received:', data);
+                        if (data.success && data.redirect_url) {
+                            window.location.href = data.redirect_url;
+                        }
+                    }).catch(error => {
+                        if (error.message !== "该邮箱已被注册") {
+                            console.error('Error:', error);
+                            alert(error.message || '注册过程中发生错误');
+                        }
+                    });
+                }
+
+                // 添加页面加载完成后的初始化代码
+                window.onload = function() {
+                    console.log('Page loaded, Google Sign-In initialized');
+                }
+            </script>
             <div class="auth-links">
                 <a href="/login">已有账号？立即登录</a>
             </div>

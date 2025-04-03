@@ -1,0 +1,45 @@
+fastapi的SessionMiddleware会话session保存在哪？
+1. 会话数据是存储在客户端（浏览器）的 Cookie 中，而不是服务器端。
+2. 工作流程：
+
+   - 当创建新会话时，服务器会生成一个会话数据
+   - 使用密钥（就是你代码中设置的 secret_key ）对数据进行签名和加密
+   - 将加密后的数据存储在客户端的 Cookie 中
+   - Cookie 的名称就是你代码中设置的 session_cookie="session"
+3. 安全性考虑：
+
+   - 由于数据存储在客户端，建议不要在 session 中存储敏感信息
+   - secret_key 用于加密和验证，确保数据不被篡改
+   - 建议将 secret_key 设置为强密码并存储在配置文件中
+如果你需要存储大量数据或敏感信息，建议使用服务器端会话存储方案，比如：
+
+- Redis
+- MongoDB
+- 数据库存储
+你可以考虑使用第三方库如 fastapi-sessions 或自定义中间件来实现服务器端会话存储。
+
+#### 添加使用谷歌注册功能。
+https://cloud.google.com/identity-platform/docs/web/google?hl=zh-cn
+register.html  auth.py添加使用谷歌注册功能。
+我将帮您在 auth.py 中添加谷歌注册功能。首先需要添加必要的导入和路由处理。
+
+pip install google-auth google-auth-oauthlib google-auth-httplib2
+
+
+###
+这样用户就可以选择使用谷歌账号注册，系统会自动使用他们的谷歌账号信息创建账户。
+
+需要注意的是，您可能还需要：
+
+1. 修改数据库模式以支持谷歌用户标识
+2. 添加相应的样式来美化谷歌登录按钮
+3. 考虑添加错误处理和加载状态
+4. 确保服务器配置支持跨域请求（如果前后端分离）
+
+
+对于已经注册的用户进行的登录，是不是可以不要弹出谷歌授权？可以简化流程？
+
+
+auth.py register.html login.html 实现微信二维码授权登录。说明怎么在微信开启授权功能。
+
+

@@ -6,3 +6,10 @@ uvicorn src.main_web:app --reload --host 127.0.0.1 --port 8080
 
 
 127.0.0.1:8000
+
+mongodb查询优化
+# 可以在应用启动时执行
+db.trial_records.create_index("ip", unique=True)
+db.trial_records.create_index("last_try")
+
+

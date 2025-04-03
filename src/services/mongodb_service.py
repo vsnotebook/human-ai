@@ -1,6 +1,7 @@
 import uuid
 from datetime import datetime
 from datetime import timedelta
+from typing import Dict, Optional
 
 import bcrypt
 from bson import ObjectId
@@ -19,7 +20,7 @@ db = client.voice_workshop
 class MongoDBService:
     c_db = client.voice_workshop
     @staticmethod
-    def create_user(username: str, email: str, password: str, role: str = "user") -> bool:
+    def create_user(username: str, email: str, password: str = None, role: str = "user", is_google_user: bool = False) -> bool:
         users_collection = db.users
 
         # 检查用户名是否已存在
@@ -30,20 +31,24 @@ class MongoDBService:
         if users_collection.find_one({'email': email}):
             return False
 
-        # 使用bcrypt加密密码
-        password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
         # 创建用户文档
-        users_collection.insert_one({
+        user_data = {
             'username': username,
             'email': email,
-            'password_hash': password_hash,
             'role': role,
             'trial_count': 10,
             'trial_seconds': 60,
-            'created_at': datetime.now()
-        })
-        return True
+            'created_at': datetime.now(),
+            'is_google_user': is_google_user,
+            'google_id': None
+        }
+
+        # 如果不是谷歌用户，添加密码
+        if not is_google_user and password:
+            user_data['password_hash'] = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+        result = users_collection.insert_one(user_data)
+        return str(result.inserted_id) if result.inserted_id else False
 
     @staticmethod
     def verify_user(username: str, password: str) -> dict:
@@ -388,6 +393,207 @@ class MongoDBService:
             print(f"更新密码失败: {str(e)}")
             return False
 
+    @staticmethod
+    def get_user_by_email(email: str) -> dict:
+        """Get user by email address"""
+        try:
+            user = db.users.find_one({'email': email})
+            if not user:
+                return None
+                
+            return {
+                'id': str(user['_id']),
+                'username': user['username'],
+                'email': user['email'],
+                'role': user.get('role', 'user'),
+                'trial_count': user.get('trial_count', 10),
+                'trial_seconds': user.get('trial_seconds', 60)
+            }
+        except Exception as e:
+            print(f"Failed to get user by email: {str(e)}")
+            return None
+
+    @staticmethod
+    async def update_user(user_id, user_data):
+        try:
+            # 如果包含密码，则使用bcrypt加密
+            if 'password' in user_data and user_data['password']:
+                password_hash = bcrypt.hashpw(user_data['password'].encode('utf-8'), bcrypt.gensalt())
+                user_data['password_hash'] = password_hash
+                del user_data['password']
+
+            result = db.users.update_one(
+                {'_id': ObjectId(user_id)},
+                {'$set': user_data}
+            )
+            return result.modified_count > 0
+        except Exception as e:
+            print(f"更新用户失败: {str(e)}")
+            return False
+
+    @staticmethod
+    async def get_user_wallet(user_id: str) -> dict:
+        try:
+            user = db.users.find_one({'_id': ObjectId(user_id)})
+            if not user:
+                return {"balance": 0}
+
+            return {
+                "balance": user.get('balance', 0),
+                "remaining_minutes": user.get('remaining_minutes', 0),
+                "subscription_expiry": user.get('subscription_expiry', None)
+            }
+        except Exception as e:
+            print(f"获取钱包信息失败: {str(e)}")
+            return {"balance": 0}
+
+    @staticmethod
+    async def get_user_transactions(user_id: str) -> list:
+        try:
+            transactions = list(db.transactions
+                             .find({'user_id': user_id})
+                             .sort('created_at', -1)
+                             .limit(20))
+
+            return [{
+                'id': str(trans['_id']),
+                'amount': trans.get('amount', 0),
+                'type': trans.get('type', ''),
+                'description': trans.get('description', ''),
+                'created_at': trans.get('created_at', datetime.now())
+            } for trans in transactions]
+        except Exception as e:
+            print(f"获取交易记录失败: {str(e)}")
+            return []
+
+    @staticmethod
+    async def get_user_subscriptions(user_id: str):
+        try:
+            subs = list(db.subscriptions.find({'user_id': user_id}))
+            return [{
+                'id': str(sub.get('_id')),
+                'plan_name': sub.get('plan_name'),
+                'minutes': sub.get('minutes'),
+                'start_date': sub.get('start_date'),
+                'end_date': sub.get('end_date'),
+                'status': sub.get('status')
+            } for sub in subs]
+        except Exception:
+            return []
+
+    @staticmethod
+    async def get_user_orders(user_id: str):
+        try:
+            orders = list(db.orders.find({'user_id': user_id}))
+            return [{
+                'id': str(order.get('_id')),
+                'plan_name': order.get('plan_name'),
+                'amount': order.get('amount'),
+                'status': order.get('status'),
+                'created_at': order.get('created_at')
+            } for order in orders]
+        except Exception:
+            return []
+
+    @staticmethod
+    async def create_user_by_admin(username, email, password, role="user", trial_count=10):
+        """管理员创建用户"""
+        try:
+            # 检查用户名是否存在
+            existing_user = db.users.find_one({'username': username})
+            if existing_user:
+                return False
+
+            # 检查邮箱是否存在
+            existing_email = db.users.find_one({'email': email})
+            if existing_email:
+                return False
+
+            # 使用bcrypt加密密码
+            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
+
+            user_data = {
+                'username': username,
+                'email': email,
+                'password_hash': password_hash,
+                'role': role,
+                'trial_count': trial_count,
+                'created_at': datetime.now()
+            }
+
+            db.users.insert_one(user_data)
+            return True
+        except Exception as e:
+            print(f"创建用户失败: {str(e)}")
+            return False
+
+    @staticmethod
+    async def delete_user(user_id):
+        """删除用户"""
+        try:
+            result = db.users.delete_one({'_id': ObjectId(user_id)})
+            return result.deleted_count > 0
+        except Exception as e:
+            print(f"删除用户失败: {str(e)}")
+            return False
+
+    @staticmethod
+    def verify_password(user_id: str, password: str) -> bool:
+        """验证用户密码"""
+        try:
+            user = db.users.find_one({'_id': ObjectId(user_id)})
+            if not user:
+                return False
+
+            # 使用bcrypt验证密码
+            if 'password_hash' in user:
+                stored_hash = user['password_hash']
+                if isinstance(stored_hash, bytes):
+                    return bcrypt.checkpw(password.encode('utf-8'), stored_hash)
+            return False
+        except Exception as e:
+            print(f"验证密码失败: {str(e)}")
+            return False
+
+    @staticmethod
+    async def update_password(user_id: str, new_password: str) -> bool:
+        """更新用户密码"""
+        try:
+            # 使用bcrypt加密新密码
+            password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
+
+            # 更新密码
+            result = db.users.update_one(
+                {'_id': ObjectId(user_id)},
+                {'$set': {'password_hash': password_hash}}
+            )
+            return result.modified_count > 0
+        except Exception as e:
+            print(f"更新密码失败: {str(e)}")
+            return False
+
+    # 在MongoDBService类中添加get_user_by_username方法
+    @classmethod
+    def get_user_by_username(cls, username: str) -> Optional[Dict]:
+        """根据用户名获取用户信息"""
+        try:
+            user = db.users.find_one({"username": username})
+            if not user:
+                return None
+            
+            # 转换ObjectId为字符串
+            user_data = dict(user)
+            user_data['id'] = str(user_data.pop('_id'))
+            
+            # 确保所有字段都是可序列化的
+            for key, value in user_data.items():
+                if isinstance(value, bytes):
+                    user_data[key] = value.decode('utf-8', errors='replace')
+                    
+            return user_data
+        except Exception as e:
+            print(f"获取用户失败: {str(e)}")
+            return None
     # 在适当的位置添加以下方法
     
     @classmethod
@@ -503,3 +709,70 @@ class MongoDBService:
         await cls.create_user_balance(user_id)
         
         return user_id
+
+    # 在现有的MongoDBService类中添加以下方法
+
+    @classmethod
+    def create_api_key(cls, user_id: str) -> Dict:
+        """为用户创建新的API密钥"""
+        from src.utils.auth_util import generate_api_secret
+
+        # 生成API密钥
+        api_secret = generate_api_secret()
+
+        # 创建API密钥记录
+        api_key = {
+            "user_id": user_id,
+            "api_secret": api_secret,
+            "created_at": datetime.utcnow(),
+            "last_used_at": None,
+            "is_active": True
+        }
+
+        # 保存到数据库
+        result = db.api_keys.insert_one(api_key)
+        api_key["_id"] = str(result.inserted_id)
+
+        return api_key
+
+    @classmethod
+    def get_user_api_keys(cls, user_id: str) -> list:
+        """获取用户的所有API密钥"""
+        api_keys = list(db.api_keys.find({"user_id": user_id}))
+        for key in api_keys:
+            key["_id"] = str(key["_id"])
+        return api_keys
+
+    @classmethod
+    def get_api_secret(cls, username: str) -> Optional[str]:
+        """根据用户名获取API密钥"""
+        # 先获取用户ID
+        user = db.users.find_one({"username": username})
+        if not user:
+            return None
+
+        # 获取用户的活跃API密钥
+        api_key = db.api_keys.find_one({
+            "user_id": str(user["_id"]),
+            "is_active": True
+        })
+
+        if not api_key:
+            return None
+
+        # 更新最后使用时间
+        db.api_keys.update_one(
+            {"_id": api_key["_id"]},
+            {"$set": {"last_used_at": datetime.utcnow()}}
+        )
+
+        return api_key["api_secret"]
+
+    @classmethod
+    def deactivate_api_key(cls, key_id: str, user_id: str) -> bool:
+        """停用API密钥"""
+        result = db.api_keys.update_one(
+            {"_id": ObjectId(key_id), "user_id": user_id},
+            {"$set": {"is_active": False}}
+        )
+        return result.modified_count > 0

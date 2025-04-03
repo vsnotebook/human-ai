@@ -9,7 +9,8 @@ from src.services.speech_service import SpeechService
 
 async def test_transcribe():
     # 读取音频文件
-    audio_file_path = r"C:\Users\vsnot\Music\audio\让我来告诉你吧——是手心啊，哈哈哈.wav"
+    # audio_file_path = r"C:\Users\vsnot\Music\audio\让我来告诉你吧——是手心啊，哈哈哈.wav"
+    audio_file_path = r"C:\Users\vsnot\Music\audio\a.m4a"
     with open(audio_file_path, "rb") as audio_file:
         audio_content = audio_file.read()
 

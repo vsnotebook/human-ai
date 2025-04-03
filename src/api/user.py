@@ -238,3 +238,46 @@ async def recharge(
             "error": "充值失败，请稍后重试"
         }
     )
+
+
+# 在用户路由中添加API密钥管理功能
+
+@router.get("/api-keys", response_class=HTMLResponse)
+async def api_keys_page(request: Request):
+    user = await get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    
+    # 获取用户的API密钥
+    api_keys = DBService.get_user_api_keys(user.get("id"))
+    
+    return templates.TemplateResponse(
+        "user/api-keys.html",
+        {
+            "request": request,
+            "current_user": user,
+            "api_keys": api_keys
+        }
+    )
+
+@router.post("/api-keys/create")
+async def create_api_key(request: Request):
+    user = await get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    
+    # 创建新的API密钥
+    api_key = DBService.create_api_key(user.get("id"))
+    
+    return RedirectResponse(url="/user/api-keys", status_code=302)
+
+@router.post("/api-keys/{key_id}/deactivate")
+async def deactivate_api_key(request: Request, key_id: str):
+    user = await get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+    
+    # 停用API密钥
+    success = DBService.deactivate_api_key(key_id, user.get("id"))
+    
+    return RedirectResponse(url="/user/api-keys", status_code=302)

@@ -1,0 +1,28 @@
+创建一个语音识别的API接口服务，方便用户使用程序调用API接口。帮我设计一个可行的方案。
+创建一个语音识别的API接口服务，方便用户使用程序调用API接口。帮我设计一个可行的方案。暂时不要编写代码。只回答优秀的设计方案有哪些。
+
+使用API密钥认证机制。给出具体的交互流程。暂时不编写代码。
+
+
+创建用户的时候，默认生产一个API密钥
+
+
+
+双因素认证方案
+
+oauth对于用户来说太复杂。
+USERNAME = "your-username"  # 使用用户名替代API_KEY
+API_SECRET = "your-api-secret"  # 用户对应的密钥
+
+asr.py  home.py auth_util.py dashboard.py register.html auth.py
+1. 创建一个语音识别的API接口服务，方便用户使用程序调用API接口。
+2. 使用双因素认证方案。API_SECRET密钥生成随机的32个英文或数字字符。API_SECRET不在网络传输，只用于签名。username可以在网络传输，也用于签名。
+3. 注册用户时候，生成默认API密钥。密钥保存在用户表。
+4. 已经注册的用户，可以在用户中心，点击新建API密钥。
+5. 用户调用external/asr 接口，实现语音识别。
+
+
+
+
+
+

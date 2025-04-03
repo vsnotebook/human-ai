@@ -9,6 +9,15 @@ https://www.iflyrec.com/
 https://play.ht/
 https://speechgen.io/zh/
 
+index.html register.html 首页点击免费试用，跳转到语音识别页面。只允许没登陆的试用3次语音识别。超过次数跳转到注册页面。并提示注册赠送额度。
+完善 voice_recognition.html 的开发。
+
+voice_recognition.html 超过次数后，没有发生跳转到注册页面。而且报错转写错误: SyntaxError: Unexpected token '<', "<!DOCTYPE "... is not valid JSON
+这个问题是因为当超过试用次数时，服务器返回了一个重定向响应，但前端 JavaScript 尝试将其解析为 JSON 导致的。我们需要修改前端代码来正确处理重定向：
+
+
+现在谷歌登录已经完全成功了。 根据上面的编码过程。写一篇自己的应用程序使用谷歌登录的博客。包括一些容易错误的细节也要写清楚。使用markdown代码。 方便我我直接复制出来。
+
 
 
 

@@ -5,7 +5,9 @@ from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
 from src.api import home, user, admin, auth, profile, payment, translate, voice_translate
+from src.api.external import asr
 from src.core.config import settings
+from src.api import demo  # 添加这行
 
 app = FastAPI()
 
@@ -30,7 +32,7 @@ app.add_middleware(
 # 添加会话中间件
 app.add_middleware(
     SessionMiddleware,
-    secret_key="your-secret-key-here",  # 建议从配置文件读取
+    secret_key="d197aa63a2f3caab36c2335e3b0309ef",  # 建议从配置文件读取
     session_cookie="session",
     # max_age=60,  # 会话过期时间，单位为秒（这里设置为1分钟。单位是秒）。默认是2周。
 )
@@ -47,6 +49,8 @@ app.include_router(payment.router)
 app.include_router(profile.router)
 app.include_router(translate.router)
 app.include_router(voice_translate.router)
+app.include_router(demo.router)  # 添加这行
+app.include_router(asr.router)  # 添加这行
 
 if __name__ == "__main__":
     uvicorn.run(app, host=settings.SERVER_HOST, port=int(settings.SERVER_PORT))

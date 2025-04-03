@@ -270,3 +270,13 @@ select, input[type="file"] {
 .nav-btn.user:hover {
     background-color: #388E3C;
 }
+
+.info-message {
+    background-color: #e3f2fd;
+    border: 1px solid #90caf9;
+    color: #1976d2;
+    padding: 10px;
+    margin-bottom: 20px;
+    border-radius: 4px;
+    text-align: center;
+}

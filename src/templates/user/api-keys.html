@@ -1,0 +1,176 @@
+{% extends "user/layout.html" %}
+
+{% block title %}API密钥管理{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="section-title">
+        <h2><i class="mdi mdi-key"></i> API密钥管理</h2>
+    </div>
+    
+    <div class="api-keys-info">
+        <p>API密钥用于访问我们的语音识别API服务。请妥善保管您的API密钥，不要泄露给他人。</p>
+        <p>每个API密钥包含两部分：用户名和密钥。用户名用于识别您的身份，密钥用于生成请求签名。</p>
+    </div>
+    
+    <div class="api-keys-list">
+        <h3>您的API密钥</h3>
+        {% if api_keys %}
+            <table class="api-keys-table">
+                <thead>
+                    <tr>
+                        <th>创建时间</th>
+                        <th>API密钥</th>
+                        <th>状态</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for key in api_keys %}
+                    <tr>
+                        <td>{{ key.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                        <td>
+                            {% if key.is_active %}
+                                <code>{{ key.api_secret }}</code>
+                            {% else %}
+                                <span class="inactive">已停用</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if key.is_active %}
+                                <span class="active">活跃</span>
+                            {% else %}
+                                <span class="inactive">已停用</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if key.is_active %}
+                                <form method="post" action="/user/api-keys/{{ key._id }}/deactivate">
+                                    <button type="submit" class="btn-danger">停用</button>
+                                </form>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>您还没有API密钥。</p>
+        {% endif %}
+        
+        <form method="post" action="/user/api-keys/create" class="create-key-form">
+            <button type="submit" class="btn-primary">创建新密钥</button>
+        </form>
+    </div>
+    
+    <div class="api-usage-guide">
+        <h3>API使用指南</h3>
+        <p>以下是使用我们的API进行语音识别的示例代码：</p>
+        
+        <div class="code-block">
+            <pre><code>import requests
+import requests
+import time
+import hashlib
+import hmac
+import json
+
+# 配置
+API_URL = "http://localhost:8080/external/asr"
+USERNAME = "USERNAME"  # 您的用户名
+API_SECRET = "您的API密钥"  # 请替换为您的实际API密钥
+
+# 准备请求
+file_path = r"音频路径"
+with open(file_path, "rb") as f:
+    audio_data = f.read()
+
+# 生成时间戳
+timestamp = str(int(time.time()))
+
+# 准备请求数据
+form_data = {"language_code": "zh-CN"}
+
+# 生成签名 - 修改为使用表单数据
+data_to_sign = f"{USERNAME}:{timestamp}:{json.dumps(form_data)}"
+signature = hmac.new(
+    API_SECRET.encode('utf-8'),
+    data_to_sign.encode('utf-8'),
+    hashlib.sha256
+).hexdigest()
+
+# 设置请求头
+headers = {
+    "X-Username": USERNAME,
+    "X-Timestamp": timestamp,
+    "X-Signature": signature
+}
+
+# 发送请求
+files = {
+    "file": (
+        "audio.wav",
+        audio_data,
+        "audio/wav"  # 指定content_type为audio/wav
+    )
+}
+response = requests.post(API_URL, headers=headers, files=files, data=form_data)
+print(response)
+if response.status_code == 200:
+    print(response.json())
+else:
+    print(f"错误: {response.text}")
+</code></pre>
+        </div>
+    </div>
+</div>
+
+<style>
+.api-keys-info {
+    margin-bottom: 20px;
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.api-keys-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+.api-keys-table th, .api-keys-table td {
+    padding: 10px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+.api-keys-table th {
+    background-color: #f5f5f5;
+}
+
+.create-key-form {
+    margin: 20px 0;
+}
+
+.active {
+    color: green;
+    font-weight: bold;
+}
+
+.inactive {
+    color: #999;
+}
+
+.code-block {
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 5px;
+    overflow-x: auto;
+}
+
+.code-block pre {
+    margin: 0;
+}
+</style>
+{% endblock %}

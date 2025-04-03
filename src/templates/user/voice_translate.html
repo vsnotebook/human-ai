@@ -84,11 +84,14 @@
             <div class="form-group">
                 <label for="file"><i class="mdi mdi-file-music-outline"></i> 选择音频文件</label>
                 <div class="file-input-wrapper">
-                    <input type="file" name="file" id="file" accept="audio/*" required>
+                    <input type="file" name="file" id="file" accept="audio/wav,audio/mp3,audio/mpeg,audio/aac,audio/m4a" required>
                     <div class="file-input-custom">
                         <span id="file-name">未选择文件</span>
                         <button type="button" class="browse-btn">浏览</button>
                     </div>
+                </div>
+                <div class="file-format-hint">
+                    支持的格式：WAV, MP3 等常见音频格式。如遇格式无法识别，请联系 <a href="mailto:vsfrank@qq.com">vsfrank@qq.com</a>
                 </div>
             </div>
 
@@ -321,23 +324,44 @@
     // 开始录音
     document.getElementById('startRecord').addEventListener('click', async () => {
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            mediaRecorder = new MediaRecorder(stream);
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                audio: {
+                    channelCount: 1,        // 单声道
+                    sampleRate: 16000,      // 采样率16kHz
+                    sampleSize: 16,         // 采样大小16位
+                }
+            });
+            
+            mediaRecorder = new MediaRecorder(stream, {
+                mimeType: 'audio/webm;codecs=opus'  // 使用opus编码器
+            });
             audioChunks = [];
 
             mediaRecorder.ondataavailable = (event) => {
                 audioChunks.push(event.data);
             };
 
-            mediaRecorder.onstop = () => {
-                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                const audioUrl = URL.createObjectURL(audioBlob);
+            mediaRecorder.onstop = async () => {
+                // 将录音数据转换为WAV格式
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // 将音频数据解码为AudioBuffer
+                const arrayBuffer = await audioBlob.arrayBuffer();
+                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                
+                // 创建WAV文件
+                const wavBuffer = audioBufferToWav(audioBuffer);
+                const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+                
+                // 显示音频预览
+                const audioUrl = URL.createObjectURL(wavBlob);
                 const audio = document.getElementById('recordedAudio');
                 audio.src = audioUrl;
                 audio.style.display = 'block';
 
                 // 创建文件对象并添加到FormData
-                const file = new File([audioBlob], 'recording.wav', { type: 'audio/wav' });
+                const file = new File([wavBlob], 'recording.wav', { type: 'audio/wav' });
                 const formData = new FormData();
                 formData.append('file', file);
                 formData.append('source_language', document.getElementById('source_language').value);
@@ -363,6 +387,54 @@
         }
     });
 
+    // 添加 AudioBuffer 转 WAV 的函数
+    function audioBufferToWav(buffer) {
+        const numChannels = buffer.numberOfChannels;
+        const sampleRate = buffer.sampleRate;
+        const format = 1; // PCM
+        const bitDepth = 16;
+        
+        const bytesPerSample = bitDepth / 8;
+        const blockAlign = numChannels * bytesPerSample;
+        
+        const wav = new ArrayBuffer(44 + buffer.length * bytesPerSample);
+        const view = new DataView(wav);
+        
+        // WAV文件头
+        writeString(view, 0, 'RIFF');
+        view.setUint32(4, 36 + buffer.length * bytesPerSample, true);
+        writeString(view, 8, 'WAVE');
+        writeString(view, 12, 'fmt ');
+        view.setUint32(16, 16, true);
+        view.setUint16(20, format, true);
+        view.setUint16(22, numChannels, true);
+        view.setUint32(24, sampleRate, true);
+        view.setUint32(28, sampleRate * blockAlign, true);
+        view.setUint16(32, blockAlign, true);
+        view.setUint16(34, bitDepth, true);
+        writeString(view, 36, 'data');
+        view.setUint32(40, buffer.length * bytesPerSample, true);
+        
+        // 写入采样数据
+        const offset = 44;
+        const data = new Int16Array(buffer.length);
+        const channelData = buffer.getChannelData(0);
+        for (let i = 0; i < buffer.length; i++) {
+            const s = Math.max(-1, Math.min(1, channelData[i]));
+            data[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+        }
+        for (let i = 0; i < data.length; i++) {
+            view.setInt16(offset + i * 2, data[i], true);
+        }
+        
+        return wav;
+    }
+
+    function writeString(view, offset, string) {
+        for (let i = 0; i < string.length; i++) {
+            view.setUint8(offset + i, string.charCodeAt(i));
+        }
+    }
     // 停止录音
     document.getElementById('stopRecord').addEventListener('click', () => {
         if (mediaRecorder && mediaRecorder.state === 'recording') {
@@ -459,4 +531,19 @@
         });
     }
 </script>
+
+    <style>
+    .file-format-hint {
+        margin-top: 8px;
+        font-size: 0.9em;
+        color: #666;
+    }
+    .file-format-hint a {
+        color: #007bff;
+        text-decoration: none;
+    }
+    .file-format-hint a:hover {
+        text-decoration: underline;
+    }
+    </style>
 {% endblock %}
