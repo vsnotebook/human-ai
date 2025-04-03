@@ -43,7 +43,7 @@ class Settings(BaseSettings):
     def __init__(self, **values):
         super().__init__(**values)
         print("运行环境：-1" + self.APP_ENV)
-        GOOGLE_CLIENT_ID = os.environ.get("_GOOGLE_CLIENT_ID", "")
+        GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
         a = "bbbbbb--0" + GOOGLE_CLIENT_ID + "--aaa"
         logger.info(a)
         print(a)
