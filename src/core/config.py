@@ -46,7 +46,7 @@ class Settings(BaseSettings):
         GOOGLE_CLIENT_ID = os.environ.get("_GOOGLE_CLIENT_ID", "")
         a = "bbbbbb--0" + GOOGLE_CLIENT_ID + "--aaa"
         logger.info(a)
-        print.info(a)
+        print(a)
         print(GOOGLE_CLIENT_ID)
         print("运行环境-2：" + self.APP_ENV)
         if self.PROXY_ENABLE:
