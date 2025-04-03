@@ -126,7 +126,6 @@ async def transcribe_audio(
 
         # 获取文件名
         file_name = file.filename
-<<<<<<< HEAD
 
         audio_content = await file.read()
 
@@ -196,25 +195,6 @@ async def transcribe_trial(
         return {
             "transcription": transcription,
             # "remaining_seconds": updated_user.get("remaining_audio_seconds", 0)
-=======
-        
-        audio_content = await file.read()
-        
-        # 传递用户ID以便扣除余额并记录使用情况
-        transcription = await SpeechService.transcribe_by_userid(audio_content, language_code, user.get("id"), file_name)
-        print(transcription)
-        
-        # 获取更新后的用户信息
-        updated_user = await get_current_user(request)
-        
-        # 从user_balance表获取最新的ASR余额
-        # balance = db.user_balance.find_one({"user_id": user.get("id")})
-        # remaining_seconds = balance.get("asr_balance", 0) if balance else 0
-
-        return {
-            "transcription": transcription,
-            "remaining_seconds": updated_user.get("remaining_audio_seconds", 0)
->>>>>>> a62a0e3a5d7f6dfc749fa7b85d1fd5946994b443
         }
 
     except ValueError as e:
@@ -222,8 +202,3 @@ async def transcribe_trial(
         return JSONResponse(content={"error": str(e)}, status_code=400)
     except Exception as e:
         print(str(e))
-<<<<<<< HEAD
-        return JSONResponse(content={"error": str(e)}, status_code=500)
-=======
-        return JSONResponse(content={"error": str(e)}, status_code=500)
->>>>>>> a62a0e3a5d7f6dfc749fa7b85d1fd5946994b443
