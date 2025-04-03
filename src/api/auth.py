@@ -1,3 +1,4 @@
+import logging
 import os
 
 from fastapi import APIRouter, Form, Request, Response, HTTPException, status
@@ -9,6 +10,7 @@ from src.core.template import templates
 from src.services.mongodb_service import MongoDBService as DBService
 
 router = APIRouter()
+logger = logging.getLogger("fastapi")
 
 # 添加 Google OAuth 配置
 GOOGLE_CLIENT_ID = os.environ.get("_GOOGLE_CLIENT_ID", "")
@@ -166,6 +168,8 @@ async def google_login(
     try:
         print("---------------------------------------")
         print(GOOGLE_CLIENT_ID)
+        logger.info("---------------------------------------")
+        logger.info(GOOGLE_CLIENT_ID)
         # 验证 Google token
         idinfo = id_token.verify_oauth2_token(
             credential,
