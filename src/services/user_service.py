@@ -79,6 +79,7 @@ class UserService:
         Returns:
             音频时长（秒）
         """
+<<<<<<< HEAD
         ######################################################################################################
         # # 保存上传的音频文件到本地，用于检查格式
         # debug_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "debug_audio")
@@ -92,6 +93,17 @@ class UserService:
 
 
 
+=======
+        # 保存上传的音频文件到本地，用于检查格式
+        debug_dir = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "debug_audio")
+        os.makedirs(debug_dir, exist_ok=True)
+        # debug_file_path = os.path.join(debug_dir, f"audio_debug_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.bin")
+        debug_file_path = os.path.join(debug_dir, f"audio_debug_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.bin")
+        with open(debug_file_path, 'wb') as f:
+            f.write(audio_content)
+        print(f"已保存音频文件到: {debug_file_path}")
+        
+>>>>>>> a62a0e3a5d7f6dfc749fa7b85d1fd5946994b443
         # 创建临时文件
         with tempfile.NamedTemporaryFile(delete=False) as temp_file:
             temp_file.write(audio_content)
