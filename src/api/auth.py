@@ -164,6 +164,8 @@ async def google_login(
         credential: str = Form(...),
 ):
     try:
+        print("---------------------------------------")
+        print(GOOGLE_CLIENT_ID)
         # 验证 Google token
         idinfo = id_token.verify_oauth2_token(
             credential,
