@@ -11,7 +11,8 @@ from src.services.mongodb_service import MongoDBService as DBService
 router = APIRouter()
 
 # 添加 Google OAuth 配置
-GOOGLE_CLIENT_ID = os.environ.get("GOOGLE_CLIENT_ID", "")
+GOOGLE_CLIENT_ID = os.environ.get("_GOOGLE_CLIENT_ID", "")
+print(GOOGLE_CLIENT_ID)
 
 @router.get("/login", response_class=HTMLResponse)
 async def login_page(request: Request):
