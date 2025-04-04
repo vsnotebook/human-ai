@@ -3,10 +3,8 @@ import datetime
 import tempfile
 import os
 import wave
-
-from bson import ObjectId
 from mutagen import File as MutagenFile
-from src.db.mongodb import db
+from src.services.mongodb_service import MongoDBService as DBService
 
 class UserService:
     @staticmethod
@@ -21,52 +19,9 @@ class UserService:
         Returns:
             更新后的用户信息
         """
-        # 从 user_balance 表获取用户余额信息
-        balance_collection = db.user_balance
-        
-        # 获取用户当前余额信息
-        balance = balance_collection.find_one({'user_id': user_id})
-        if not balance:
-            # 如果没有余额记录，创建一个新的
-            balance = {
-                "user_id": user_id,
-                "asr_balance": 60,  # 默认1分钟
-                "tts_balance": 500,
-                "text_translation_balance": 0,
-                "voice_translation_balance": 0,
-                "created_at": datetime.datetime.now(),
-                "updated_at": datetime.datetime.now()
-            }
-            balance_collection.insert_one(balance)
-        
-        # 计算剩余时长
-        remaining_seconds = balance.get("asr_balance", 0)
-        if remaining_seconds < audio_duration_seconds:
-            raise ValueError("语音识别时长余额不足")
-        
-        # 扣除时长
-        new_remaining_seconds = remaining_seconds - audio_duration_seconds
-        
-        # 更新用户余额信息
-        update_result = balance_collection.update_one(
-            {"user_id": user_id},
-            {
-                "$set": {
-                    "asr_balance": new_remaining_seconds,
-                    "updated_at": datetime.datetime.utcnow()
-                },
-                "$inc": {
-                    "total_asr_usage_seconds": audio_duration_seconds
-                }
-            }
-        )
-        
-        if update_result.modified_count == 0:
-            raise ValueError("更新用户余额失败")
-        
-        # 返回更新后的用户余额信息
-        updated_balance = balance_collection.find_one({"user_id": user_id})
-        return updated_balance
+        ret = await DBService.deduct_audio_time(user_id, audio_duration_seconds)
+        print(ret)
+        return ret
     
     @staticmethod
     async def get_audio_duration(audio_content: bytes) -> int:

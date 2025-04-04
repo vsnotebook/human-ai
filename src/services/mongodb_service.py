@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from datetime import timedelta
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 import bcrypt
 from bson import ObjectId
@@ -551,7 +551,46 @@ class MongoDBService:
         
         return user_id
 
-    # 在现有的MongoDBService类中添加以下方法
+    @classmethod
+    async def deduct_audio_time(cls, user_id: str, audio_duration_seconds: int) -> Dict[str, Any]:
+        """扣除用户的语音识别时长余额"""
+        try:
+            # 获取用户当前余额信息
+            balance = cls.c_db.user_balance.find_one({'user_id': user_id})
+            if not balance:
+                # 如果没有余额记录，创建一个新的
+                balance = await cls.create_user_balance(user_id)
+            
+            # 计算剩余时长
+            remaining_seconds = balance.get("asr_balance", 0)
+            if remaining_seconds < audio_duration_seconds:
+                raise ValueError("语音识别时长余额不足")
+            
+            # 扣除时长
+            new_remaining_seconds = remaining_seconds - audio_duration_seconds
+            
+            # 更新用户余额信息
+            update_result = cls.c_db.user_balance.update_one(
+                {"user_id": user_id},
+                {
+                    "$set": {
+                        "asr_balance": new_remaining_seconds,
+                        "updated_at": datetime.now()
+                    },
+                    "$inc": {
+                        "total_asr_usage_seconds": audio_duration_seconds
+                    }
+                }
+            )
+            
+            if update_result.modified_count == 0:
+                raise ValueError("更新用户余额失败")
+            
+            # 返回更新后的用户余额信息
+            return cls.c_db.user_balance.find_one({"user_id": user_id})
+        except Exception as e:
+            print(f"扣除语音识别时长失败: {str(e)}")
+            raise
 
     @classmethod
     def create_api_key(cls, user_id: str) -> Dict:
@@ -617,3 +656,7 @@ class MongoDBService:
             {"$set": {"is_active": False}}
         )
         return result.modified_count > 0
+
+    @classmethod
+    def insert_usage_records(cls, usage_record: dict) :
+        db.usage_records.insert_one(usage_record)

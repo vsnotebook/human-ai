@@ -6,8 +6,7 @@ import uuid
 from src.config.language_config import LANGUAGE_CONFIG
 from src.core.config import settings
 from src.services.user_service import UserService
-from src.db.mongodb import db
-
+from src.services.mongodb_service import MongoDBService as DBService
 
 class SpeechService:
 
@@ -53,7 +52,7 @@ class SpeechService:
         }
         
         # 插入记录到数据库
-        db.usage_records.insert_one(usage_record)
+        DBService.insert_usage_records(usage_record)
         
         return transcription
 
