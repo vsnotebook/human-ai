@@ -400,7 +400,6 @@ class MongoDBService:
             user = db.users.find_one({'email': email})
             if not user:
                 return None
-                
             return {
                 'id': str(user['_id']),
                 'username': user['username'],
@@ -412,165 +411,6 @@ class MongoDBService:
         except Exception as e:
             print(f"Failed to get user by email: {str(e)}")
             return None
-
-    @staticmethod
-    async def update_user(user_id, user_data):
-        try:
-            # 如果包含密码，则使用bcrypt加密
-            if 'password' in user_data and user_data['password']:
-                password_hash = bcrypt.hashpw(user_data['password'].encode('utf-8'), bcrypt.gensalt())
-                user_data['password_hash'] = password_hash
-                del user_data['password']
-
-            result = db.users.update_one(
-                {'_id': ObjectId(user_id)},
-                {'$set': user_data}
-            )
-            return result.modified_count > 0
-        except Exception as e:
-            print(f"更新用户失败: {str(e)}")
-            return False
-
-    @staticmethod
-    async def get_user_wallet(user_id: str) -> dict:
-        try:
-            user = db.users.find_one({'_id': ObjectId(user_id)})
-            if not user:
-                return {"balance": 0}
-
-            return {
-                "balance": user.get('balance', 0),
-                "remaining_minutes": user.get('remaining_minutes', 0),
-                "subscription_expiry": user.get('subscription_expiry', None)
-            }
-        except Exception as e:
-            print(f"获取钱包信息失败: {str(e)}")
-            return {"balance": 0}
-
-    @staticmethod
-    async def get_user_transactions(user_id: str) -> list:
-        try:
-            transactions = list(db.transactions
-                             .find({'user_id': user_id})
-                             .sort('created_at', -1)
-                             .limit(20))
-
-            return [{
-                'id': str(trans['_id']),
-                'amount': trans.get('amount', 0),
-                'type': trans.get('type', ''),
-                'description': trans.get('description', ''),
-                'created_at': trans.get('created_at', datetime.now())
-            } for trans in transactions]
-        except Exception as e:
-            print(f"获取交易记录失败: {str(e)}")
-            return []
-
-    @staticmethod
-    async def get_user_subscriptions(user_id: str):
-        try:
-            subs = list(db.subscriptions.find({'user_id': user_id}))
-            return [{
-                'id': str(sub.get('_id')),
-                'plan_name': sub.get('plan_name'),
-                'minutes': sub.get('minutes'),
-                'start_date': sub.get('start_date'),
-                'end_date': sub.get('end_date'),
-                'status': sub.get('status')
-            } for sub in subs]
-        except Exception:
-            return []
-
-    @staticmethod
-    async def get_user_orders(user_id: str):
-        try:
-            orders = list(db.orders.find({'user_id': user_id}))
-            return [{
-                'id': str(order.get('_id')),
-                'plan_name': order.get('plan_name'),
-                'amount': order.get('amount'),
-                'status': order.get('status'),
-                'created_at': order.get('created_at')
-            } for order in orders]
-        except Exception:
-            return []
-
-    @staticmethod
-    async def create_user_by_admin(username, email, password, role="user", trial_count=10):
-        """管理员创建用户"""
-        try:
-            # 检查用户名是否存在
-            existing_user = db.users.find_one({'username': username})
-            if existing_user:
-                return False
-
-            # 检查邮箱是否存在
-            existing_email = db.users.find_one({'email': email})
-            if existing_email:
-                return False
-
-            # 使用bcrypt加密密码
-            password_hash = bcrypt.hashpw(password.encode('utf-8'), bcrypt.gensalt())
-
-            user_data = {
-                'username': username,
-                'email': email,
-                'password_hash': password_hash,
-                'role': role,
-                'trial_count': trial_count,
-                'created_at': datetime.now()
-            }
-
-            db.users.insert_one(user_data)
-            return True
-        except Exception as e:
-            print(f"创建用户失败: {str(e)}")
-            return False
-
-    @staticmethod
-    async def delete_user(user_id):
-        """删除用户"""
-        try:
-            result = db.users.delete_one({'_id': ObjectId(user_id)})
-            return result.deleted_count > 0
-        except Exception as e:
-            print(f"删除用户失败: {str(e)}")
-            return False
-
-    @staticmethod
-    def verify_password(user_id: str, password: str) -> bool:
-        """验证用户密码"""
-        try:
-            user = db.users.find_one({'_id': ObjectId(user_id)})
-            if not user:
-                return False
-
-            # 使用bcrypt验证密码
-            if 'password_hash' in user:
-                stored_hash = user['password_hash']
-                if isinstance(stored_hash, bytes):
-                    return bcrypt.checkpw(password.encode('utf-8'), stored_hash)
-            return False
-        except Exception as e:
-            print(f"验证密码失败: {str(e)}")
-            return False
-
-    @staticmethod
-    async def update_password(user_id: str, new_password: str) -> bool:
-        """更新用户密码"""
-        try:
-            # 使用bcrypt加密新密码
-            password_hash = bcrypt.hashpw(new_password.encode('utf-8'), bcrypt.gensalt())
-
-            # 更新密码
-            result = db.users.update_one(
-                {'_id': ObjectId(user_id)},
-                {'$set': {'password_hash': password_hash}}
-            )
-            return result.modified_count > 0
-        except Exception as e:
-            print(f"更新密码失败: {str(e)}")
-            return False
 
     # 在MongoDBService类中添加get_user_by_username方法
     @classmethod
@@ -620,26 +460,27 @@ class MongoDBService:
     @classmethod
     async def get_user_usage_stats(cls, user_id):
         """获取用户使用统计和余额信息"""
-        # 获取原有的使用统计
-        stats = {
-            "total_used_minutes": 0,
-            "remaining_minutes": 0,
-            "trial_count": 0
-        }
-        
+        # 获取用户基本信息
+        user = db.users.find_one({'_id': ObjectId(user_id)})
+        if not user:
+            return None
+
         # 获取用户余额信息
         balance = cls.c_db.user_balance.find_one({"user_id": user_id})
         if not balance:
             # 如果没有余额记录，创建一个新的
             balance = await cls.create_user_balance(user_id)
         
-        # 合并余额信息到统计数据中
-        stats.update({
+        # 合并所有统计数据
+        stats = {
+            'remaining_minutes': user.get('remaining_minutes', 0),
+            'total_used_minutes': user.get('total_used_minutes', 0),
+            'trial_count': user.get('trial_count', 0),
             "asr_balance": balance.get("asr_balance", 0),
             "tts_balance": balance.get("tts_balance", 0),
             "text_translation_balance": balance.get("text_translation_balance", 0),
             "voice_translation_balance": balance.get("voice_translation_balance", 0)
-        })
+        }
         
         return stats
 
