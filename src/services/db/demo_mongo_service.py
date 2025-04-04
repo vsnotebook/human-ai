@@ -11,7 +11,7 @@ uri = "mongodb+srv://vswork666:VuSnbgmkrs4jamVt@cluster0.naywsqs.mongodb.net/?re
 client = MongoClient(uri, server_api=ServerApi('1'))
 db = client.voice_workshop
 
-class DemoDBService:
+class DemoMongoService:
     """试用功能相关的数据库操作"""
     
     @classmethod

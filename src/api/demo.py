@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request, Depends
 from fastapi.responses import RedirectResponse
 from src.core.template import templates
 from src.utils.http_session_util import get_current_user
-from src.services.db.demo_db_service import DemoDBService as DBService
+from src.services.db.demo_mongo_service import DemoMongoService as DBService
 
 router = APIRouter()
 
