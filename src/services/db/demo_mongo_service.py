@@ -67,3 +67,29 @@ class DemoMongoService:
         except Exception as e:
             print(f"重置试用记录失败: {str(e)}")
             return False
+
+    @classmethod
+    async def update_trial_count(cls, client_ip: str) -> Optional[Dict]:
+        """更新试用次数并返回更新后的记录"""
+        try:
+            current_time = datetime.utcnow()
+            trial_record = await cls.get_trial_record(client_ip)
+
+            # 如果没有记录或记录已过期（14天），创建/重置记录
+            if not trial_record or (current_time - trial_record["last_try"]) > timedelta(days=14):
+                trial_record = {
+                    "ip": client_ip,
+                    "count": 0,
+                    "last_try": current_time,
+                    "created_at": current_time
+                }
+
+            # 更新试用次数
+            new_count = trial_record["count"] + 1
+            await cls.create_or_update_trial_record(client_ip, new_count)
+            
+            # 返回更新后的记录
+            return await cls.get_trial_record(client_ip)
+        except Exception as e:
+            print(f"更新试用次数失败: {str(e)}")
+            return None

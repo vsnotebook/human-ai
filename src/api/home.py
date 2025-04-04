@@ -8,9 +8,9 @@ from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from starlette.responses import FileResponse
 
 from src.core.template import templates
-from src.db.mongodb import db
 from src.services.speech_service import SpeechService
 from src.utils.http_session_util import get_current_user
+from src.services.db.demo_mongo_service import DemoMongoService as DemoService
 
 router = APIRouter()
 
@@ -26,19 +26,13 @@ async def check_trial_count(request: Request) -> Optional[RedirectResponse]:
     client_ip = request.client.host
     print(f"client_ip: {client_ip}")
 
-    # 从MongoDB获取IP试用记录
-    trial_collection = db.trial_records
-    trial_record = trial_collection.find_one({"ip": client_ip})
-
-    # 如果没有记录或记录已过期（7天），创建/重置记录
-    current_time = datetime.utcnow()
-    if not trial_record or (current_time - trial_record["last_try"]) > timedelta(days=14):
-        trial_record = {
-            "ip": client_ip,
-            "count": 0,
-            "last_try": current_time,
-            "created_at": current_time
-        }
+    # 获取并更新试用记录
+    trial_record = await DemoService.update_trial_count(client_ip)
+    if not trial_record:
+        return RedirectResponse(
+            url="/register?message=error",
+            status_code=302
+        )
 
     # 检查是否超过试用次数
     if trial_record["count"] >= MAX_TRIAL_COUNT:
@@ -46,19 +40,6 @@ async def check_trial_count(request: Request) -> Optional[RedirectResponse]:
             url="/register?message=trial_exceeded",
             status_code=302
         )
-
-    # 更新试用次数
-    trial_collection.update_one(
-        {"ip": client_ip},
-        {
-            "$set": {
-                "last_try": current_time,
-                "count": trial_record["count"] + 1
-            },
-            "$setOnInsert": {"created_at": current_time}
-        },
-        upsert=True
-    )
 
     return None
 
@@ -153,52 +134,3 @@ async def transcribe_audio(
         print(str(e))
         return JSONResponse(content={"error": str(e)}, status_code=500)
 
-
-@router.post("/transcribe_trial")
-async def transcribe_trial(
-        request: Request,
-        file: UploadFile = File(...),
-        language_code: Annotated[str, Form()] = "en-US",
-        redirect: Optional[RedirectResponse] = Depends(check_trial_count),
-        model: Annotated[str, Form()] = "latest_long",
-):
-    # 如果需要重定向，直接返回重定向响应
-    if redirect:
-        return RedirectResponse(
-            url="/register?message=trial_exceeded",
-            status_code=303  # 使用 303 See Other 状态码
-        )
-    
-    try:
-        if not file.content_type.startswith("audio/"):
-            return JSONResponse(
-                content={"error": "无效的文件类型。只允许音频文件。"},
-                status_code=400,
-            )
-
-        # 获取文件名
-        file_name = file.filename
-
-        audio_content = await file.read()
-
-        # 传递用户ID以便扣除余额并记录使用情况
-        transcription = await SpeechService.transcribe(audio_content, language_code)
-        print(transcription)
-
-        # 获取更新后的用户信息
-        # updated_user = await get_current_user(request)
-
-        # 从user_balance表获取最新的ASR余额
-        # balance = db.user_balance.find_one({"user_id": user.get("id")})
-        # remaining_seconds = balance.get("asr_balance", 0) if balance else 0
-
-        return {
-            "transcription": transcription,
-            # "remaining_seconds": updated_user.get("remaining_audio_seconds", 0)
-        }
-
-    except ValueError as e:
-        print(str(e))
-        return JSONResponse(content={"error": str(e)}, status_code=400)
-    except Exception as e:
-        print(str(e))
