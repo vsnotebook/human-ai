@@ -11,7 +11,7 @@
 
     问 ： fastapi 实现邮箱注册，邮箱收到验证码后提交验证码激活注册。怎么做
 10、所有接口消耗时间的中间件。
-11、mongodb 转写 firestore
+11、mongodb 转写 firestore。 将mongodb_service.py的函数全部转写到FirestoreService。功能逻辑要和mongodb_service完全一致。
 12、登录接口，为什么有时候登录快，有时候登录慢？我怎么订阅
 
 

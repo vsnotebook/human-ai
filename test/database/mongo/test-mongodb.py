@@ -13,7 +13,7 @@ uri = "mongodb+srv://vswork666:VuSnbgmkrs4jamVt@cluster0.naywsqs.mongodb.net/?re
 
 def test_insert():
     start_time = time.time()  # 记录开始时间
-    
+
     # Create a new client and connect to the server
     client: MongoClient = MongoClient(uri, server_api=ServerApi('1'))
     # Send a ping to confirm a successful connection
@@ -26,8 +26,8 @@ def test_insert():
 
         # 创建用户文档
         users_ref.insert_one({
-            'username': "liu2",
-            'email': "liu1@qq.com",
+            'username': "vsfran",
+            'email': "vsfran@qq.com",
             'password_hash': password_hash,
             'role': "user",
             'trial_count': 10,
@@ -43,16 +43,17 @@ def test_insert():
         print(f"程序执行时间: {execution_time:.2f} 秒")
 
 
-def test_query():
+def test_query(client, username):
     start_time = time.time()
-    
-    client: MongoClient = MongoClient(uri, server_api=ServerApi('1'))
+    # db.users.create_index("username", unique=True)
+    # db.users.create_index("last_try")
+    # client: MongoClient = MongoClient(uri, server_api=ServerApi('1'))
     try:
         db = client.web
         users_ref = db.users
 
         # 查询单个用户
-        user = users_ref.find_one({'username': 'liu2'})
+        user = users_ref.find_one({'username': username})
         if user:
             print("找到用户:")
             print(f"用户名: {user['username']}")
@@ -63,10 +64,10 @@ def test_query():
             print("未找到用户")
 
         # 查询所有用户
-        print("\n所有用户列表:")
-        all_users = users_ref.find()
-        for user in all_users:
-            print(f"用户名: {user['username']}, 邮箱: {user['email']}")
+        # print("\n所有用户列表:")
+        # all_users = users_ref.find()
+        # for user in all_users:
+        #     print(f"用户名: {user['username']}, 邮箱: {user['email']}")
 
     except Exception as e:
         print(e)
@@ -78,7 +79,7 @@ def test_query():
 
 def test_advanced_query():
     start_time = time.time()
-    
+
     client: MongoClient = MongoClient(uri, server_api=ServerApi('1'))
     try:
         db = client.web
@@ -113,8 +114,21 @@ def test_advanced_query():
         execution_time = end_time - start_time
         print(f"\n程序执行时间: {execution_time:.2f} 秒")
 
+
+def test_query_many():
+    client: MongoClient = MongoClient(uri, server_api=ServerApi('1'))
+    test_query(client, 'vsfran')
+    print("=========================")
+    test_query(client, 'liu2')
+    print("=========================")
+    test_query(client, 'liu1')
+    print("=========================")
+    test_query(client, 'liu555')
+    print("=========================")
+
+
 # 在文件末尾添加测试调用
 if __name__ == "__main__":
     # test_insert()
-    test_query()
+    test_query_many()
     # test_advanced_query()
