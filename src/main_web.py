@@ -1,6 +1,7 @@
 import uvicorn
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from src.core.middleware.timing import timing_middleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
@@ -10,6 +11,9 @@ from src.core.config import settings
 from src.api import demo  # 添加这行
 
 app = FastAPI()
+
+# 添加计时中间件
+app.middleware("http")(timing_middleware)
 
 
 def check_allowed_origin(origin: str, request: Request) -> bool:

@@ -23,6 +23,7 @@ asr.py  home.py auth_util.py dashboard.py register.html auth.py
 
 
 
+fastapi项目，我需要统计所有调用接口的消耗时间，怎么优雅的做到？
 
 
 
