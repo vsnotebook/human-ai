@@ -7,8 +7,8 @@ from fastapi.responses import JSONResponse
 from fastapi.responses import RedirectResponse
 
 from src.core.template import templates
-# from src.services.db.demo_firestore_service import DemoFirestoreService as DemoService
-from src.services.db.demo_mongo_service import DemoMongoService as DemoService
+from src.services.db.demo_firestore_service import DemoFirestoreService as DemoService
+# from src.services.db.demo_mongo_service import DemoMongoService as DemoService
 from src.services.speech_service import SpeechService
 from src.utils.http_session_util import get_current_user
 

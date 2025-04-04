@@ -20,6 +20,9 @@ UserService，不应当有直接操作数据库的操作。把操作数据库的
 将 mongodb_service.py 的 deduct_audio_time 函转写到 firestore_service.py。 功能逻辑要和 mongodb_service 完全一致
 将 mongodb_service.py 的 insert_usage_records 函转写到 firestore_service.py。 功能逻辑要和 mongodb_service 完全一致
 
+将 demo_mongo_service.py 的 update_trial_count 函转写到 demo_firestore_service.py。 功能逻辑要和 demo_mongo_service 完全一致
+
+
 home.py的check_trial_count，不应当有直接操作数据库的操作。把操作数据库的操作放到 demo_mongo_service.py
 
 12、登录接口，为什么有时候登录快，有时候登录慢？我怎么订阅
