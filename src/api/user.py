@@ -4,8 +4,8 @@ from fastapi.responses import HTMLResponse, RedirectResponse, JSONResponse  # æ·
 # from src.config.payment_config import SUBSCRIPTION_PLANS
 from src.config.plans import SUBSCRIPTION_PLANS
 from src.models.user import User
-# from src.services.firestore_service import FirestoreService as DBService
-from src.services.mongodb_service import MongoDBService as DBService
+from src.services.firestore_service import FirestoreService as DBService
+# from src.services.mongodb_service import MongoDBService as DBService
 from src.core.template import templates
 from src.utils.http_session_util import get_current_user
 

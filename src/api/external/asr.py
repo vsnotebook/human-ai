@@ -3,7 +3,8 @@ from fastapi.responses import JSONResponse
 from typing import Annotated, Optional
 
 from src.services.speech_service import SpeechService
-from src.services.mongodb_service import MongoDBService as DBService
+from src.services.firestore_service import FirestoreService as DBService
+# from src.services.mongodb_service import MongoDBService as DBService
 from src.utils.auth_util import extract_api_auth, verify_api_signature
 
 router = APIRouter(prefix="/external")

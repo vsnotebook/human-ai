@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from datetime import timedelta
-from typing import Dict, Optional
+from typing import Dict, Optional, Any
 
 import bcrypt
 from google.cloud import firestore
@@ -677,5 +677,52 @@ class FirestoreService:
             doc_ref.update({"is_active": False})
             return True
         except Exception:
+            return False
+
+    @classmethod
+    async def deduct_audio_time(cls, user_id: str, audio_duration_seconds: int) -> Dict[str, Any]:
+        """扣除用户的语音识别时长余额"""
+        try:
+            # 获取用户当前余额信息
+            balance_doc = db.collection('user_balance').document(user_id).get()
+            if not balance_doc.exists:
+                # 如果没有余额记录，创建一个新的
+                balance = await cls.create_user_balance(user_id)
+            else:
+                balance = balance_doc.to_dict()
+            
+            # 计算剩余时长
+            remaining_seconds = balance.get("asr_balance", 0)
+            if remaining_seconds < audio_duration_seconds:
+                raise ValueError("语音识别时长余额不足")
+            
+            # 扣除时长
+            new_remaining_seconds = remaining_seconds - audio_duration_seconds
+            
+            # 更新用户余额信息
+            balance_ref = db.collection('user_balance').document(user_id)
+            balance_ref.update({
+                "asr_balance": new_remaining_seconds,
+                "updated_at": datetime.now(),
+                "total_asr_usage_seconds": balance.get("total_asr_usage_seconds", 0) + audio_duration_seconds
+            })
+            
+            # 返回更新后的用户余额信息
+            updated_balance = balance_ref.get().to_dict()
+            return updated_balance
+        except Exception as e:
+            print(f"扣除语音识别时长失败: {str(e)}")
+            raise
+
+    @classmethod
+    def insert_usage_records(cls, usage_record: dict):
+        """插入使用记录"""
+        try:
+            # 创建新的使用记录文档
+            doc_ref = db.collection('usage_records').document()
+            doc_ref.set(usage_record)
+            return True
+        except Exception as e:
+            print(f"插入使用记录失败: {str(e)}")
             return False
 

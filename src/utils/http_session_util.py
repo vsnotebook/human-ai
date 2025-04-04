@@ -1,6 +1,7 @@
 from fastapi import Request, HTTPException, Depends
 from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
-from src.services.mongodb_service import MongoDBService as DBService
+from src.services.firestore_service import FirestoreService as DBService
+# from src.services.mongodb_service import MongoDBService as DBService
 
 async def get_current_user(request: Request):
     """获取当前登录用户"""

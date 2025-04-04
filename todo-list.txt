@@ -14,6 +14,12 @@
 11、mongodb 转写 firestore。 将mongodb_service.py的函数全部转写到FirestoreService。功能逻辑要和mongodb_service完全一致。
 UserService，不应当有直接操作数据库的操作。把操作数据库的操作放到MongoDBService mongodb_service.py
 将 demo_mongo_service.py 的函数全部转写到 demo_firestore_service.py。功能逻辑要和 demo_mongo_service 完全一致。函数的排列顺序也一致。方便我自己对比。
+将 mongodb_service.py 的函转写到 firestore_service.py。功能逻辑要和 mongodb_service 完全一致。函数的排列顺序也一致。方便我自己对比。
+
+将 mongodb_service.py 的函转写到 firestore_service.py。只需要转写firestore_service没有的函数。 功能逻辑要和 mongodb_service 完全一致。函数的排列顺序也一致。方便我自己对比。
+将 mongodb_service.py 的 deduct_audio_time 函转写到 firestore_service.py。 功能逻辑要和 mongodb_service 完全一致
+将 mongodb_service.py 的 insert_usage_records 函转写到 firestore_service.py。 功能逻辑要和 mongodb_service 完全一致
+
 
 12、登录接口，为什么有时候登录快，有时候登录慢？我怎么订阅
 

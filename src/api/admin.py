@@ -6,8 +6,8 @@ from pydantic import BaseModel, EmailStr, Field
 from starlette.responses import RedirectResponse
 
 from src.core.template import templates
-# from src.services.firestore_service import FirestoreService as DBService
-from src.services.mongodb_service import MongoDBService as DBService
+from src.services.firestore_service import FirestoreService as DBService
+# from src.services.mongodb_service import MongoDBService as DBService
 from src.utils.http_session_util import get_current_user, admin_required
 
 router = APIRouter(prefix="/admin")
