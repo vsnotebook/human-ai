@@ -1,6 +1,6 @@
 from fastapi import Request, HTTPException, Depends
 from starlette.status import HTTP_401_UNAUTHORIZED, HTTP_403_FORBIDDEN
-from src.db.mongodb import db
+from src.services.mongodb_service import MongoDBService as DBService
 
 async def get_current_user(request: Request):
     """获取当前登录用户"""
@@ -30,7 +30,8 @@ async def get_current_user2(request: Request, force_refresh: bool = False):
     
     # 从数据库获取最新的用户信息
     # db = await get_db()
-    user = await db.users.find_one({"_id": user_id})
+    # user = await db.users.find_one({"_id": user_id})
+    user = await DBService.get_user_by_id(user_id)
 
     if user:
         # 更新会话中的用户信息
