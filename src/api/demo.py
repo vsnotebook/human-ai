@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request, Depends
 from fastapi.responses import RedirectResponse
 from src.core.template import templates
 from src.utils.http_session_util import get_current_user
-from src.db.mongodb import db
+from src.services.db.demo_db_service import DemoDBService as DBService
 
 router = APIRouter()
 
@@ -19,19 +19,14 @@ async def check_trial_count(request: Request) -> Optional[RedirectResponse]:
     client_ip = request.client.host
     print(f"client_ip: {client_ip}")
     
-    # 从MongoDB获取IP试用记录
-    trial_collection = db.trial_records
-    trial_record = trial_collection.find_one({"ip": client_ip})
+    # 从数据库获取IP试用记录
+    trial_record = await DBService.get_trial_record(client_ip)
     
     # 如果没有记录或记录已过期（7天），创建/重置记录
     current_time = datetime.utcnow()
     if not trial_record or (current_time - trial_record["last_try"]) > timedelta(days=7):
-        trial_record = {
-            "ip": client_ip,
-            "count": 0,
-            "last_try": current_time,
-            "created_at": current_time
-        }
+        await DBService.reset_trial_record(client_ip)
+        trial_record = await DBService.get_trial_record(client_ip)
     
     # 检查是否超过试用次数
     if trial_record["count"] >= MAX_TRIAL_COUNT:
@@ -41,16 +36,9 @@ async def check_trial_count(request: Request) -> Optional[RedirectResponse]:
         )
     
     # 更新试用次数
-    # trial_collection.update_one(
-    #     {"ip": client_ip},
-    #     {
-    #         "$set": {
-    #             "last_try": current_time,
-    #             "count": trial_record["count"] + 1
-    #         },
-    #         "$setOnInsert": {"created_at": current_time}
-    #     },
-    #     upsert=True
+    # await DBService.create_or_update_trial_record(
+    #     client_ip,
+    #     trial_record["count"] + 1
     # )
     
     return None
@@ -66,7 +54,7 @@ async def try_demo(
     
     # 获取IP的试用次数
     client_ip = request.client.host
-    trial_record = db.trial_records.find_one({"ip": client_ip})
+    trial_record = await DBService.get_trial_record(client_ip)
     trial_count = trial_record["count"] if trial_record else 0
     
     return templates.TemplateResponse(
