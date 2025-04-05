@@ -17,19 +17,21 @@ PROJECT_ID = "human-ai-454609"
 os.environ["http_proxy"] = "http://127.0.0.1:10808"
 os.environ["https_proxy"] = "http://127.0.0.1:10808"
 
-def transcribe_batch_gcs_input_inline_output_v2(
+def transcribe_batch_gcs_input_gcs_output_v2(
     audio_uri: str,
+    gcs_output_path: str,
 ) -> cloud_speech.BatchRecognizeResults:
     """Transcribes audio from a Google Cloud Storage URI using the Google Cloud Speech-to-Text API.
-        The transcription results are returned inline in the response.
+    The transcription results are stored in another Google Cloud Storage bucket.
     Args:
         audio_uri (str): The Google Cloud Storage URI of the input audio file.
             E.g., gs://[BUCKET]/[FILE]
+        gcs_output_path (str): The Google Cloud Storage bucket URI where the output transcript will be stored.
+            E.g., gs://[BUCKET]
     Returns:
-        cloud_speech.BatchRecognizeResults: The response containing the transcription results.
+        cloud_speech.BatchRecognizeResults: The response containing the URI of the transcription results.
     """
     # Instantiates a client
-    # client = SpeechClient()
     client_options = {"api_endpoint": "asia-southeast1-speech.googleapis.com"}
     # 初始化v2客户端
     # client = SpeechClient(credentials=credentials, client_options=client_options)
@@ -52,7 +54,9 @@ def transcribe_batch_gcs_input_inline_output_v2(
         config=config,
         files=[file_metadata],
         recognition_output_config=cloud_speech.RecognitionOutputConfig(
-            inline_response_config=cloud_speech.InlineOutputConfig(),
+            gcs_output_config=cloud_speech.GcsOutputConfig(
+                uri=gcs_output_path,
+            ),
         ),
     )
 
@@ -61,36 +65,29 @@ def transcribe_batch_gcs_input_inline_output_v2(
 
     print("Waiting for operation to complete...")
     response = operation.result(timeout=120)
+    print("complete...")
+    file_results = response.results[audio_uri]
 
-    if audio_uri not in response.results:
-        print(f"错误：未能获取到 {audio_uri} 的识别结果")
-        return None
+    print(f"Operation finished. Fetching results from {file_results.uri}...")
+    output_bucket, output_object = re.match(
+        r"gs://([^/]+)/(.*)", file_results.uri
+    ).group(1, 2)
 
-    transcript = response.results[audio_uri].transcript
-    if not transcript.results:
-        print(f"警告：{audio_uri} 的识别结果为空，可能原因：")
-        print("1. 音频文件可能是空的")
-        print("2. 音频质量太差")
-        print("3. 音频格式不支持")
-        return None
+    # Instantiates a Cloud Storage client
+    storage_client = storage.Client()
 
-    for result in transcript.results:
-        if not result.alternatives:
-            print(f"警告：结果中没有可用的转录内容")
-            continue
+    # Fetch results from Cloud Storage
+    bucket = storage_client.bucket(output_bucket)
+    blob = bucket.blob(output_object)
+    results_bytes = blob.download_as_bytes()
+    batch_recognize_results = cloud_speech.BatchRecognizeResults.from_json(
+        results_bytes, ignore_unknown_fields=True
+    )
 
-        if not result.alternatives:
-            print(f"警告：结果中没有可用的转录内容")
-            continue
-
+    for result in batch_recognize_results.results:
         print(f"Transcript: {result.alternatives[0].transcript}")
-        # 如果需要查看更多信息，可以取消下面的注释
-        # print(f"Confidence: {result.alternatives[0].confidence}")
 
-    return response.results[audio_uri].transcript
-
-
-# [END speech_transcribe_streaming_v2]
+    return batch_recognize_results
 
 
 if __name__ == "__main__":
@@ -101,5 +98,5 @@ if __name__ == "__main__":
     # transcribe_streaming_v2("../resources/历代名人咏江阴_耳聆网.mp3")
     # transcribe_batch_gcs_input_inline_output_v2("gs://[BUCKET]/[FILE]")
     # transcribe_batch_gcs_input_inline_output_v2("gs://voice-audio-1001/徐秀娟故居讲解词.mp3")
-    transcribe_batch_gcs_input_inline_output_v2("gs://voice-audio-1001/test.mp3")
+    transcribe_batch_gcs_input_gcs_output_v2("gs://voice-audio-1001/test.mp3","gs://voice-audio-1001")
     # transcribe_batch_gcs_input_inline_output_v2("../resources/第五十六条 经营者违反本法规定.wav")
