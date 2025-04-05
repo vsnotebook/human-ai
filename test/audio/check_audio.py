@@ -117,8 +117,12 @@ def print_audio_info(file_path: str):
             print(f"{key}: {value}")
 
 
+# ffmpeg -i "input.aac" -acodec pcm_s16le -ar 16000 -ac 1 "output.wav"
+# ffmpeg -i "a.mp3" -acodec pcm_s16le -ar 16000 -ac 1 "output.wav"
+
 if __name__ == "__main__":
     # 示例用法
     # print_audio_info(r"C:\Users\vsnot\Music\audio\a.bin")
     # print_audio_info(r"D:\vs-program\google\py\web-cloud\debug_audio\audio_debug_20250402_233347.bin")
-    print_audio_info(r"D:\vs-program\google\py\web-cloud\debug_audio\audio_debug_20250402_224021.m4a")
+    # print_audio_info(r"D:\vs-program\google\py\web-cloud\debug_audio\audio_debug_20250402_224021.m4a")
+    print_audio_info(r"D:\vs-program\google\py\web-cloud\test\google\asr\resources\第五十六条 经营者违反本法规定，达成并实施垄断协议的，由反垄断执法机构责令停止违法行为，没收违法所得，并处上一年度销售额百分之一以上百分之十以下的罚款.mp3")
