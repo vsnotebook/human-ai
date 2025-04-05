@@ -1,4 +1,5 @@
 import os
+import time
 
 from google.cloud.speech_v2 import SpeechClient
 from google.cloud.speech_v2.types import cloud_speech as cloud_speech_types, cloud_speech
@@ -51,7 +52,7 @@ def transcribe_streaming_v2(
         recognizer=f"projects/{PROJECT_ID}/locations/asia-southeast1/recognizers/_",
         streaming_config=streaming_config,
     )
-
+    start_time = time.time()
     def requests(config: cloud_speech_types.RecognitionConfig, audio: list) -> list:
         yield config
         yield from audio
@@ -61,11 +62,14 @@ def transcribe_streaming_v2(
         requests=requests(config_request, audio_requests)
     )
     responses = []
+
     for response in responses_iterator:
+        print("=======================1")
         responses.append(response)
         for result in response.results:
             print(f"Transcript: {result.alternatives[0].transcript}")
-
+            print(f"请求耗时: {time.time() - start_time:.2f}秒")
+            start_time = time.time()
     return responses
 
 
