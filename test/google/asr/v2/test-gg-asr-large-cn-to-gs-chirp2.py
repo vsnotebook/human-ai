@@ -41,7 +41,7 @@ def transcribe_batch_gcs_input_gcs_output_v2(
     config = cloud_speech.RecognitionConfig(
         auto_decoding_config=cloud_speech.AutoDetectDecodingConfig(),
         language_codes=["cmn-Hans-CN"],
-        model="chirp",
+        model="chirp_2",
         features=cloud_speech.RecognitionFeatures(
             enable_automatic_punctuation=True,  # 自动添加标点
             # enable_spoken_punctuation=True,  # 识别口语中的标点

@@ -56,11 +56,18 @@ def transcribe_batch_gcs_input_inline_output_v2(
         ),
     )
 
+    # 添加开始时间记录
+    start_time = time.time()
+
     # Transcribes the audio into text
     operation = client.batch_recognize(request=request)
 
     print("Waiting for operation to complete...")
     response = operation.result(timeout=120)
+
+    # 计算总耗时
+    total_time = time.time() - start_time
+    print(f"\n识别总耗时: {total_time:.2f} 秒")
 
     if audio_uri not in response.results:
         print(f"错误：未能获取到 {audio_uri} 的识别结果")
