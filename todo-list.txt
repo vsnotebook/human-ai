@@ -35,7 +35,9 @@ home.py的check_trial_count，不应当有直接操作数据库的操作。把�
 
 15、语音识别页面的录音，改成按住说话。
 
+预处理视频文件：使用ffmpeg提取视频文件中的音轨、降采样到16kHz 16bit Mono、并压缩编码为opus文件进行存储。
 
+ffmpeg -i input-video-file -ac 1 -ar 16000 -acodec libopus output-audio-file.opus
 
 seo 收录到百度和google
 
