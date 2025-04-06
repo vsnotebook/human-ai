@@ -281,3 +281,19 @@ async def deactivate_api_key(request: Request, key_id: str):
     success = DBService.deactivate_api_key(key_id, user.get("id"))
     
     return RedirectResponse(url="/user/api-keys", status_code=302)
+
+
+@router.get("/myanmar-interpretation", response_class=HTMLResponse)
+async def myanmar_interpretation(request: Request):
+    user = await get_current_user(request)
+    if not user:
+        return RedirectResponse(url="/login", status_code=302)
+
+    return templates.TemplateResponse(
+        "user/myanmar_interpretation.html",
+        {
+            "request": request,
+            "current_user": user,
+            "active_page": "myanmar-interpretation"
+        }
+    )

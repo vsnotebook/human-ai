@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>缅甸语同声传译</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入字体图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-2 max-w-md">
+        <!-- 顶部导航栏 -->
+        <div class="flex justify-between items-center py-3">
+            <h1 class="text-xl font-medium">翻译</h1>
+            <button class="p-2">
+                <i class="fas fa-user-circle text-xl text-gray-600"></i>
+            </button>
+        </div>
+
+        <!-- 聊天内容区域 -->
+        <div class="bg-white rounded-lg p-4 mb-20" id="chatContainer">
+            <!-- 消息气泡示例 -->
+            <div class="flex flex-col space-y-4">
+                <!-- 中文消息 -->
+                <div class="flex flex-col items-start">
+                    <div class="bg-white border rounded-lg p-3 max-w-[80%] shadow-sm">
+                        <p class="text-gray-800">你好，很高兴认识你。</p>
+                        <p class="text-gray-500 text-sm mt-1">မင်္ဂလာပါ၊ သင့်ကို တွေ့ရတာ ဝမ်းသာပါတယ်။</p>
+                    </div>
+                </div>
+
+                <!-- 缅甸语消息 -->
+                <div class="flex flex-col items-end">
+                    <div class="bg-blue-500 rounded-lg p-3 max-w-[80%] shadow-sm">
+                        <p class="text-white">မင်္ဂလာပါ၊ ကျွန်တော် John ပါ။</p>
+                        <p class="text-blue-100 text-sm mt-1">你好，我是约翰。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 底部控制区 -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4">
+            <div class="flex justify-between items-center max-w-md mx-auto space-x-4">
+                <button id="chineseBtn" class="flex-1 py-3 px-4 rounded-full bg-gray-100 text-gray-800 text-center active:bg-gray-200">
+                    按住说中文
+                </button>
+                <button id="myanmarBtn" class="flex-1 py-3 px-4 rounded-full bg-gray-100 text-gray-800 text-center active:bg-gray-200">
+                    ဗမာစကား
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatContainer = document.getElementById('chatContainer');
+        const chineseBtn = document.getElementById('chineseBtn');
+        const myanmarBtn = document.getElementById('myanmarBtn');
+
+        // 添加新消息的函数
+        function addMessage(text, translation, isChineseFirst = true) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex flex-col ${isChineseFirst ? 'items-start' : 'items-end'} mb-4`;
+            
+            messageDiv.innerHTML = `
+                <div class="bg-${isChineseFirst ? 'white border' : 'blue-500'} rounded-lg p-3 max-w-[80%] shadow-sm">
+                    <p class="text-${isChineseFirst ? 'gray-800' : 'white'}">${text}</p>
+                    <p class="text-${isChineseFirst ? 'gray-500' : 'blue-100'} text-sm mt-1">${translation}</p>
+                </div>
+            `;
+            
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // 按住说话功能
+        let isRecording = false;
+        let recordTimeout;
+
+        chineseBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isRecording = true;
+            chineseBtn.textContent = '松开结束';
+            // 这里添加录音开始逻辑
+        });
+
+        chineseBtn.addEventListener('touchend', () => {
+            if (isRecording) {
+                isRecording = false;
+                chineseBtn.textContent = '按住说中文';
+                // 这里添加录音结束和翻译逻辑
+                addMessage('你好，很高兴认识你。', 'မင်္ဂလာပါ၊ သင့်ကို တွေ့ရတာ ဝမ်းသာပါတယ်။', true);
+            }
+        });
+
+        myanmarBtn.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isRecording = true;
+            myanmarBtn.textContent = 'လွှတ်ပါ';
+            // 这里添加录音开始逻辑
+        });
+
+        myanmarBtn.addEventListener('touchend', () => {
+            if (isRecording) {
+                isRecording = false;
+                myanmarBtn.textContent = 'ဗမာစကား';
+                // 这里添加录音结束和翻译逻辑
+                addMessage('မင်္ဂလာပါ၊ ကျွန်တော် John ပါ။', '你好，我是约翰。', false);
+            }
+        });
+
+        // 显示提示消息
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg opacity-0 transition-opacity duration-300';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('opacity-0');
+                toast.classList.add('opacity-90');
+            }, 100);
+            
+            setTimeout(() => {
+                toast.classList.remove('opacity-90');
+                toast.classList.add('opacity-0');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 2000);
+        }
+    </script>
+</body>
+</html>
