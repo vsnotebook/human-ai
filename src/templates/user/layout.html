@@ -24,15 +24,24 @@
                             <span>我的主页</span>
                         </a>
                     </li>
+                    <!-- 修改缅甸语同声传译菜单项，使其与其他项风格一致但仍然突出 -->
+                    <li class="nav-item {% if active_page == 'myanmar_interpretation' %}active{% endif %}">
+                        <a href="/user/myanmar-interpretation">
+                            <i class="mdi mdi-headset"></i>
+                            <span>缅甸语同声传译</span>
+<!--                            <span class="feature-badge">新</span>-->
+                        </a>
+                    </li>
+
                     <li class="nav-item {% if active_page == 'asr' %}active{% endif %}">
                         <a href="/user/asr">
-                            <i class="mdi mdi-credit-card-outline"></i>
+                            <i class="mdi mdi-microphone-outline"></i>
                             <span>语音转文本</span>
                         </a>
                     </li>
                     <li class="nav-item {% if active_page == 'tts' %}active{% endif %}">
                         <a href="/user/tts">
-                            <i class="mdi mdi-credit-card-outline"></i>
+                            <i class="mdi mdi-text-to-speech"></i>
                             <span>文本转语音</span>
                         </a>
                     </li>
