@@ -27,12 +27,13 @@ home.py的check_trial_count，不应当有直接操作数据库的操作。把�
 
 12、登录接口，为什么有时候登录快，有时候登录慢？我怎么订阅
 
-13、大文本、大音频文件识别。音频翻译。
+13、大文本、大音频文件识别。音频翻译。 与 whisper v3 对比
 
 14、cloudflarejias
 我在谷歌云部署了一个服务。网站是https://voice.123666123.xyz/。 如何利用cloudfare的CDN加快访问速度？
 我在谷歌云部署了一个云服务。使用Cloud Run部署，生成的域名是https://human-ai-686418751121.asia-east1.run.app。 如何利用cloudfare的CDN加快访问速度？
 
+15、语音识别页面的录音，改成按住说话。
 
 
 
