@@ -3,6 +3,7 @@ from fastapi.responses import HTMLResponse, JSONResponse
 from src.core.template import templates
 from src.services.speech_service import SpeechService
 from src.utils.http_session_util import get_current_user
+from src.utils.timing_decorator import timing_decorator
 from google.cloud import translate_v2 as translate
 import requests
 
@@ -19,6 +20,18 @@ async def myanmar_interpretation_page(request: Request, current_user=Depends(get
             "current_user": current_user,
         }
     )
+
+@timing_decorator("语音识别")
+async def speech_recognition(audio_content: bytes, source_language: str, user_id: str, filename: str) -> str:
+    return await SpeechService.transcribe_by_userid(audio_content, source_language, user_id, filename)
+
+@timing_decorator("文本翻译")
+def text_translation(target: str, text: str, source: str = None) -> dict:
+    return translate_text(target, text, source)
+
+@timing_decorator("文本转语音")
+def speech_synthesis(text: str, language_code: str) -> str:
+    return text_to_speech(text, language_code)
 
 @router.post("/myanmar-interpretation")
 async def myanmar_interpretation_api(
@@ -44,7 +57,7 @@ async def myanmar_interpretation_api(
 
         # 1. 语音识别
         audio_content = await file.read()
-        transcription = await SpeechService.transcribe_by_userid(
+        transcription = await speech_recognition(
             audio_content, 
             source_language, 
             user.get("id"), 
@@ -53,7 +66,7 @@ async def myanmar_interpretation_api(
         print("语音识别完成：" + transcription)
 
         # 2. 文本翻译
-        translation = translate_text(
+        translation = await text_translation(
             target_language, 
             transcription,
             source_language.split('-')[0] if '-' in source_language else source_language
@@ -61,7 +74,7 @@ async def myanmar_interpretation_api(
         print("文本翻译完成：" + translation["translatedText"])
 
         # 3. 文本转语音
-        audio_url = text_to_speech(translation["translatedText"], target_language)
+        audio_url = await speech_synthesis(translation["translatedText"], target_language)
         print("文本转语音完成：" + audio_url)
 
         # 返回结果

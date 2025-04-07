@@ -25,3 +25,4 @@ google-cloud-translate
 mutagen
 google-cloud-storage
 openai
+sse-starlette
