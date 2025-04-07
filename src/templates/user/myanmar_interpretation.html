@@ -92,7 +92,7 @@
                     // 发送到服务器
                     try {
                         showToast('正在翻译...');
-                        const response = await fetch('/voice-translate', {
+                        const response = await fetch('/myanmar-interpretation', {  // 修改这里的URL
                             method: 'POST',
                             body: formData
                         });

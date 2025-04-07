@@ -5,7 +5,7 @@ from src.core.middleware.timing import timing_middleware
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 
-from src.api import home, user, admin, auth, profile, payment, translate, voice_translate
+from src.api import home, user, admin, auth, profile, payment, translate, voice_translate, interpretation
 from src.api.external import asr
 from src.core.config import settings
 from src.api import demo  # 添加这行
@@ -53,8 +53,9 @@ app.include_router(payment.router)
 app.include_router(profile.router)
 app.include_router(translate.router)
 app.include_router(voice_translate.router)
-app.include_router(demo.router)  # 添加这行
-app.include_router(asr.router)  # 添加这行
+app.include_router(interpretation.router)  # 添加新的路由
+app.include_router(demo.router)
+app.include_router(asr.router)
 
 if __name__ == "__main__":
     uvicorn.run(app, host=settings.SERVER_HOST, port=int(settings.SERVER_PORT))
