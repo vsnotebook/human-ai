@@ -5,6 +5,7 @@ import uuid
 
 from src.config.language_config import LANGUAGE_CONFIG
 from src.core.config import settings
+from src.services.audio_factory import AudioServiceFactory
 from src.services.user_service import UserService
 from src.services.firestore_service import FirestoreService as DBService
 # from src.services.mongodb_service import MongoDBService as DBService
@@ -19,23 +20,27 @@ class SpeechService:
 
         # 生成唯一的任务ID
         task_id = str(uuid.uuid4())
-        
+
         # 获取音频时长
         audio_duration = await UserService.get_audio_duration(audio_content)
-        
+
         # 扣除用户余额
         await UserService.deduct_audio_time(user_id, audio_duration)
 
         # 记录开始时间
         start_time = datetime.datetime.now()
-        
+
+        print(" 使用 google 语音识别")
+        speech_service = AudioServiceFactory.get_speech_service(provider="google")
+
         # 执行语音识别
-        transcription = await SpeechService.transcribe(audio_content, language_code)
-        
+        # transcription = await SpeechService.transcribe(audio_content, language_code)
+        transcription = await speech_service.recognize(audio_content, language_code)
+
         # 记录结束时间
         end_time = datetime.datetime.now()
         process_time = (end_time - start_time).total_seconds()
-        
+
         # 将使用记录保存到数据库
         usage_record = {
             "task_id": task_id,
@@ -51,10 +56,10 @@ class SpeechService:
             "completed_at": end_time,
             "status": "completed"
         }
-        
+
         # 插入记录到数据库
         DBService.insert_usage_records(usage_record)
-        
+
         return transcription
 
     @staticmethod
