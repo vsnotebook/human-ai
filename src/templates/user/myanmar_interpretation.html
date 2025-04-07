@@ -10,51 +10,38 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/recorder-js@1.0.7/dist/recorder.min.js"></script>
 </head>
-<body class="bg-gray-100 min-h-screen">
+<!-- 修改 body 背景色 -->
+<body class="bg-white min-h-screen">
     <div class="container mx-auto px-4 py-2 max-w-md">
         <!-- 顶部导航栏 -->
-        <div class="flex justify-between items-center py-3">
-            <h1 class="text-xl font-medium">翻译</h1>
+        <div class="flex justify-between items-center py-3 border-b">
+            <h1 class="text-xl font-medium text-gray-800">翻译</h1>
             <button class="p-2">
                 <i class="fas fa-user-circle text-xl text-gray-600"></i>
             </button>
         </div>
 
-        <!-- 聊天内容区域 -->
-        <div class="bg-white rounded-lg p-4 mb-20" id="chatContainer">
-            <!-- 消息气泡示例 -->
+        <!-- 聊天内容区域 - 移除默认对话，修改背景色 -->
+        <div class="bg-white p-4 mb-20" id="chatContainer">
             <div class="flex flex-col space-y-4">
-                <!-- 中文消息 -->
-                <div class="flex flex-col items-start">
-                    <div class="bg-white border rounded-lg p-3 max-w-[80%] shadow-sm">
-                        <p class="text-gray-800">你好，很高兴认识你。</p>
-                        <p class="text-gray-500 text-sm mt-1">မင်္ဂလာပါ၊ သင့်ကို တွေ့ရတာ ဝမ်းသာပါတယ်။</p>
-                    </div>
-                </div>
-
-                <!-- 缅甸语消息 -->
-                <div class="flex flex-col items-end">
-                    <div class="bg-blue-500 rounded-lg p-3 max-w-[80%] shadow-sm">
-                        <p class="text-white">မင်္ဂလာပါ၊ ကျွန်တော် John ပါ။</p>
-                        <p class="text-blue-100 text-sm mt-1">你好，我是约翰。</p>
-                    </div>
-                </div>
+                <!-- 移除默认对话示例 -->
             </div>
         </div>
 
-        <!-- 底部控制区 -->
-        <div class="fixed bottom-0 left-0 right-0 bg-white border-t p-4">
-            <div class="flex justify-between items-center max-w-md mx-auto space-x-4">
-                <button id="chineseBtn" class="flex-1 py-3 px-4 rounded-full bg-gray-100 text-gray-800 text-center active:bg-gray-200">
+        <!-- 底部控制区 - 优化样式 -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white border-t">
+            <div class="flex justify-between items-center max-w-md mx-auto space-x-4 p-4">
+                <button id="chineseBtn" class="flex-1 py-3 px-4 rounded-full bg-gray-50 text-gray-800 text-center active:bg-gray-100 hover:bg-gray-100 transition-colors duration-200">
                     按住说中文
                 </button>
-                <button id="myanmarBtn" class="flex-1 py-3 px-4 rounded-full bg-gray-100 text-gray-800 text-center active:bg-gray-200">
+                <button id="myanmarBtn" class="flex-1 py-3 px-4 rounded-full bg-gray-50 text-gray-800 text-center active:bg-gray-100 hover:bg-gray-100 transition-colors duration-200">
                     ဗမာစကား
                 </button>
             </div>
         </div>
     </div>
 
+    <!-- 修改 addMessage 函数中的样式 -->
     <script>
         const chatContainer = document.getElementById('chatContainer');
         const chineseBtn = document.getElementById('chineseBtn');
@@ -158,9 +145,9 @@
             messageDiv.className = `flex flex-col ${isChineseFirst ? 'items-start' : 'items-end'} mb-4`;
             
             messageDiv.innerHTML = `
-                <div class="bg-${isChineseFirst ? 'white border' : 'blue-500'} rounded-lg p-3 max-w-[80%] shadow-sm">
-                    <p class="text-${isChineseFirst ? 'gray-800' : 'white'}">${text}</p>
-                    <p class="text-${isChineseFirst ? 'gray-500' : 'blue-100'} text-sm mt-1">${translation}</p>
+                <div class="${isChineseFirst ? 'bg-gray-100' : 'bg-blue-500'} rounded-lg p-3 max-w-[80%] shadow-sm">
+                    <p class="${isChineseFirst ? 'text-gray-800' : 'text-white'}">${text}</p>
+                    <p class="${isChineseFirst ? 'text-gray-500' : 'text-blue-50'} text-sm mt-1">${translation}</p>
                 </div>
             `;
             
