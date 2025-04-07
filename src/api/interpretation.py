@@ -50,6 +50,7 @@ async def myanmar_interpretation_api(
             user.get("id"), 
             file.filename
         )
+        print("语音识别完成：" + transcription)
 
         # 2. 文本翻译
         translation = translate_text(
@@ -57,9 +58,11 @@ async def myanmar_interpretation_api(
             transcription,
             source_language.split('-')[0] if '-' in source_language else source_language
         )
+        print("文本翻译完成：" + translation["translatedText"])
 
         # 3. 文本转语音
         audio_url = text_to_speech(translation["translatedText"], target_language)
+        print("文本转语音完成：" + audio_url)
 
         # 返回结果
         return {
