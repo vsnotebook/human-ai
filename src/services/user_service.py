@@ -21,7 +21,7 @@ class UserService:
             更新后的用户信息
         """
         ret = await DBService.deduct_audio_time(user_id, audio_duration_seconds)
-        print(ret)
+        # print(ret)
         return ret
     
     @staticmethod
