@@ -24,6 +24,7 @@ class GoogleSpeechAdapter(SpeechRecognitionInterface):
         #     "model": "long",
         #     "language_code": "en-US"
         # })
+        print("使用 google 语音识别")
 
         language_settings = LANGUAGE_CONFIG.get(language_code)
 

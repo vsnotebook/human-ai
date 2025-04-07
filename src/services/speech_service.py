@@ -30,8 +30,8 @@ class SpeechService:
         # 记录开始时间
         start_time = datetime.datetime.now()
 
-        print(" 使用 google 语音识别")
-        speech_service = AudioServiceFactory.get_speech_service(provider="google")
+        # speech_service = AudioServiceFactory.get_speech_service(provider="google")
+        speech_service = AudioServiceFactory.get_speech_service(provider="aliyun")
 
         # 执行语音识别
         # transcription = await SpeechService.transcribe(audio_content, language_code)

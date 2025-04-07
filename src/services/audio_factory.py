@@ -30,11 +30,7 @@ class AudioServiceFactory:
             
         # 根据提供商获取配置
         if provider.lower() == "aliyun":
-            return adapter_class(
-                app_key=settings.ALIYUN_APP_KEY,
-                access_key_id=settings.ALIYUN_ACCESS_KEY_ID,
-                access_key_secret=settings.ALIYUN_ACCESS_KEY_SECRET
-            )
+            return adapter_class()
         else:
             return adapter_class()
     
