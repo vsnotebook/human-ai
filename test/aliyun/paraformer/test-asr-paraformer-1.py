@@ -8,11 +8,12 @@ dashscope.api_key = "sk-196bc2b54b444440962781ef844e7720"
 
 recognition = Recognition(model='paraformer-realtime-v2',
                           format='wav',
-                          sample_rate=16000,
+                          sample_rate=48000,
                           # “language_hints”只支持paraformer-realtime-v2模型
                           language_hints=['zh', 'en'],
                           callback=None)
-result = recognition.call('../../resources/asr_example.wav')
+# result = recognition.call('../../resources/asr_example.wav')
+result = recognition.call(r'C:\Users\vsnot\AppData\Local\Temp\tmp0fxv720d.wav')
 if result.status_code == HTTPStatus.OK:
     print('识别结果：')
     print(result.get_sentence())

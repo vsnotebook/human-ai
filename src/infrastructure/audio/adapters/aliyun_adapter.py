@@ -4,30 +4,46 @@ from src.infrastructure.audio.interfaces import SpeechRecognitionInterface, Tran
 from http import HTTPStatus
 import dashscope
 import json
+import tempfile
+import os
 from typing import Dict, Any, Optional
 
 
 class AliyunSpeechAdapter(SpeechRecognitionInterface):
     def __init__(self):
-        # self.app_key = app_key  # API Key
-        self.app_key = "sk-196bc2b54b444440962781ef844e7720"  # API Key
+        self.app_key = "sk-196bc2b54b444440962781ef844e7720"
         dashscope.api_key = self.app_key
         self.recognition = Recognition(
             model='paraformer-realtime-v2',
             format='wav',
-            sample_rate=16000,
-            language_hints=['zh', 'my', 'en'],  # 支持中文、缅甸语和英语
+            sample_rate=48000,
+            language_hints=['zh', 'my', 'en'],
             callback=None
         )
     
     async def recognize(self, audio_content: bytes, language_code: str, **kwargs) -> str:
         try:
             print("使用 aliyun 语音识别")
-            # 调用阿里云语音识别API
-            result = self.recognition.call(audio_content)
+            
+            # 创建临时文件并写入音频数据
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_file:
+                temp_file.write(audio_content)
+                temp_file_path = temp_file.name
+            
+            try:
+                # 使用临时文件路径调用识别API
+                result = self.recognition.call(temp_file_path)
+            finally:
+                # 删除临时文件
+                if os.path.exists(temp_file_path):
+                    print(temp_file_path)
+                    os.unlink(temp_file_path)
             
             if result.status_code == HTTPStatus.OK:
-                return result.get_sentence()
+                # 提取识别文本
+                if result.output and result.output.get('sentence'):
+                    return result.output['sentence'][0]['text']
+                return ""
             else:
                 raise Exception(f"语音识别失败: {result.message}")
                 
