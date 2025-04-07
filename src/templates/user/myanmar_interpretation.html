@@ -50,6 +50,47 @@
         let mediaRecorder;
         let audioChunks = [];
         let isRecording = false;
+        let socket = null;
+        let currentTranscription = '';
+        
+        // 初始化WebSocket连接
+        function initWebSocket(language) {
+            const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${wsProtocol}//${window.location.host}/ws/speech`;
+            
+            socket = new WebSocket(wsUrl);
+            
+            socket.onopen = function() {
+                console.log('WebSocket连接已建立');
+                // 发送语言设置
+                socket.send(JSON.stringify({
+                    language: language === 'chinese' ? 'zh' : 'my'
+                }));
+            };
+            
+            socket.onmessage = function(event) {
+                const data = JSON.parse(event.data);
+                console.log('收到识别结果:', data);
+                
+                // 更新当前识别文本
+                currentTranscription = data.text;
+                
+                // 如果是句子结束，则发送翻译请求
+                if (data.is_end) {
+                    sendTranslationRequest(currentTranscription, language);
+                    currentTranscription = '';
+                }
+            };
+            
+            socket.onerror = function(error) {
+                console.error('WebSocket错误:', error);
+                showToast('WebSocket连接错误');
+            };
+            
+            socket.onclose = function() {
+                console.log('WebSocket连接已关闭');
+            };
+        }
         
         // 初始化录音功能
         async function initRecorder() {
@@ -68,48 +109,63 @@
                 
                 mediaRecorder.ondataavailable = (event) => {
                     audioChunks.push(event.data);
+                    
+                    // 如果WebSocket连接已建立，直接发送音频数据
+                    if (socket && socket.readyState === WebSocket.OPEN) {
+                        // 将音频数据转换为ArrayBuffer并发送
+                        event.data.arrayBuffer().then(buffer => {
+                            socket.send(buffer);
+                        });
+                    }
                 };
         
                 mediaRecorder.onstop = async () => {
-                    // 将录音数据转换为WAV格式
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
-                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    
-                    // 将音频数据解码为AudioBuffer
-                    const arrayBuffer = await audioBlob.arrayBuffer();
-                    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                    
-                    // 创建WAV文件
-                    const wavBuffer = audioBufferToWav(audioBuffer);
-                    const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
-                    
-                    // 创建FormData对象
-                    const formData = new FormData();
-                    formData.append('file', new File([wavBlob], 'recording.wav', { type: 'audio/wav' }));
-                    formData.append('source_language', currentLang === 'chinese' ? 'zh-CN' : 'my-MM');
-                    formData.append('target_language', currentLang === 'chinese' ? 'my' : 'zh-CN');
-                    
-                    // 发送到服务器
-                    try {
-                        showToast('正在翻译...');
-                        const response = await fetch('/myanmar-interpretation', {  // 修改这里的URL
-                            method: 'POST',
-                            body: formData
-                        });
+                    // 如果使用WebSocket，则发送停止信号
+                    if (socket && socket.readyState === WebSocket.OPEN) {
+                        socket.send('stop');
+                        socket.close();
+                        socket = null;
+                    } else {
+                        // 原有的录音处理逻辑保留为备用
+                        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                         
-                        if (!response.ok) {
-                            throw new Error('翻译请求失败');
+                        // 将音频数据解码为AudioBuffer
+                        const arrayBuffer = await audioBlob.arrayBuffer();
+                        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                        
+                        // 创建WAV文件
+                        const wavBuffer = audioBufferToWav(audioBuffer);
+                        const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+                        
+                        // 创建FormData对象
+                        const formData = new FormData();
+                        formData.append('file', new File([wavBlob], 'recording.wav', { type: 'audio/wav' }));
+                        formData.append('source_language', currentLang === 'chinese' ? 'zh-CN' : 'my-MM');
+                        formData.append('target_language', currentLang === 'chinese' ? 'my' : 'zh-CN');
+                        
+                        // 发送到服务器
+                        try {
+                            showToast('正在翻译...');
+                            const response = await fetch('/myanmar-interpretation', {
+                                method: 'POST',
+                                body: formData
+                            });
+                            
+                            if (!response.ok) {
+                                throw new Error('翻译请求失败');
+                            }
+                            
+                            const data = await response.json();
+                            addMessage(
+                                data.transcription || '',
+                                data.translation || '',
+                                currentLang === 'chinese'
+                            );
+                        } catch (error) {
+                            console.error('翻译错误:', error);
+                            showToast('翻译失败: ' + error.message);
                         }
-                        
-                        const data = await response.json();
-                        addMessage(
-                            data.transcription || '',
-                            data.translation || '',
-                            currentLang === 'chinese'
-                        );
-                    } catch (error) {
-                        console.error('翻译错误:', error);
-                        showToast('翻译失败: ' + error.message);
                     }
                     
                     audioChunks = [];
@@ -117,6 +173,40 @@
             } catch (err) {
                 console.error('无法访问麦克风:', err);
                 showToast('无法访问麦克风');
+            }
+        }
+        
+        // 发送翻译请求
+        async function sendTranslationRequest(text, sourceLang) {
+            if (!text || text.trim() === '') return;
+            
+            try {
+                showToast('正在翻译...');
+                const response = await fetch('/myanmar-interpretation/text', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        source_language: sourceLang === 'chinese' ? 'zh-CN' : 'my-MM',
+                        target_language: sourceLang === 'chinese' ? 'my' : 'zh-CN',
+                    }),
+                });
+                
+                if (!response.ok) {
+                    throw new Error('翻译请求失败');
+                }
+                
+                const data = await response.json();
+                addMessage(
+                    text,
+                    data.translation || '',
+                    sourceLang === 'chinese'
+                );
+            } catch (error) {
+                console.error('翻译错误:', error);
+                showToast('翻译失败: ' + error.message);
             }
         }
 
@@ -183,8 +273,12 @@
                 isRecording = true;
                 audioChunks = [];
                 
+                // 初始化WebSocket连接
+                initWebSocket(lang);
+                
                 if (mediaRecorder && mediaRecorder.state === 'inactive') {
-                    mediaRecorder.start();
+                    // 设置较小的timeslice，使音频数据能够实时发送
+                    mediaRecorder.start(100); // 每100毫秒发送一次数据
                     btn.classList.add('bg-blue-500', 'text-white');
                     btn.classList.remove('bg-gray-100', 'text-gray-800');
                     btn.textContent = lang === 'chinese' ? '松开结束' : 'လွှတ်ပါ';

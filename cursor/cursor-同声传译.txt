@@ -70,3 +70,28 @@
 添加一个函数执行计时器。方便我查询函数的执行时间。
 实时音频翻译，有3个步骤。1. 语音识别。# 2. 文本翻译。# 3. 文本转语音。 3个步骤。可以识别完成之后，就马上返回前端。翻译完成，马上返回前端。
 
+myanmar_interpretation.html 参考 ws_server.py  参考ws_server.py ，使用websocket实现实时语音识别。
+
+## 主要修改说明
+1. 添加WebSocket连接功能 ：
+
+   - 新增了 initWebSocket 函数，用于建立与后端的WebSocket连接
+   - 根据用户选择的语言（中文或缅甸语）初始化不同的识别模式
+2. 实时音频数据处理 ：
+
+   - 修改了 mediaRecorder 的配置，设置较小的 timeslice (100ms)，使音频数据能够实时发送
+   - 在 ondataavailable 事件中，将音频数据直接通过WebSocket发送到服务器
+3. 实时识别结果处理 ：
+
+   - 添加了WebSocket的 onmessage 事件处理，接收服务器返回的实时识别结果
+   - 当收到句子结束标志时，发送翻译请求
+4. 翻译请求处理 ：
+
+   - 新增了 sendTranslationRequest 函数，用于发送文本翻译请求
+   - 保留了原有的录音处理逻辑作为备用方案
+这个实现方案利用WebSocket实现了实时语音识别，可以在用户说话的同时进行识别，并在句子结束时自动发送翻译请求，提供更流畅的用户体验。
+
+注意：你需要在后端添加一个新的API端点 /myanmar-interpretation/text 来处理文本翻译请求。
+
+用户在前端，怎么开启websocket进行同声传译。
+
