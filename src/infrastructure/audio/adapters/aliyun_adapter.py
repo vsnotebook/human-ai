@@ -1,4 +1,5 @@
 from dashscope.audio.asr import Recognition
+import wave
 
 from src.infrastructure.audio.interfaces import SpeechRecognitionInterface, TranslationInterface, TextToSpeechInterface
 from http import HTTPStatus
@@ -8,18 +9,10 @@ import tempfile
 import os
 from typing import Dict, Any, Optional
 
-
 class AliyunSpeechAdapter(SpeechRecognitionInterface):
     def __init__(self):
         self.app_key = "sk-196bc2b54b444440962781ef844e7720"
         dashscope.api_key = self.app_key
-        self.recognition = Recognition(
-            model='paraformer-realtime-v2',
-            format='wav',
-            sample_rate=48000,
-            language_hints=['zh', 'my', 'en'],
-            callback=None
-        )
     
     async def recognize(self, audio_content: bytes, language_code: str, **kwargs) -> str:
         try:
@@ -31,8 +24,25 @@ class AliyunSpeechAdapter(SpeechRecognitionInterface):
                 temp_file_path = temp_file.name
             
             try:
+                # 读取WAV文件信息
+                with wave.open(temp_file_path, 'rb') as wav_file:
+                    sample_rate = wav_file.getframerate()
+                    channels = wav_file.getnchannels()
+                    sample_width = wav_file.getsampwidth()
+
+                print(f"音频信息: 采样率={sample_rate}, 声道数={channels}, 采样宽度={sample_width}")
+                
+                # 动态创建识别实例
+                recognition = Recognition(
+                    model='paraformer-realtime-v2',
+                    format='wav',
+                    sample_rate=sample_rate,
+                    language_hints=['zh', 'my', 'en'],
+                    callback=None
+                )
+                
                 # 使用临时文件路径调用识别API
-                result = self.recognition.call(temp_file_path)
+                result = recognition.call(temp_file_path)
             finally:
                 # 删除临时文件
                 if os.path.exists(temp_file_path):
