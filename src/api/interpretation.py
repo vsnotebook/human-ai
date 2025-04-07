@@ -25,13 +25,6 @@ async def myanmar_interpretation_page(request: Request, current_user=Depends(get
 async def speech_recognition(audio_content: bytes, source_language: str, user_id: str, filename: str) -> str:
     return await SpeechService.transcribe_by_userid(audio_content, source_language, user_id, filename)
 
-@timing_decorator("文本翻译")
-def text_translation(target: str, text: str, source: str = None) -> dict:
-    return translate_text(target, text, source)
-
-@timing_decorator("文本转语音")
-def speech_synthesis(text: str, language_code: str) -> str:
-    return text_to_speech(text, language_code)
 
 @router.post("/myanmar-interpretation")
 async def myanmar_interpretation_api(
@@ -65,17 +58,17 @@ async def myanmar_interpretation_api(
         )
         print("语音识别完成：" + transcription)
 
-        # 2. 文本翻译
-        translation = await text_translation(
-            target_language, 
-            transcription,
-            source_language.split('-')[0] if '-' in source_language else source_language
-        )
-        print("文本翻译完成：" + translation["translatedText"])
+        # 2. 调用翻译API
+        translation = translate_text(target_language, transcription,
+                                     source_language.split('-')[0] if '-' in source_language else source_language)
+        print("语音翻译完成：" + translation["translatedText"])
 
-        # 3. 文本转语音
-        audio_url = await speech_synthesis(translation["translatedText"], target_language)
+        # 3. 调用文本转语音API
+        audio_url = text_to_speech(translation["translatedText"], target_language)
         print("文本转语音完成：" + audio_url)
+
+        # 获取更新后的用户信息
+        updated_user = await get_current_user(request)
 
         # 返回结果
         return {
