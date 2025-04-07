@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 引入字体图标 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/recorder-js@1.0.7/dist/recorder.min.js"></script>
 </head>
 <body class="bg-gray-100 min-h-screen">
     <div class="container mx-auto px-4 py-2 max-w-md">
@@ -58,6 +59,98 @@
         const chatContainer = document.getElementById('chatContainer');
         const chineseBtn = document.getElementById('chineseBtn');
         const myanmarBtn = document.getElementById('myanmarBtn');
+        
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+        
+        // 初始化录音功能
+        async function initRecorder() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+        
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    // 这里可以将 audioBlob 发送到服务器进行语音识别和翻译
+                    audioChunks = [];
+                    
+                    // 模拟翻译过程
+                    showToast('正在翻译...');
+                    setTimeout(() => {
+                        if (currentLang === 'chinese') {
+                            addMessage('你好，很高兴认识你。', 'မင်္ဂလာပါ၊ သင့်ကို တွေ့ရတာ ဝမ်းသာပါတယ်။', true);
+                        } else {
+                            addMessage('မင်္ဂလာပါ၊ ကျွန်တော် John ပါ။', '你好，我是约翰。', false);
+                        }
+                    }, 1000);
+                };
+            } catch (err) {
+                console.error('无法访问麦克风:', err);
+                showToast('无法访问麦克风');
+            }
+        }
+
+        let currentLang = '';
+        
+        // 按住说话事件处理
+        function handleTouchStart(btn, lang) {
+            return async (e) => {
+                e.preventDefault();
+                if (!mediaRecorder) {
+                    await initRecorder();
+                }
+                
+                currentLang = lang;
+                isRecording = true;
+                audioChunks = [];
+                
+                if (mediaRecorder && mediaRecorder.state === 'inactive') {
+                    mediaRecorder.start();
+                    btn.classList.add('bg-blue-500', 'text-white');
+                    btn.classList.remove('bg-gray-100', 'text-gray-800');
+                    btn.textContent = lang === 'chinese' ? '松开结束' : 'လွှတ်ပါ';
+                    showToast('正在录音...');
+                }
+            };
+        }
+
+        function handleTouchEnd(btn, defaultText) {
+            return () => {
+                if (isRecording && mediaRecorder) {
+                    isRecording = false;
+                    mediaRecorder.stop();
+                    btn.classList.remove('bg-blue-500', 'text-white');
+                    btn.classList.add('bg-gray-100', 'text-gray-800');
+                    btn.textContent = defaultText;
+                }
+            };
+        }
+
+        // 绑定触摸事件和鼠标事件
+        chineseBtn.addEventListener('touchstart', handleTouchStart(chineseBtn, 'chinese'));
+        chineseBtn.addEventListener('touchend', handleTouchEnd(chineseBtn, '按住说中文'));
+        chineseBtn.addEventListener('touchcancel', handleTouchEnd(chineseBtn, '按住说中文'));
+        // 添加鼠标事件
+        chineseBtn.addEventListener('mousedown', handleTouchStart(chineseBtn, 'chinese'));
+        chineseBtn.addEventListener('mouseup', handleTouchEnd(chineseBtn, '按住说中文'));
+        chineseBtn.addEventListener('mouseleave', handleTouchEnd(chineseBtn, '按住说中文'));
+
+        myanmarBtn.addEventListener('touchstart', handleTouchStart(myanmarBtn, 'myanmar'));
+        myanmarBtn.addEventListener('touchend', handleTouchEnd(myanmarBtn, 'ဗမာစကား'));
+        myanmarBtn.addEventListener('touchcancel', handleTouchEnd(myanmarBtn, 'ဗမာစကား'));
+        // 添加鼠标事件
+        myanmarBtn.addEventListener('mousedown', handleTouchStart(myanmarBtn, 'myanmar'));
+        myanmarBtn.addEventListener('mouseup', handleTouchEnd(myanmarBtn, 'ဗမာစကား'));
+        myanmarBtn.addEventListener('mouseleave', handleTouchEnd(myanmarBtn, 'ဗမာစကား'));
+
+        // 防止长按时触发系统菜单
+        chineseBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+        myanmarBtn.addEventListener('contextmenu', (e) => e.preventDefault());
 
         // 添加新消息的函数
         function addMessage(text, translation, isChineseFirst = true) {
@@ -74,42 +167,6 @@
             chatContainer.appendChild(messageDiv);
             chatContainer.scrollTop = chatContainer.scrollHeight;
         }
-
-        // 按住说话功能
-        let isRecording = false;
-        let recordTimeout;
-
-        chineseBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            isRecording = true;
-            chineseBtn.textContent = '松开结束';
-            // 这里添加录音开始逻辑
-        });
-
-        chineseBtn.addEventListener('touchend', () => {
-            if (isRecording) {
-                isRecording = false;
-                chineseBtn.textContent = '按住说中文';
-                // 这里添加录音结束和翻译逻辑
-                addMessage('你好，很高兴认识你。', 'မင်္ဂလာပါ၊ သင့်ကို တွေ့ရတာ ဝမ်းသာပါတယ်။', true);
-            }
-        });
-
-        myanmarBtn.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            isRecording = true;
-            myanmarBtn.textContent = 'လွှတ်ပါ';
-            // 这里添加录音开始逻辑
-        });
-
-        myanmarBtn.addEventListener('touchend', () => {
-            if (isRecording) {
-                isRecording = false;
-                myanmarBtn.textContent = 'ဗမာစကား';
-                // 这里添加录音结束和翻译逻辑
-                addMessage('မင်္ဂလာပါ၊ ကျွန်တော် John ပါ။', '你好，我是约翰。', false);
-            }
-        });
 
         // 显示提示消息
         function showToast(message) {
