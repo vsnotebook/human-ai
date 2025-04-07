@@ -26,3 +26,4 @@ mutagen
 google-cloud-storage
 openai
 sse-starlette
+dashscope
