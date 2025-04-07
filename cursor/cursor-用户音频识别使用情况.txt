@@ -32,7 +32,11 @@ home.py voice_translate.py speech_service.py使用SpeechService.transcribe_by_us
 这些参数与Google Speech-to-Text API的推荐配置相匹配。
 
 
-
+1. 设置录音参数：单声道、16kHz采样率、16位采样大小
+2. 使用无损编码器进行录音
+3. 添加了将AudioBuffer转换为WAV格式的函数
+4. 在录音停止时，将录音数据转换为WAV格式后再发送到服务器
+这样修改后，录音的音频将以WAV格式发送到服务器，格式为：
 
 
 
