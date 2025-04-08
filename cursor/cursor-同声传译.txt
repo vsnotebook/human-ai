@@ -110,3 +110,6 @@ myanmar_interpretation.html 参考 ws_server.py  参考ws_server.py ，使用web
 1、图标位置
 
 按住说话，出现一个弹框。刚开始显示说中文或缅甸文。用户说话后，就显示聆听中。收到后台websocket的识别结果，就显示出来。记住，这是一个同声传译的app。
+
+弹框做打一下，可以。收到后台websocket的识别结果后，就在弹框显示出来。
+我要的弹框是图片中的这种效果。
