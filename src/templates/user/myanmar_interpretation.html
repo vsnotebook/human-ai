@@ -108,15 +108,13 @@
                             }
                         } else if (data.status === 'ready') {
                             console.log('识别服务就绪');
+                        } else if (data.status === 'stopped') {
+                            console.log('ASR服务已停止:', data.message);
                         } else if (data.status === 'error') {
                             showToast(data.message || '识别服务出错');
                         }
                     } catch (e) {
                         console.error('处理消息错误:', e, event.data);
-                        // 检查是否是停止消息
-                        if (event.data === 'asr stopped') {
-                            console.log('ASR服务已停止');
-                        }
                     }
                 };
                 
