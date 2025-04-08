@@ -305,15 +305,65 @@
                 }
                 
                 const data = await response.json();
+                
+                // 添加消息到聊天界面
                 addMessage(
                     text,
                     data.translation || '',
                     sourceLang === 'chinese'
                 );
+                
+                // 调用语音合成
+                if (data.translation) {
+                    const targetLang = sourceLang === 'chinese' ? 'my' : 'zh-CN';
+                    const audioUrl = await textToSpeech(data.translation, targetLang);
+                    
+                    // 播放合成的语音
+                    if (audioUrl) {
+                        playAudio(audioUrl);
+                    }
+                }
             } catch (error) {
                 console.error('翻译错误:', error);
                 showToast('翻译失败: ' + error.message);
             }
+        }
+        
+        // 文本转语音函数
+        async function textToSpeech(text, languageCode) {
+            try {
+                showToast('正在合成语音...');
+                const response = await fetch('/text-to-speech', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        text: text,
+                        language_code: languageCode,
+                    }),
+                });
+                
+                if (!response.ok) {
+                    throw new Error('语音合成请求失败');
+                }
+                
+                const data = await response.json();
+                return data.audio_url;
+            } catch (error) {
+                console.error('语音合成错误:', error);
+                showToast('语音合成失败: ' + error.message);
+                return null;
+            }
+        }
+        
+        // 播放音频函数
+        function playAudio(url) {
+            const audio = new Audio(url);
+            audio.play().catch(error => {
+                console.error('播放音频错误:', error);
+                showToast('无法播放音频');
+            });
         }
         
         // 按住说话事件处理

@@ -41,6 +41,7 @@ ffmpeg -i input-video-file -ac 1 -ar 16000 -acodec libopus output-audio-file.opu
 
 16、使用 https://www.tawk.to/ 免费的在线聊天工具
 
+17、免费额度。每天提供1小时公共免费额度。开通会员1月内有效。
 
 
 

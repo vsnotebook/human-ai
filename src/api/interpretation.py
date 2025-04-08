@@ -15,6 +15,10 @@ class TranslationRequest(BaseModel):
     source_language: str
     target_language: str
 
+class TextToSpeechRequest(BaseModel):
+    text: str
+    language_code: str
+
 
 router = APIRouter()
 translate_client = translate.Client()
@@ -110,7 +114,7 @@ async def myanmar_translate_text(
 
         print("待翻译文本：" + translation_request.text)
 
-        # 2. 调用翻译API
+        # 调用翻译API
         language = translation_request.source_language.split('-')[
             0] if '-' in translation_request.source_language else translation_request.source_language
 
@@ -122,18 +126,40 @@ async def myanmar_translate_text(
         )
         print("文本翻译完成：" + translation["translatedText"])
 
-        # 3. 调用文本转语音API
-        # audio_url = text_to_speech(translation["translatedText"], translation_request.target_language)
-        # print("文本转语音完成：" + audio_url)
+        # 返回结果，不进行语音合成
+        return {
+            "transcription": translation_request.text,
+            "translation": translation["translatedText"]
+        }
 
-        # 获取更新后的用户信息
-        updated_user = await get_current_user(request)
+    except ValueError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+# 添加新的文本转语音接口
+@router.post("/text-to-speech")
+async def text_to_speech_api(
+        request: Request,
+        tts_request: TextToSpeechRequest
+):
+    try:
+        # 获取当前用户
+        user = await get_current_user(request)
+        if not user:
+            return JSONResponse(
+                content={"error": "用户未登录，请先登录"},
+                status_code=401,
+            )
+
+        # 调用文本转语音API
+        audio_url = text_to_speech(tts_request.text, tts_request.language_code)
+        print("文本转语音完成：" + audio_url)
 
         # 返回结果
         return {
-            "transcription": translation_request.text,
-            "translation": translation["translatedText"],
-            # "audio_url": audio_url
+            "audio_url": audio_url
         }
 
     except ValueError as e:
