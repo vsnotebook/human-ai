@@ -109,3 +109,4 @@ myanmar_interpretation.html 参考 ws_server.py  参考ws_server.py ，使用web
 前端收到翻译结果，要立即自动发起语音合成。
 1、图标位置
 
+按住说话，出现一个弹框。刚开始显示说中文或缅甸文。用户说话后，就显示聆听中。收到后台websocket的识别结果，就显示出来。记住，这是一个同声传译的app。

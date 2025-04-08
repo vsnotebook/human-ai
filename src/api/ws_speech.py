@@ -160,10 +160,12 @@ async def websocket_speech(websocket: WebSocket):
                 else:
                     print("警告: 收到音频数据但识别器未初始化或未激活")
                     # 通知客户端需要重新初始化
-                    await websocket.send_json({
-                        'status': 'error',
-                        'message': '请重新开始录音'
-                    })
+                    if False:
+                        await websocket.send_json({
+                            'status': 'error',
+                            'message': '请重新开始录音'
+                        })
+                    pass
             
     except websockets.exceptions.ConnectionClosed:
         print("客户端断开连接")
