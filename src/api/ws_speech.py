@@ -88,8 +88,12 @@ async def websocket_speech(websocket: WebSocket):
                             if callback:
                                 for event in callback.send_events:
                                     await event.wait()
-                                
-                            await websocket.send_text('asr stopped')
+                            
+                            # 将字符串消息改为JSON格式
+                            await websocket.send_json({
+                                'status': 'stopped',
+                                'message': 'ASR service stopped'
+                            })
                             print('asr stopped')
                         except Exception as e:
                             print(f"停止识别错误: {str(e)}")

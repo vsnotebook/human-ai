@@ -97,4 +97,15 @@ myanmar_interpretation.html 参考 ws_server.py  参考ws_server.py ，使用web
 
 参考audio_recorder.js  index.html  recorder_worklet.js  server.py 修改 ws_speech.py  myanmar_interpretation.html。 目的是使用websocket实现阿里云的实时语音识别。
 
+分析同声传译代码。
+当前的处理逻辑是，调用/myanmar-interpretation/text接口。 该接口会完成文本翻译和语音合成。
+现在修改为，调用/myanmar-interpretation/text接口，只对文本翻译。然后自动调用/text-to-speech语音合成接口。
+然后前端自动播放语音。同时在翻译文本的最后生成一个语音播放图标。用户可以点击就可以播放
+
+
+返回语音合成后，有一个播放的图标，用户可以点击播放。要美观和现代。
+1、翻译结果返回后，自动发起语音合成。
+2、不要移除自动播放。
+前端收到翻译结果，要立即自动发起语音合成。
+1、图标位置
 

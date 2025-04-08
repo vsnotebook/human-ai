@@ -126,10 +126,14 @@ async def myanmar_translate_text(
         )
         print("文本翻译完成：" + translation["translatedText"])
 
+        # audio_url = text_to_speech(translation_request.text, translation_request.language_code)
+        # print("文本转语音完成：" + audio_url)
+
         # 返回结果，不进行语音合成
         return {
             "transcription": translation_request.text,
-            "translation": translation["translatedText"]
+            "translation": translation["translatedText"],
+            # "audio_url": audio_url
         }
 
     except ValueError as e:

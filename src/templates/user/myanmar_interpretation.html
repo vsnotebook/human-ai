@@ -93,6 +93,7 @@
                 
                 socket.onmessage = function(event) {
                     try {
+                        console.log('收到识别结果:', event.data);
                         const data = JSON.parse(event.data);
                         console.log('收到识别结果:', data);
                         
@@ -306,21 +307,24 @@
                 
                 const data = await response.json();
                 
-                // 添加消息到聊天界面
+                // 添加消息到聊天界面，包含播放按钮
                 addMessage(
                     text,
                     data.translation || '',
                     sourceLang === 'chinese'
                 );
-                
+
                 // 调用语音合成
                 if (data.translation) {
                     const targetLang = sourceLang === 'chinese' ? 'my' : 'zh-CN';
                     const audioUrl = await textToSpeech(data.translation, targetLang);
-                    
+
                     // 播放合成的语音
                     if (audioUrl) {
                         playAudio(audioUrl);
+
+                        // 更新最后一条消息，添加音频URL
+                        updateLastMessageAudio(audioUrl);
                     }
                 }
             } catch (error) {
@@ -328,7 +332,7 @@
                 showToast('翻译失败: ' + error.message);
             }
         }
-        
+
         // 文本转语音函数
         async function textToSpeech(text, languageCode) {
             try {
@@ -343,11 +347,11 @@
                         language_code: languageCode,
                     }),
                 });
-                
+
                 if (!response.ok) {
                     throw new Error('语音合成请求失败');
                 }
-                
+
                 const data = await response.json();
                 return data.audio_url;
             } catch (error) {
@@ -356,7 +360,7 @@
                 return null;
             }
         }
-        
+
         // 播放音频函数
         function playAudio(url) {
             const audio = new Audio(url);
@@ -365,7 +369,41 @@
                 showToast('无法播放音频');
             });
         }
-        
+
+        // 更新最后一条消息，添加音频URL
+        function updateLastMessageAudio(audioUrl) {
+            const messages = chatContainer.querySelectorAll('div.flex.flex-col.mb-4');
+            if (messages.length > 0) {
+                const lastMessage = messages[messages.length - 1];
+                const messageContent = lastMessage.querySelector('div');
+
+                // 检查是否已经有播放按钮
+                if (!messageContent.querySelector('.audio-play-btn')) {
+                    // 创建播放按钮
+                    const playButton = document.createElement('button');
+                    playButton.className = 'audio-play-btn text-sm ml-2 mt-1';
+                    playButton.innerHTML = '<i class="fas fa-volume-up"></i>';
+                    playButton.setAttribute('data-audio-url', audioUrl);
+
+                    // 添加点击事件
+                    playButton.addEventListener('click', function() {
+                        const url = this.getAttribute('data-audio-url');
+                        if (url) {
+                            playAudio(url);
+                        }
+                    });
+
+                    // 找到翻译文本的容器并添加播放按钮
+                    const translationContainer = messageContent.querySelector('.flex.items-center');
+                    if (translationContainer) {
+                        translationContainer.appendChild(playButton);
+                    } else {
+                        messageContent.appendChild(playButton);
+                    }
+                }
+            }
+        }
+
         // 按住说话事件处理
         function handleTouchStart(btn, lang) {
             return async (e) => {
@@ -443,19 +481,17 @@
         myanmarBtn.addEventListener('mouseup', handleTouchEnd(myanmarBtn, 'ဗမာစကား'));
         myanmarBtn.addEventListener('mouseleave', handleTouchEnd(myanmarBtn, 'ဗမာစကား'));
 
-        // 防止长按时触发系统菜单
-        chineseBtn.addEventListener('contextmenu', (e) => e.preventDefault());
-        myanmarBtn.addEventListener('contextmenu', (e) => e.preventDefault());
-
         // 添加新消息的函数
         function addMessage(text, translation, isChineseFirst = true) {
             const messageDiv = document.createElement('div');
             messageDiv.className = `flex flex-col ${isChineseFirst ? 'items-start' : 'items-end'} mb-4`;
-            
+
             messageDiv.innerHTML = `
                 <div class="${isChineseFirst ? 'bg-gray-100' : 'bg-blue-500'} rounded-lg p-3 max-w-[80%] shadow-sm">
                     <p class="${isChineseFirst ? 'text-gray-800' : 'text-white'}">${text}</p>
-                    <p class="${isChineseFirst ? 'text-gray-500' : 'text-blue-50'} text-sm mt-1">${translation}</p>
+                    <div class="flex items-center">
+                        <p class="${isChineseFirst ? 'text-gray-500' : 'text-blue-50'} text-sm mt-1">${translation}</p>
+                    </div>
                 </div>
             `;
             
