@@ -113,3 +113,9 @@ myanmar_interpretation.html 参考 ws_server.py  参考ws_server.py ，使用web
 
 弹框做打一下，可以。收到后台websocket的识别结果后，就在弹框显示出来。
 我要的弹框是图片中的这种效果。
+
+
+处理时长的函数是deduct_audio_time这个函数。现在要修改，识别完成后要调用deduct_audio_time接口扣除时间。
+
+你搞错了，不是这个时间。 阿里云识别完成后返回的字段{'sentence_id': 1, 'begin_time': 0, 'end_time': 1680, 'text': '你好，明天去。', 'channel_id': 0, 'speaker_id': None, 'sentence_end': True, 'heartbeat': False, 'words': [{'begin_time': 0, 'end_time': 672, 'text': '你好', 'punctuation': '，', 'fixed': False, 'speaker_id': None}, {'begin_time': 672, 'end_time': 1176, 'text': '明天', 'punctuation': '', 'fixed': False, 'speaker_id': None}, {'begin_time': 1176, 'end_time': 1680, 'text': '去', 'punctuation': '。', 'fixed': False, 'speaker_id': None}], 'stash': {'sentence_id': 2, 'text': '', 'begin_time': 1680, 'current_time': 1680, 'words': []}}有begin_time和end_time。单位是毫秒。 扣除这个时间。
+参考SpeechService，将识别的结果和将用户使用记录保存到数据库。方便后续追溯。

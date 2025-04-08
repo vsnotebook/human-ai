@@ -1,0 +1,43 @@
+{
+  "sentence_id": 1,
+  "begin_time": 0,
+  "end_time": 1680,
+  "text": "你好，明天去。",
+  "channel_id": 0,
+  "speaker_id": None,
+  "sentence_end": True,
+  "heartbeat": False,
+  "words": [
+    {
+      "begin_time": 0,
+      "end_time": 672,
+      "text": "你好",
+      "punctuation": "，",
+      "fixed": False,
+      "speaker_id": None
+    },
+    {
+      "begin_time": 672,
+      "end_time": 1176,
+      "text": "明天",
+      "punctuation": "",
+      "fixed": False,
+      "speaker_id": None
+    },
+    {
+      "begin_time": 1176,
+      "end_time": 1680,
+      "text": "去",
+      "punctuation": "。",
+      "fixed": False,
+      "speaker_id": None
+    }
+  ],
+  "stash": {
+    "sentence_id": 2,
+    "text": "",
+    "begin_time": 1680,
+    "current_time": 1680,
+    "words": []
+  }
+}
