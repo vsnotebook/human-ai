@@ -39,6 +39,11 @@ home.py的check_trial_count，不应当有直接操作数据库的操作。把�
 
 ffmpeg -i input-video-file -ac 1 -ar 16000 -acodec libopus output-audio-file.opus
 
+16、使用 https://www.tawk.to/ 免费的在线聊天工具
+
+
+
+
 seo 收录到百度和google
 
 

@@ -95,3 +95,6 @@ myanmar_interpretation.html 参考 ws_server.py  参考ws_server.py ，使用web
 
 用户在前端，怎么开启websocket进行同声传译。
 
+参考audio_recorder.js  index.html  recorder_worklet.js  server.py 修改 ws_speech.py  myanmar_interpretation.html。 目的是使用websocket实现阿里云的实时语音识别。
+
+

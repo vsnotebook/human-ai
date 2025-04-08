@@ -6,9 +6,19 @@ from src.utils.http_session_util import get_current_user
 from src.utils.timing_decorator import timing_decorator
 from google.cloud import translate_v2 as translate
 import requests
+from pydantic import BaseModel
+
+
+# 添加 Pydantic 模型定义
+class TranslationRequest(BaseModel):
+    text: str
+    source_language: str
+    target_language: str
+
 
 router = APIRouter()
 translate_client = translate.Client()
+
 
 @router.get("/user/myanmar-interpretation", response_class=HTMLResponse)
 async def myanmar_interpretation_page(request: Request, current_user=Depends(get_current_user)):
@@ -20,6 +30,7 @@ async def myanmar_interpretation_page(request: Request, current_user=Depends(get
             "current_user": current_user,
         }
     )
+
 
 @timing_decorator("语音识别")
 async def speech_recognition(audio_content: bytes, source_language: str, user_id: str, filename: str) -> str:
@@ -51,9 +62,9 @@ async def myanmar_interpretation_api(
         # 1. 语音识别
         audio_content = await file.read()
         transcription = await speech_recognition(
-            audio_content, 
-            source_language, 
-            user.get("id"), 
+            audio_content,
+            source_language,
+            user.get("id"),
             file.filename
         )
         print("语音识别完成：" + transcription)
@@ -82,6 +93,55 @@ async def myanmar_interpretation_api(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+@router.post("/myanmar-interpretation/text")
+async def myanmar_translate_text(
+        request: Request,
+        translation_request: TranslationRequest
+):
+    try:
+        # 获取当前用户
+        user = await get_current_user(request)
+        if not user:
+            return JSONResponse(
+                content={"error": "用户未登录，请先登录"},
+                status_code=401,
+            )
+
+        print("待翻译文本：" + translation_request.text)
+
+        # 2. 调用翻译API
+        language = translation_request.source_language.split('-')[
+            0] if '-' in translation_request.source_language else translation_request.source_language
+
+        print("目标语言： " + language)
+        translation = translate_text(
+            translation_request.target_language,
+            translation_request.text,
+            language
+        )
+        print("文本翻译完成：" + translation["translatedText"])
+
+        # 3. 调用文本转语音API
+        # audio_url = text_to_speech(translation["translatedText"], translation_request.target_language)
+        # print("文本转语音完成：" + audio_url)
+
+        # 获取更新后的用户信息
+        updated_user = await get_current_user(request)
+
+        # 返回结果
+        return {
+            "transcription": translation_request.text,
+            "translation": translation["translatedText"],
+            # "audio_url": audio_url
+        }
+
+    except ValueError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 def translate_text(target: str, text: str, source: str = None) -> dict:
     """使用Google Translate API翻译文本"""
     if isinstance(text, bytes):
@@ -101,6 +161,7 @@ def translate_text(target: str, text: str, source: str = None) -> dict:
         result = translate_client.translate(text, target_language=target)
 
     return result
+
 
 def text_to_speech(text: str, language_code: str) -> str:
     """使用TTS API将文本转换为语音"""
@@ -135,7 +196,7 @@ def text_to_speech(text: str, language_code: str) -> str:
         base_url = "http://47.120.55.3:5000"
         audio_base_url = "https://tts.51685168.xyz"
         synthesize_url = f"{base_url}/api/synthesize"
-        
+
         response = requests.post(
             synthesize_url,
             data=form_data,
