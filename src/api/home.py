@@ -47,6 +47,8 @@ async def check_trial_count(request: Request) -> Optional[RedirectResponse]:
 @router.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     user = await get_current_user(request)
+    if user:
+        return RedirectResponse(url="/user/dashboard", status_code=302)
     return templates.TemplateResponse(
         "index.html",
         {

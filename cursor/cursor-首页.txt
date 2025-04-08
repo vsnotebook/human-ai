@@ -20,7 +20,7 @@ voice_recognition.html 超过次数后，没有发生跳转到注册页面。而
 
 
 
-
+home.py  user.py main_web.py 对于已经登录的用户，如果用户点击的是首页，则直接跳转到用户中心。
 
 
 
