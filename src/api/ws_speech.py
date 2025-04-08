@@ -6,18 +6,21 @@ import dashscope
 import websockets
 from fastapi import APIRouter, WebSocket
 from dashscope.audio.asr import Recognition, RecognitionCallback, RecognitionResult
+from src.services.firestore_service import FirestoreService as DBService
 
 router = APIRouter()
 
 # 实时语音识别回调类，参考自server.py中的MyRecognitionCallback
 class SpeechRecognitionCallback(RecognitionCallback):
-    def __init__(self, tag, websocket, loop) -> None:
+    def __init__(self, tag, websocket, loop, user) -> None:
         super().__init__()
         self.tag = tag
         self.text = ''
         self.websocket = websocket
         self.loop = loop
         self.send_events = []
+        self.user = user
+
 
     def on_open(self) -> None:
         print(f'[{self.tag}] Recognition started')
@@ -42,6 +45,22 @@ class SpeechRecognitionCallback(RecognitionCallback):
                 is_end = False
                 if RecognitionResult.is_sentence_end(sentence):
                     is_end = True
+                    duration_seconds = sentence.get('end_time', 0) - sentence.get('begin_time', 0)
+                    duration_seconds = duration_seconds/1000+1
+                    if duration_seconds > 0:
+                        # 使用事件循环执行异步操作
+                        asyncio.run_coroutine_threadsafe(
+                            DBService.deduct_audio_time(self.user.get("id"), duration_seconds),
+                            self.loop
+                        )
+                        # TODO
+                        #                         result = await DBService.deduct_audio_time(self.user_id, duration_seconds)
+                        #                         if result:
+                        #                             print(f"成功扣除试用时长: {duration_seconds}秒")
+                        #                         else:
+                        #                             print("扣除试用时长失败")
+
+
                 print(f"[{self.tag}] {sentence['text']}")
                 msg = {'text': sentence['text'], 'is_end': is_end}
                 event = asyncio.Event()
@@ -60,6 +79,11 @@ class SpeechRecognitionCallback(RecognitionCallback):
 async def websocket_speech(websocket: WebSocket):
     await websocket.accept()
     print("WebSocket连接已接受")
+
+    # 获取用户ID
+    session = websocket.session
+    user = session.get("user")
+    print(f"用户ID: {user}")
 
     dashscope.api_key = "sk-196bc2b54b444440962781ef844e7720"
 
@@ -117,7 +141,7 @@ async def websocket_speech(websocket: WebSocket):
                     
                     # 创建回调实例
                     loop = asyncio.get_event_loop()
-                    callback = SpeechRecognitionCallback('process0', websocket, loop)
+                    callback = SpeechRecognitionCallback('process0', websocket, loop, user)
                     
                     # 创建识别实例
                     recognition = Recognition(
