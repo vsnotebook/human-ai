@@ -440,13 +440,17 @@
                 }
                 
                 setTimeout(async () => {
+                    console.log('--------------------------1');
                     if (socket && socket.readyState === WebSocket.OPEN) {
+                        console.log('--------------------------2');
                         const recorderInitialized = await initAudioRecorder((audioBuffer) => {
+                            console.log('--------------------------3');
                             if (socket && socket.readyState === WebSocket.OPEN) {
+                                console.log('--------------------------4');
                                 socket.send(audioBuffer);
                             }
                         });
-                        
+                        console.log('--------------------------5');
                         if (recorderInitialized) {
                             isRecording = true;
                             btn.classList.add('bg-blue-500', 'text-white');
