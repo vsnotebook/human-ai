@@ -3,7 +3,9 @@ import os
 from pydantic import Field, RedisDsn, PostgresDsn
 from pydantic_settings import BaseSettings
 from typing import Optional
+
 logger = logging.getLogger("fastapi")
+
 
 class Settings(BaseSettings):
     # 通用配置
@@ -49,10 +51,13 @@ class Settings(BaseSettings):
         print(a)
         print(GOOGLE_CLIENT_ID)
         print("运行环境-2：" + self.APP_ENV)
+        print(self.PROXY_ENABLE)
         if self.PROXY_ENABLE:
             os.environ["http_proxy"] = "http://127.0.0.1:10808"
             os.environ["https_proxy"] = "http://127.0.0.1:10808"
 
+        print("http_proxy: " + os.environ["http_proxy"])
+        print("http_proxy: " + os.getenv("http_proxy"))
         # 动态生成数据库 URL
         self.SQLALCHEMY_DATABASE_URI = (
             f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}"
