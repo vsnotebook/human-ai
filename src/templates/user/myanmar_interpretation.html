@@ -8,9 +8,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 引入字体图标 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- 添加 Eruda 调试工具 -->
-    <script src="https://cdn.jsdelivr.net/npm/eruda"></script>
-    <script>eruda.init();</script>
 </head>
 <!-- 修改 body 背景色 -->
 <body class="bg-white min-h-screen">
@@ -24,17 +21,7 @@
             </button>
         </div>
 
-        <!-- 将按钮移到这里 -->
-        <div class="flex justify-between items-center space-x-4 p-4 bg-white">
-            <button id="chineseBtn" class="flex-1 py-3 px-4 rounded-full bg-gray-50 text-gray-800 text-center active:bg-gray-100 hover:bg-gray-100 transition-colors duration-200">
-                按住说中文
-            </button>
-            <button id="myanmarBtn" class="flex-1 py-3 px-4 rounded-full bg-gray-50 text-gray-800 text-center active:bg-gray-100 hover:bg-gray-100 transition-colors duration-200">
-                ဗမာစကား
-            </button>
-        </div>
-
-        <!-- 聊天内容区域 -->
+        <!-- 聊天内容区域 - 移除默认对话，修改背景色 -->
         <div class="bg-white p-4 mb-20" id="chatContainer">
             <div class="flex flex-col space-y-4">
                 <!-- 移除默认对话示例 -->
