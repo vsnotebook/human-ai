@@ -77,8 +77,7 @@
                 socket.close();
             }
             
-            // 显示连接状态
-            // showToast('正在连接WebSocket...');
+            console.log('开始初始化WebSocket连接...');
             
             // 检查当前URL，确保使用正确的WebSocket地址
             const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
@@ -100,7 +99,6 @@
                         };
                         console.log('发送语言设置:', langData);
                         socket.send(JSON.stringify(langData));
-                        // showToast('连接已建立，可以开始说话');
                     } catch (e) {
                         console.error('发送语言设置错误:', e);
                     }
@@ -432,42 +430,53 @@
                 voiceStatusBox.classList.remove('hidden');
                 voiceStatusText.textContent = lang === 'chinese' ? '请说中文' : 'ဗမာစကားပြောပါ';
                 
+                console.log('准备初始化WebSocket连接...');
                 // 初始化WebSocket连接
                 const wsConnected = initWebSocket(lang);
+                console.log('WebSocket连接初始化结果:', wsConnected);
+                
                 if (!wsConnected) {
                     showError('无法连接到语音识别服务');
                     return;
                 }
                 
-                setTimeout(async () => {
-                    console.log('--------------------------1');
+                // 等待WebSocket连接建立
+                let checkCount = 0;
+                const maxChecks = 10;
+                const checkInterval = setInterval(() => {
+                    checkCount++;
+                    console.log(`检查WebSocket状态 (${checkCount}/${maxChecks}):`, socket ? socket.readyState : 'socket未创建');
+                    
                     if (socket && socket.readyState === WebSocket.OPEN) {
+                        clearInterval(checkInterval);
                         console.log('--------------------------2');
-                        const recorderInitialized = await initAudioRecorder((audioBuffer) => {
+                        initAudioRecorder((audioBuffer) => {
                             console.log('--------------------------3');
                             if (socket && socket.readyState === WebSocket.OPEN) {
                                 console.log('--------------------------4');
                                 socket.send(audioBuffer);
                             }
+                        }).then(recorderInitialized => {
+                            console.log('--------------------------5');
+                            if (recorderInitialized) {
+                                isRecording = true;
+                                btn.classList.add('bg-blue-500', 'text-white');
+                                btn.classList.remove('bg-gray-50', 'text-gray-800');
+                                btn.textContent = lang === 'chinese' ? '松开结束' : 'လွှတ်ပါ';
+                                
+                                // 显示录音动画
+                                voiceStatusText.textContent = '聆听中...';
+                                waveCircle.classList.remove('hidden');
+                                waveCircle.style.animation = 'pulse 2s infinite';
+                            } else {
+                                showError('无法初始化录音');
+                            }
                         });
-                        console.log('--------------------------5');
-                        if (recorderInitialized) {
-                            isRecording = true;
-                            btn.classList.add('bg-blue-500', 'text-white');
-                            btn.classList.remove('bg-gray-50', 'text-gray-800');
-                            btn.textContent = lang === 'chinese' ? '松开结束' : 'လွှတ်ပါ';
-                            
-                            // 显示录音动画
-                            voiceStatusText.textContent = '聆听中...';
-                            waveCircle.classList.remove('hidden');
-                            waveCircle.style.animation = 'pulse 2s infinite';
-                        } else {
-                            showError('无法初始化录音');
-                        }
-                    } else {
-                        showError('WebSocket连接未就绪');
+                    } else if (checkCount >= maxChecks) {
+                        clearInterval(checkInterval);
+                        showError('WebSocket连接超时，请重试');
                     }
-                }, 1500);
+                }, 300);
             };
         }
 
