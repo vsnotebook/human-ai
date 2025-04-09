@@ -54,8 +54,8 @@ class Settings(BaseSettings):
             os.environ["http_proxy"] = "http://127.0.0.1:10808"
             os.environ["https_proxy"] = "http://127.0.0.1:10808"
 
-        print("http_proxy: " + os.environ["http_proxy"])
-        print("http_proxy: " + os.getenv("http_proxy"))
+        # print("http_proxy: " + os.environ["http_proxy"])
+        # print("http_proxy: " + os.getenv("http_proxy"))
         # 动态生成数据库 URL
         self.SQLALCHEMY_DATABASE_URI = (
             f"postgresql+asyncpg://{self.DB_USER}:{self.DB_PASSWORD}"

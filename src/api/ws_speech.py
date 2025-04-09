@@ -96,7 +96,7 @@ async def websocket_speech(websocket: WebSocket):
         # 初始化语音识别
         while True:
             data = await websocket.receive()
-            # print("http_proxy: " + os.getenv("http_proxy"))
+            print("http_proxy: " + os.getenv("http_proxy"))
             if "text" in data:  # 文本消息
                 message = data["text"]
                 print(f"收到文本消息: {message}")
