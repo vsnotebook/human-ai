@@ -3,6 +3,11 @@ uvicorn src.main_web:app --reload
 uvicorn src.main_web:app --reload --port 8080
 uvicorn src.main_web:app --reload --host 0.0.0.0 --port 8080
 uvicorn src.main_web:app --reload --host 127.0.0.1 --port 8080
+uvicorn src.main_web:app --workers 4
+
+uvicorn main:app --host 0.0.0.0 --port 8080 --workers 2
+
+APP_ENV=prod uvicorn src.main_web:app --port 8080 --workers 2
 
 
 127.0.0.1:8000
@@ -11,5 +16,21 @@ mongodb查询优化
 # 可以在应用启动时执行
 db.trial_records.create_index("ip", unique=True)
 db.trial_records.create_index("last_try")
+
+
+部署：
+# 创建名为 .venv 的虚拟环境
+python -m venv .venv
+
+source .venv/bin/activate
+pip install -r requirements.txt
+
+
+deactivate
+python -m venv --clear .venv
+pip freeze > requirements.txt
+使用 --without-pip 创建最小化环境：
+python -m venv --without-pip .venv
+google  mcp
 
 
