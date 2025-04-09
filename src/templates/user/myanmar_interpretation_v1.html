@@ -54,31 +54,118 @@
         // 初始化录音功能
         async function initRecorder() {
             try {
-                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                mediaRecorder = new MediaRecorder(stream);
-                
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        channelCount: 1,        // 单声道
+                        sampleRate: 16000,      // 采样率16kHz
+                        sampleSize: 16,         // 采样大小16位
+                    }
+                });
+
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm;codecs=opus'  // 使用opus编码器
+                });
+
                 mediaRecorder.ondataavailable = (event) => {
                     audioChunks.push(event.data);
                 };
-        
+
                 mediaRecorder.onstop = async () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                    // 这里可以将 audioBlob 发送到服务器进行语音识别和翻译
-                    audioChunks = [];
-                    
-                    // 模拟翻译过程
-                    showToast('正在翻译...');
-                    setTimeout(() => {
-                        if (currentLang === 'chinese') {
-                            addMessage('你好，很高兴认识你。', 'မင်္ဂလာပါ၊ သင့်ကို တွေ့ရတာ ဝမ်းသာပါတယ်။', true);
-                        } else {
-                            addMessage('မင်္ဂလာပါ၊ ကျွန်တော် John ပါ။', '你好，我是约翰。', false);
+                    // 将录音数据转换为WAV格式
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                    // 将音频数据解码为AudioBuffer
+                    const arrayBuffer = await audioBlob.arrayBuffer();
+                    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+                    // 创建WAV文件
+                    const wavBuffer = audioBufferToWav(audioBuffer);
+                    const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+
+                    // 创建FormData对象
+                    const formData = new FormData();
+                    formData.append('file', new File([wavBlob], 'recording.wav', { type: 'audio/wav' }));
+                    formData.append('source_language', currentLang === 'chinese' ? 'zh-CN' : 'my-MM');
+                    formData.append('target_language', currentLang === 'chinese' ? 'my' : 'zh-CN');
+
+                    // 发送到服务器
+                    try {
+                        showToast('正在翻译...');
+                        const response = await fetch('/myanmar-interpretation', {  // 修改这里的URL
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('翻译请求失败');
                         }
-                    }, 1000);
+
+                        const data = await response.json();
+                        addMessage(
+                            data.transcription || '',
+                            data.translation || '',
+                            currentLang === 'chinese'
+                        );
+                    } catch (error) {
+                        console.error('翻译错误:', error);
+                        showToast('翻译失败: ' + error.message);
+                    }
+
+                    audioChunks = [];
                 };
             } catch (err) {
                 console.error('无法访问麦克风:', err);
                 showToast('无法访问麦克风');
+            }
+        }
+
+        // 添加 AudioBuffer 转 WAV 的函数
+        function audioBufferToWav(buffer) {
+            const numChannels = buffer.numberOfChannels;
+            const sampleRate = buffer.sampleRate;
+            const format = 1; // PCM
+            const bitDepth = 16;
+
+            const bytesPerSample = bitDepth / 8;
+            const blockAlign = numChannels * bytesPerSample;
+
+            const wav = new ArrayBuffer(44 + buffer.length * bytesPerSample);
+            const view = new DataView(wav);
+
+            // WAV文件头
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + buffer.length * bytesPerSample, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, format, true);
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * blockAlign, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitDepth, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, buffer.length * bytesPerSample, true);
+
+            // 写入采样数据
+            const offset = 44;
+            const data = new Int16Array(buffer.length);
+            const channelData = buffer.getChannelData(0);
+            for (let i = 0; i < buffer.length; i++) {
+                const s = Math.max(-1, Math.min(1, channelData[i]));
+                data[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+            }
+            for (let i = 0; i < data.length; i++) {
+                view.setInt16(offset + i * 2, data[i], true);
+            }
+
+            return wav;
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
             }
         }
 
