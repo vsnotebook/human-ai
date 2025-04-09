@@ -95,7 +95,17 @@ async def websocket_speech(websocket: WebSocket):
     try:
         # 初始化语音识别
         while True:
-            data = await websocket.receive()
+            try:
+                data = await websocket.receive()
+            except RuntimeError as e:
+                if "disconnect message has been received" in str(e):
+                    print("WebSocket已断开连接")
+                    break
+                raise
+            except websockets.exceptions.ConnectionClosed:
+                print("WebSocket连接已关闭")
+                break
+                
             if "text" in data:  # 文本消息
                 message = data["text"]
                 print(f"收到文本消息: {message}")
