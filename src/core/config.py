@@ -17,8 +17,6 @@ class Settings(BaseSettings):
     CREDENTIALS_PATH: str
     SERVER_HOST: str
     SERVER_PORT: str
-    http_proxy: str
-    https_proxy: str
     PROXY_ENABLE: bool
 
     # 数据库配置
