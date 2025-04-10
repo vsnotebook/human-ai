@@ -123,3 +123,12 @@ myanmar_interpretation.html 参考 ws_server.py  参考ws_server.py ，使用web
 
 当用户松开按住说话按钮，可能还有发送给后台的包没有发送完成。等发完最后一个包后，才向后台发送'stop'.
 
+########################################
+中文语音识别，使用的是阿里云流式识别。已经成功完成。
+现在要实现缅甸语音转中文。 阿里云没有缅甸语识别。
+修改后台，如果前端发送的语音是中文语音，则使用阿里云的语音识别，按现有逻辑。
+修改后台，如果前端发送的语音是缅甸语音，则使用google云的Speech-to-Text语音识别。
+google的语音识别网址：https://cloud.google.com/speech-to-text/v2/docs/streaming-recognize
+google的语音识别代码参考
+要求代码高内聚，低耦合
+
