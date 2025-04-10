@@ -23,8 +23,8 @@ Restart=always
 RestartSec=3
 
 # 日志配置（可选）
-StandardOutput=file:/var/log/fastapi/voice.log
-StandardError=file:/var/log/fastapi/voice-error.log
+StandardOutput=append:/var/log/fastapi/voice.log
+StandardError=append:/var/log/fastapi/voice-error.log
 
 [Install]
 WantedBy=multi-user.target
@@ -139,6 +139,43 @@ upstream fastapi_cluster {
     server unix:/opt/fastapi/app2.sock;
     keepalive 32;
 }
+
+
+10. 创建轮转配置
+新建配置文件 /etc/logrotate.d/voice
+sudo vi /etc/logrotate.d/voice
+/var/log/voice/*.log {
+    daily
+    missingok
+    rotate 30
+    compress
+    delaycompress
+    notifempty
+    create 0644 ec2-user ec2-user
+    sharedscripts
+    postrotate
+        systemctl restart voice
+    endscript
+}
+
+/var/log/your-service/*.log {
+    daily               # 按天轮转
+    missingok           # 日志不存在时不报错
+    rotate 30          # 保留 30 个旧日志
+    compress            # 压缩旧日志（gzip）
+    delaycompress       # 延迟压缩，保留最近一次未压缩的日志
+    notifempty          # 空日志不轮转
+    create 0644 ec2-user ec2-user  # 新日志文件权限和所有者
+    sharedscripts       # 执行全局脚本
+    postrotate
+        systemctl restart your-service.service  # 轮转后重启服务（可选）
+    endscript
+}
+
+logrotate -vf /etc/logrotate.d/voice
+
+
+
 
 
 
