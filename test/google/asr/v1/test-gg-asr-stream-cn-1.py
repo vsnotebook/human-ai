@@ -181,8 +181,8 @@ def main() -> None:
     """Transcribe speech from audio file."""
     # See http://g.co/cloud/speech/docs/languages
     # for a list of supported languages.
-    # language_code = "cmn-Hans-CN"  # a BCP-47 language tag
-    language_code = "my-MM"  # a BCP-47 language tag
+    language_code = "cmn-Hans-CN"  # a BCP-47 language tag
+    # language_code = "my-MM"  # a BCP-47 language tag
     client_options = {"api_endpoint": "us-central1-speech.googleapis.com"}
 
     # client = speech.SpeechClient(client_options)

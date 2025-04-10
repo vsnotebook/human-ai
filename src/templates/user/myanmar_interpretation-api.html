@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>缅甸语同声传译</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入字体图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/recorder-js@1.0.7/dist/recorder.min.js"></script>
+</head>
+<!-- 修改 body 背景色 -->
+<body class="bg-white min-h-screen">
+    <div class="container mx-auto px-4 py-2 max-w-md">
+        <!-- 顶部导航栏 -->
+        <div class="flex justify-between items-center py-3 border-b">
+            <h1 class="text-xl font-medium text-gray-800">翻译</h1>
+            <button class="p-2">
+                <i class="fas fa-user-circle text-xl text-gray-600"></i>
+            </button>
+        </div>
+
+        <!-- 聊天内容区域 - 移除默认对话，修改背景色 -->
+        <div class="bg-white p-4 mb-20" id="chatContainer">
+            <div class="flex flex-col space-y-4">
+                <!-- 移除默认对话示例 -->
+            </div>
+        </div>
+
+        <!-- 底部控制区 - 优化样式 -->
+        <div class="fixed bottom-0 left-0 right-0 bg-white border-t">
+            <div class="flex justify-between items-center max-w-md mx-auto space-x-4 p-4">
+                <button id="chineseBtn" class="flex-1 py-3 px-4 rounded-full bg-gray-50 text-gray-800 text-center active:bg-gray-100 hover:bg-gray-100 transition-colors duration-200">
+                    按住说中文
+                </button>
+                <button id="myanmarBtn" class="flex-1 py-3 px-4 rounded-full bg-gray-50 text-gray-800 text-center active:bg-gray-100 hover:bg-gray-100 transition-colors duration-200">
+                    ဗမာစကား
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修改 addMessage 函数中的样式 -->
+    <script>
+        const chatContainer = document.getElementById('chatContainer');
+        const chineseBtn = document.getElementById('chineseBtn');
+        const myanmarBtn = document.getElementById('myanmarBtn');
+
+        let mediaRecorder;
+        let audioChunks = [];
+        let isRecording = false;
+
+        // 初始化录音功能
+        async function initRecorder() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        channelCount: 1,        // 单声道
+                        sampleRate: 16000,      // 采样率16kHz
+                        sampleSize: 16,         // 采样大小16位
+                    }
+                });
+
+                mediaRecorder = new MediaRecorder(stream, {
+                    mimeType: 'audio/webm;codecs=opus'  // 使用opus编码器
+                });
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    // 将录音数据转换为WAV格式
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                    const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+                    // 将音频数据解码为AudioBuffer
+                    const arrayBuffer = await audioBlob.arrayBuffer();
+                    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+                    // 创建WAV文件
+                    const wavBuffer = audioBufferToWav(audioBuffer);
+                    const wavBlob = new Blob([wavBuffer], { type: 'audio/wav' });
+
+                    // 创建FormData对象
+                    const formData = new FormData();
+                    formData.append('file', new File([wavBlob], 'recording.wav', { type: 'audio/wav' }));
+                    formData.append('source_language', currentLang === 'chinese' ? 'zh-CN' : 'my-MM');
+                    formData.append('target_language', currentLang === 'chinese' ? 'my' : 'zh-CN');
+
+                    // 发送到服务器
+                    try {
+                        showToast('正在翻译...');
+                        const response = await fetch('/myanmar-interpretation', {  // 修改这里的URL
+                            method: 'POST',
+                            body: formData
+                        });
+
+                        if (!response.ok) {
+                            throw new Error('翻译请求失败');
+                        }
+
+                        const data = await response.json();
+                        addMessage(
+                            data.transcription || '',
+                            data.translation || '',
+                            currentLang === 'chinese'
+                        );
+                    } catch (error) {
+                        console.error('翻译错误:', error);
+                        showToast('翻译失败: ' + error.message);
+                    }
+
+                    audioChunks = [];
+                };
+            } catch (err) {
+                console.error('无法访问麦克风:', err);
+                showToast('无法访问麦克风');
+            }
+        }
+
+        // 添加 AudioBuffer 转 WAV 的函数
+        function audioBufferToWav(buffer) {
+            const numChannels = buffer.numberOfChannels;
+            const sampleRate = buffer.sampleRate;
+            const format = 1; // PCM
+            const bitDepth = 16;
+
+            const bytesPerSample = bitDepth / 8;
+            const blockAlign = numChannels * bytesPerSample;
+
+            const wav = new ArrayBuffer(44 + buffer.length * bytesPerSample);
+            const view = new DataView(wav);
+
+            // WAV文件头
+            writeString(view, 0, 'RIFF');
+            view.setUint32(4, 36 + buffer.length * bytesPerSample, true);
+            writeString(view, 8, 'WAVE');
+            writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true);
+            view.setUint16(20, format, true);
+            view.setUint16(22, numChannels, true);
+            view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * blockAlign, true);
+            view.setUint16(32, blockAlign, true);
+            view.setUint16(34, bitDepth, true);
+            writeString(view, 36, 'data');
+            view.setUint32(40, buffer.length * bytesPerSample, true);
+
+            // 写入采样数据
+            const offset = 44;
+            const data = new Int16Array(buffer.length);
+            const channelData = buffer.getChannelData(0);
+            for (let i = 0; i < buffer.length; i++) {
+                const s = Math.max(-1, Math.min(1, channelData[i]));
+                data[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+            }
+            for (let i = 0; i < data.length; i++) {
+                view.setInt16(offset + i * 2, data[i], true);
+            }
+
+            return wav;
+        }
+
+        function writeString(view, offset, string) {
+            for (let i = 0; i < string.length; i++) {
+                view.setUint8(offset + i, string.charCodeAt(i));
+            }
+        }
+
+        let currentLang = '';
+
+        // 按住说话事件处理
+        function handleTouchStart(btn, lang) {
+            return async (e) => {
+                e.preventDefault();
+                if (!mediaRecorder) {
+                    await initRecorder();
+                }
+
+                currentLang = lang;
+                isRecording = true;
+                audioChunks = [];
+
+                if (mediaRecorder && mediaRecorder.state === 'inactive') {
+                    mediaRecorder.start();
+                    btn.classList.add('bg-blue-500', 'text-white');
+                    btn.classList.remove('bg-gray-100', 'text-gray-800');
+                    btn.textContent = lang === 'chinese' ? '松开结束' : 'လွှတ်ပါ';
+                    showToast('正在录音...');
+                }
+            };
+        }
+
+        function handleTouchEnd(btn, defaultText) {
+            return () => {
+                if (isRecording && mediaRecorder) {
+                    isRecording = false;
+                    mediaRecorder.stop();
+                    btn.classList.remove('bg-blue-500', 'text-white');
+                    btn.classList.add('bg-gray-100', 'text-gray-800');
+                    btn.textContent = defaultText;
+                }
+            };
+        }
+
+        // 绑定触摸事件和鼠标事件
+        chineseBtn.addEventListener('touchstart', handleTouchStart(chineseBtn, 'chinese'));
+        chineseBtn.addEventListener('touchend', handleTouchEnd(chineseBtn, '按住说中文'));
+        chineseBtn.addEventListener('touchcancel', handleTouchEnd(chineseBtn, '按住说中文'));
+        // 添加鼠标事件
+        chineseBtn.addEventListener('mousedown', handleTouchStart(chineseBtn, 'chinese'));
+        chineseBtn.addEventListener('mouseup', handleTouchEnd(chineseBtn, '按住说中文'));
+        chineseBtn.addEventListener('mouseleave', handleTouchEnd(chineseBtn, '按住说中文'));
+
+        myanmarBtn.addEventListener('touchstart', handleTouchStart(myanmarBtn, 'myanmar'));
+        myanmarBtn.addEventListener('touchend', handleTouchEnd(myanmarBtn, 'ဗမာစကား'));
+        myanmarBtn.addEventListener('touchcancel', handleTouchEnd(myanmarBtn, 'ဗမာစကား'));
+        // 添加鼠标事件
+        myanmarBtn.addEventListener('mousedown', handleTouchStart(myanmarBtn, 'myanmar'));
+        myanmarBtn.addEventListener('mouseup', handleTouchEnd(myanmarBtn, 'ဗမာစကား'));
+        myanmarBtn.addEventListener('mouseleave', handleTouchEnd(myanmarBtn, 'ဗမာစကား'));
+
+        // 防止长按时触发系统菜单
+        chineseBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+        myanmarBtn.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // 添加新消息的函数
+        function addMessage(text, translation, isChineseFirst = true) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `flex flex-col ${isChineseFirst ? 'items-start' : 'items-end'} mb-4`;
+
+            messageDiv.innerHTML = `
+                <div class="${isChineseFirst ? 'bg-gray-100' : 'bg-blue-500'} rounded-lg p-3 max-w-[80%] shadow-sm">
+                    <p class="${isChineseFirst ? 'text-gray-800' : 'text-white'}">${text}</p>
+                    <p class="${isChineseFirst ? 'text-gray-500' : 'text-blue-50'} text-sm mt-1">${translation}</p>
+                </div>
+            `;
+
+            chatContainer.appendChild(messageDiv);
+            chatContainer.scrollTop = chatContainer.scrollHeight;
+        }
+
+        // 显示提示消息
+        function showToast(message) {
+            const toast = document.createElement('div');
+            toast.className = 'fixed bottom-24 left-1/2 transform -translate-x-1/2 bg-gray-800 text-white px-4 py-2 rounded-lg opacity-0 transition-opacity duration-300';
+            toast.textContent = message;
+            document.body.appendChild(toast);
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-0');
+                toast.classList.add('opacity-90');
+            }, 100);
+
+            setTimeout(() => {
+                toast.classList.remove('opacity-90');
+                toast.classList.add('opacity-0');
+                setTimeout(() => {
+                    document.body.removeChild(toast);
+                }, 300);
+            }, 2000);
+        }
+    </script>
+</body>
+</html>

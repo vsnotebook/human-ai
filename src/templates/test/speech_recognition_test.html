@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>语音识别测试</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 引入字体图标 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .recording-animation {
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.7;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-md">
+        <h1 class="text-2xl font-bold text-center mb-6">语音识别测试</h1>
+        
+        <div class="bg-white rounded-lg shadow-md p-6 mb-6">
+            <h2 class="text-lg font-semibold mb-4">浏览器支持检测</h2>
+            <div id="supportStatus" class="p-3 rounded-md mb-4">
+                检测中...
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-gray-700 mb-2">选择语言</label>
+                <select id="languageSelect" class="w-full p-2 border rounded-md">
+                    <option value="zh-CN">中文 (zh-CN)</option>
+                    <option value="my-MM">缅甸语 (my-MM)</option>
+                    <option value="en-US">英语 (en-US)</option>
+                </select>
+            </div>
+            
+            <button id="startButton" class="w-full bg-blue-500 hover:bg-blue-600 text-white font-medium py-2 px-4 rounded-md mb-4 flex items-center justify-center">
+                <i class="fas fa-microphone mr-2"></i>
+                开始录音
+            </button>
+            
+            <div id="recordingStatus" class="hidden text-center p-4">
+                <div class="inline-block p-3 bg-red-100 rounded-full mb-2">
+                    <i id="micIcon" class="fas fa-microphone text-red-500 text-2xl recording-animation"></i>
+                </div>
+                <p>正在录音...</p>
+            </div>
+        </div>
+        
+        <div class="bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-semibold mb-4">识别结果</h2>
+            <div id="interimResult" class="italic text-gray-500 mb-2"></div>
+            <div id="finalResult" class="border-t pt-4 mt-4">
+                <div class="flex items-center mb-2">
+                    <span class="font-medium mr-2">最终结果:</span>
+                    <span id="confidenceDisplay"></span>
+                </div>
+                <p id="resultText" class="p-3 bg-gray-50 rounded-md min-h-[100px]"></p>
+            </div>
+        </div>
+        
+        <div class="mt-6 bg-white rounded-lg shadow-md p-6">
+            <h2 class="text-lg font-semibold mb-4">日志</h2>
+            <div id="logContainer" class="bg-gray-800 text-green-300 p-3 rounded-md h-[200px] overflow-y-auto font-mono text-sm"></div>
+        </div>
+    </div>
+
+    <script>
+        // DOM 元素
+        const supportStatus = document.getElementById('supportStatus');
+        const languageSelect = document.getElementById('languageSelect');
+        const startButton = document.getElementById('startButton');
+        const recordingStatus = document.getElementById('recordingStatus');
+        const interimResult = document.getElementById('interimResult');
+        const resultText = document.getElementById('resultText');
+        const confidenceDisplay = document.getElementById('confidenceDisplay');
+        const logContainer = document.getElementById('logContainer');
+        
+        // 日志函数
+        function log(message, type = 'info') {
+            const date = new Date();
+            const timestamp = `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}:${date.getSeconds().toString().padStart(2, '0')}`;
+            
+            const colors = {
+                info: 'text-green-300',
+                error: 'text-red-400',
+                warn: 'text-yellow-300'
+            };
+            
+            const logEntry = document.createElement('div');
+            logEntry.className = colors[type] || colors.info;
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            
+            logContainer.appendChild(logEntry);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+        
+        // 检查浏览器支持
+        function checkBrowserSupport() {
+            if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+                supportStatus.innerHTML = '<div class="bg-green-100 text-green-700 p-2 rounded-md"><i class="fas fa-check-circle mr-2"></i>您的浏览器支持语音识别 API</div>';
+                startButton.disabled = false;
+                
+                // 尝试创建识别实例
+                try {
+                    const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                    log('成功创建语音识别实例');
+                    
+                    // 检查是否支持连续识别
+                    if ('continuous' in recognition) {
+                        log('支持连续识别模式');
+                    }
+                    
+                    // 检查是否支持临时结果
+                    if ('interimResults' in recognition) {
+                        log('支持临时结果');
+                    }
+                    
+                    // 获取支持的语言列表
+                    if (window.speechSynthesis) {
+                        const voices = window.speechSynthesis.getVoices();
+                        if (voices.length > 0) {
+                            log(`检测到 ${voices.length} 种语音合成声音`);
+                        } else {
+                            log('无法获取语音合成声音列表', 'warn');
+                        }
+                    }
+                } catch (e) {
+                    log(`创建识别实例时出错: ${e.message}`, 'error');
+                    supportStatus.innerHTML = '<div class="bg-yellow-100 text-yellow-700 p-2 rounded-md"><i class="fas fa-exclamation-triangle mr-2"></i>浏览器支持语音识别 API，但初始化失败</div>';
+                }
+            } else {
+                supportStatus.innerHTML = '<div class="bg-red-100 text-red-700 p-2 rounded-md"><i class="fas fa-times-circle mr-2"></i>您的浏览器不支持语音识别 API</div>';
+                startButton.disabled = true;
+                log('浏览器不支持 Web Speech API', 'error');
+            }
+        }
+        
+        // 初始化语音识别
+        let recognition = null;
+        
+        function setupRecognition() {
+            // 如果已存在实例，先停止并清理
+            if (recognition) {
+                recognition.stop();
+                recognition = null;
+            }
+            
+            try {
+                // 创建新实例
+                recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+                
+                // 配置
+                recognition.continuous = false;
+                recognition.interimResults = true;
+                recognition.maxAlternatives = 1;
+                recognition.lang = languageSelect.value;
+                
+                log(`语音识别配置完成，语言设置为: ${recognition.lang}`);
+                
+                // 事件处理
+                recognition.onstart = function() {
+                    log('开始录音');
+                    recordingStatus.classList.remove('hidden');
+                    startButton.innerHTML = '<i class="fas fa-stop-circle mr-2"></i>停止录音';
+                    startButton.classList.remove('bg-blue-500', 'hover:bg-blue-600');
+                    startButton.classList.add('bg-red-500', 'hover:bg-red-600');
+                    interimResult.textContent = '';
+                    resultText.textContent = '';
+                    confidenceDisplay.textContent = '';
+                };
+                
+                recognition.onresult = function(event) {
+                    let interimTranscript = '';
+                    let finalTranscript = '';
+                    
+                    for (let i = event.resultIndex; i < event.results.length; ++i) {
+                        const transcript = event.results[i][0].transcript;
+                        
+                        if (event.results[i].isFinal) {
+                            finalTranscript += transcript;
+                            const confidence = Math.round(event.results[i][0].confidence * 100);
+                            confidenceDisplay.textContent = `置信度: ${confidence}%`;
+                            log(`最终结果: "${transcript}" (置信度: ${confidence}%)`);
+                        } else {
+                            interimTranscript += transcript;
+                        }
+                    }
+                    
+                    if (interimTranscript) {
+                        interimResult.textContent = `临时结果: ${interimTranscript}`;
+                    }
+                    
+                    if (finalTranscript) {
+                        resultText.textContent = finalTranscript;
+                    }
+                };
+                
+                recognition.onerror = function(event) {
+                    log(`识别错误: ${event.error}`, 'error');
+                    switch(event.error) {
+                        case 'no-speech':
+                            log('未检测到语音', 'warn');
+                            break;
+                        case 'aborted':
+                            log('识别被中止', 'warn');
+                            break;
+                        case 'audio-capture':
+                            log('无法捕获音频', 'error');
+                            break;
+                        case 'not-allowed':
+                            log('麦克风访问被拒绝', 'error');
+                            break;
+                        case 'service-not-allowed':
+                            log('语音识别服务不可用', 'error');
+                            break;
+                        case 'language-not-supported':
+                            log(`不支持所选语言: ${recognition.lang}`, 'error');
+                            break;
+                    }
+                    
+                    resetUI();
+                };
+                
+                recognition.onend = function() {
+                    log('录音结束');
+                    resetUI();
+                };
+                
+                return true;
+            } catch (e) {
+                log(`设置语音识别时出错: ${e.message}`, 'error');
+                return false;
+            }
+        }
+        
+        function resetUI() {
+            recordingStatus.classList.add('hidden');
+            startButton.innerHTML = '<i class="fas fa-microphone mr-2"></i>开始录音';
+            startButton.classList.remove('bg-red-500', 'hover:bg-red-600');
+            startButton.classList.add('bg-blue-500', 'hover:bg-blue-600');
+        }
+        
+        // 事件监听
+        startButton.addEventListener('click', function() {
+            if (recognition && recognition.state === 'running') {
+                // 如果正在录音，则停止
+                recognition.stop();
+                log('手动停止录音');
+            } else {
+                // 否则开始录音
+                if (setupRecognition()) {
+                    try {
+                        recognition.start();
+                    } catch (e) {
+                        log(`启动识别时出错: ${e.message}`, 'error');
+                    }
+                }
+            }
+        });
+        
+        languageSelect.addEventListener('change', function() {
+            log(`语言已更改为: ${this.value}`);
+        });
+        
+        // 页面加载时检查浏览器支持
+        window.addEventListener('DOMContentLoaded', function() {
+            checkBrowserSupport();
+            
+            // 如果浏览器支持语音合成，等待声音列表加载
+            if (window.speechSynthesis) {
+                if (speechSynthesis.onvoiceschanged !== undefined) {
+                    speechSynthesis.onvoiceschanged = function() {
+                        const voices = window.speechSynthesis.getVoices();
+                        log(`加载了 ${voices.length} 种语音合成声音`);
+                    };
+                }
+            }
+        });
+    </script>
+</body>
+</html>
