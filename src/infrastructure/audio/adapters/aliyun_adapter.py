@@ -53,10 +53,15 @@ class AliyunSpeechAdapter(SpeechRecognitionInterface):
                 # 提取识别文本
                 if result.output and result.output.get('sentence'):
                     sentence_ = result.output['sentence']
-                    text_ = sentence_[0]['text']
-                    # TODO  返回多个 要合在一起。
-                    print("阿里云识别结果:  "+text_)
-                    return text_
+                    #TODO 合并多条识别结果
+                    combined_text = ""
+                    for item in sentence_:
+                        if item.get('text'):
+                            combined_text += item['text'] + " "
+                    
+                    combined_text = combined_text.strip()
+                    print("阿里云识别结果: " + combined_text)
+                    return combined_text
                 return ""
             else:
                 raise Exception(f"语音识别失败: {result.message}")
