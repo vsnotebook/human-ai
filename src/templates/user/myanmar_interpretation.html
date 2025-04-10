@@ -274,27 +274,78 @@
 
     // 停止音频录制
     function stopAudioRecorder() {
-        // 停止处理器
+        // 标记录音即将停止，但先不断开连接
+        let pendingStop = true;
+        
+        // 给音频处理器发送停止消息，但保持连接以便发送剩余数据
         if (processorNode) {
             processorNode.port.postMessage('stop');
-            processorNode.disconnect();
-            processorNode = null;
+            
+            // 监听处理器的消息，确认所有数据都已发送
+            const originalOnMessage = processorNode.port.onmessage;
+            processorNode.port.onmessage = (event) => {
+                // 调用原始的消息处理函数
+                if (originalOnMessage) {
+                    originalOnMessage(event);
+                }
+                
+                // 当收到处理器发来的'stopped'事件，表示所有数据已处理完毕
+                if (typeof event.data === 'object' && event.data.event === 'stopped') {
+                    console.log('所有音频数据已处理完毕，现在发送stop命令');
+                    
+                    // 向WebSocket发送stop命令
+                    if (socket && socket.readyState === WebSocket.OPEN) {
+                        socket.send('stop');
+                    }
+                    
+                    // 完全断开连接
+                    completeDisconnect();
+                }
+            };
+            
+            // 设置超时保护，防止无限等待
+            setTimeout(() => {
+                if (pendingStop) {
+                    console.log('等待音频数据处理超时，强制断开连接');
+                    if (socket && socket.readyState === WebSocket.OPEN) {
+                        socket.send('stop');
+                    }
+                    completeDisconnect();
+                }
+            }, 1000); // 1秒超时
+        } else {
+            // 如果没有处理器，直接发送stop并断开连接
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                socket.send('stop');
+            }
+            completeDisconnect();
         }
-
-        // 停止音频流
-        if (stream) {
-            const tracks = stream.getTracks();
-            tracks.forEach(track => track.stop());
-            stream = null;
+        
+        // 完全断开所有连接的辅助函数
+        function completeDisconnect() {
+            pendingStop = false;
+            
+            // 断开处理器
+            if (processorNode) {
+                processorNode.disconnect();
+                processorNode = null;
+            }
+            
+            // 停止音频流
+            if (stream) {
+                const tracks = stream.getTracks();
+                tracks.forEach(track => track.stop());
+                stream = null;
+            }
+            
+            // 断开音频源
+            if (currentSource) {
+                currentSource.disconnect();
+                currentSource = null;
+            }
+            
+            console.log('音频录制器已完全停止');
         }
-
-        // 断开音频源
-        if (currentSource) {
-            currentSource.disconnect();
-            currentSource = null;
-        }
-
-        console.log('音频录制器已停止');
     }
 
     // 发送翻译请求
