@@ -62,6 +62,7 @@ sudo systemctl daemon-reload
 sudo systemctl start voice
 
 # 设置开机自启
+sudo systemctl enable nginx
 sudo systemctl enable voice
 ```
 

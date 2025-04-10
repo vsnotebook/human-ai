@@ -119,3 +119,7 @@ myanmar_interpretation.html 参考 ws_server.py  参考ws_server.py ，使用web
 
 你搞错了，不是这个时间。 阿里云识别完成后返回的字段{'sentence_id': 1, 'begin_time': 0, 'end_time': 1680, 'text': '你好，明天去。', 'channel_id': 0, 'speaker_id': None, 'sentence_end': True, 'heartbeat': False, 'words': [{'begin_time': 0, 'end_time': 672, 'text': '你好', 'punctuation': '，', 'fixed': False, 'speaker_id': None}, {'begin_time': 672, 'end_time': 1176, 'text': '明天', 'punctuation': '', 'fixed': False, 'speaker_id': None}, {'begin_time': 1176, 'end_time': 1680, 'text': '去', 'punctuation': '。', 'fixed': False, 'speaker_id': None}], 'stash': {'sentence_id': 2, 'text': '', 'begin_time': 1680, 'current_time': 1680, 'words': []}}有begin_time和end_time。单位是毫秒。 扣除这个时间。
 参考SpeechService，将识别的结果和将用户使用记录保存到数据库。方便后续追溯。
+
+
+当用户松开按住说话按钮，可能还有发送给后台的包没有发送完成。等发完最后一个包后，才向后台发送'stop'.
+
