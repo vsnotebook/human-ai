@@ -1,4 +1,5 @@
 import os
+import time
 
 from google.cloud.speech_v2 import SpeechClient
 from google.cloud.speech_v2.types import cloud_speech
@@ -174,10 +175,10 @@ def quickstart_v2_my(audio_file: str) -> cloud_speech.RecognizeResponse:
         auto_decoding_config=cloud_speech.AutoDetectDecodingConfig(),
         language_codes=["my-MM"],
         model="chirp",
-        # features=cloud_speech.RecognitionFeatures(
-        #     enable_automatic_punctuation=True,  # 自动添加标点
-        #     enable_spoken_punctuation=True,  # 识别口语中的标点
-        # )
+        features=cloud_speech.RecognitionFeatures(
+            enable_automatic_punctuation=True,  # 自动添加标点
+            # enable_spoken_punctuation=True,  # 识别口语中的标点
+        )
     )
 
     request = cloud_speech.RecognizeRequest(
@@ -239,9 +240,17 @@ print("---------------------------------------------------------------------")
 # quickstart_v2_cn("../resources/让我来告诉你吧——是手心啊，哈哈哈.wav")
 
 # quickstart_v2_cn("../resources/第五十六条 经营者违反本法规定.wav")
-# quickstart_v2_cn2("./让我来告诉你吧——是手心啊，哈哈哈.wav")
-quickstart_v2_cn2("../resources/第五十六条 经营者违反本法规定.wav")
+# quickstart_v2_cn2("../resources//让我来告诉你吧——是手心啊，哈哈哈.wav")
+# quickstart_v2_cn2("../resources/第五十六条 经营者违反本法规定.wav")
 print("---------------------------------------------------------------------")
-# quickstart_v2_my("./用户发送了一段中文文本，并希望将其翻译成缅甸文.wav")
-# quickstart_v2_my("./用户发送了一段中文文本，并希望将其翻译成缅甸文-缅甸语.mp3")
-# quickstart_v2_my2("./用户发送了一段中文文本，并希望将其翻译成缅甸文-缅甸语.mp3")
+# quickstart_v2_my("../resources//用户发送了一段中文文本，并希望将其翻译成缅甸文.wav")
+# quickstart_v2_my("../resources//用户发送了一段中文文本，并希望将其翻译成缅甸文-缅甸语.mp3")
+# quickstart_v2_my2("../resources//用户发送了一段中文文本，并希望将其翻译成缅甸文-缅甸语.mp3")
+start_time=time.time()
+quickstart_v2_my("../resources/使用现代神经网络将文本转换为语音。 将其用于工作、视频编辑、商业、广告、社交网络、娱乐等。 而是粘贴您的文本，语音并下载-缅甸语.mp3")
+print(f"\n程序执行时间: {time.time() - start_time:.2f} 秒")
+
+start_time=time.time()
+quickstart_v2_my2("../resources/使用现代神经网络将文本转换为语音。 将其用于工作、视频编辑、商业、广告、社交网络、娱乐等。 而是粘贴您的文本，语音并下载-缅甸语.mp3")
+print(f"\n程序执行时间: {time.time() - start_time:.2f} 秒")
+
