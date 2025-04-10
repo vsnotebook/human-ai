@@ -192,7 +192,7 @@ async def websocket_speech(websocket: WebSocket):
                     print("收到停止信号")
                     if recognition and is_recognition_active:
                         is_recognition_active = not await stop_recognition(recognition, callback, websocket)
-                    continue
+                    return
 
                 # 处理初始化请求
                 # 如果已有识别实例正在运行，先停止它
