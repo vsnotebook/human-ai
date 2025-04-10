@@ -99,6 +99,35 @@ sudo nginx -s reload
 ## 部署
 APP_ENV=prod uvicorn src.main_web:app --port 8080 --workers 2
 
+APP_ENV=prod /home/ec2-user/gits/human-ai/.venv/bin/uvicorn src.main_web:app --port 8080 --workers 2
+在你的FastAPI应用程序文件（例如，main.py）的目录中创建一个启动脚本，例如 run_app.sh：
+``` shell
+gunicorn -w 4 -k uvicorn.workers.UvicornWorker main:app -b 0.0.0.0:8000
+```
+这里的参数说明：
+
+-w 4: 设置工作进程数，可以根据需要进行调整。
+-k uvicorn.workers.UvicornWorker: 指定Gunicorn使用Uvicorn Worker。
+main:app: 指定FastAPI应用的模块和对象。main是你的应用文件的模块名，app是FastAPI实例的名称。
+-b 0.0.0.0:8000: 指定绑定的主机和端口号。在这个例子中，FastAPI将在本地所有可用的网络接口上监听端口8000。
+
+uvicorn 适用于运行异步 Web 应用程序，充分利用 Python 的异步特性。
+gunicorn 适用于运行同步 Web 应用程序，提供可靠的多进程支持，并可以选择性地使用异步工作模型。
+在某些情况下，你也可以结合使用两者。例如，使用 gunicorn 作为前端服务器，而在其中运行 uvicorn 作为后端，以支持异步应用程序。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
