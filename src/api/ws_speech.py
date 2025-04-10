@@ -1,15 +1,16 @@
-import traceback
-import json
-import os
 import asyncio
+import json
+import traceback
 
 import dashscope
 import websockets
-from fastapi import APIRouter, WebSocket
 from dashscope.audio.asr import Recognition, RecognitionCallback, RecognitionResult
+from fastapi import APIRouter, WebSocket
+
 from src.services.firestore_service import FirestoreService as DBService
 
 router = APIRouter()
+
 
 # 实时语音识别回调类，参考自server.py中的MyRecognitionCallback
 class SpeechRecognitionCallback(RecognitionCallback):
@@ -21,7 +22,6 @@ class SpeechRecognitionCallback(RecognitionCallback):
         self.loop = loop
         self.send_events = []
         self.user = user
-
 
     def on_open(self) -> None:
         print(f'[{self.tag}] Recognition started')
@@ -47,7 +47,7 @@ class SpeechRecognitionCallback(RecognitionCallback):
                 if RecognitionResult.is_sentence_end(sentence):
                     is_end = True
                     duration_seconds = sentence.get('end_time', 0) - sentence.get('begin_time', 0)
-                    duration_seconds = duration_seconds/1000+1
+                    duration_seconds = duration_seconds / 1000 + 1
                     if duration_seconds > 0:
                         # 使用事件循环执行异步操作
                         asyncio.run_coroutine_threadsafe(
@@ -60,7 +60,6 @@ class SpeechRecognitionCallback(RecognitionCallback):
                         #                             print(f"成功扣除试用时长: {duration_seconds}秒")
                         #                         else:
                         #                             print("扣除试用时长失败")
-
 
                 print(f"[{self.tag}] {sentence['text']}")
                 msg = {'text': sentence['text'], 'is_end': is_end}
@@ -75,6 +74,7 @@ class SpeechRecognitionCallback(RecognitionCallback):
 
     def on_close(self) -> None:
         print(f'[{self.tag}] RecognitionCallback closed')
+
 
 @router.websocket("/ws/speech")
 async def websocket_speech(websocket: WebSocket):
@@ -91,7 +91,7 @@ async def websocket_speech(websocket: WebSocket):
     recognition = None
     is_recognition_active = False
     callback = None
-    
+
     try:
         # 初始化语音识别
         while True:
@@ -105,11 +105,11 @@ async def websocket_speech(websocket: WebSocket):
             except websockets.exceptions.ConnectionClosed:
                 print("WebSocket连接已关闭")
                 break
-                
+
             if "text" in data:  # 文本消息
                 message = data["text"]
                 print(f"收到文本消息: {message}")
-                
+
                 # 检查是否为停止信号
                 if message == "stop":
                     print("收到停止信号，停止识别")
@@ -117,12 +117,12 @@ async def websocket_speech(websocket: WebSocket):
                         try:
                             recognition.stop()
                             is_recognition_active = False
-                            
+
                             # 等待所有ASR结果发送完成
                             if callback:
                                 for event in callback.send_events:
                                     await event.wait()
-                            
+
                             # 将字符串消息改为JSON格式
                             await websocket.send_json({
                                 'status': 'stopped',
@@ -132,7 +132,7 @@ async def websocket_speech(websocket: WebSocket):
                         except Exception as e:
                             print(f"停止识别错误: {str(e)}")
                     continue
-                
+
                 try:
                     # 如果已有识别实例正在运行，先停止它
                     if recognition and is_recognition_active:
@@ -141,18 +141,18 @@ async def websocket_speech(websocket: WebSocket):
                             is_recognition_active = False
                         except Exception as e:
                             print(f"停止旧识别实例错误: {str(e)}")
-                    
+
                     # 尝试解析JSON字符串
                     message_data = json.loads(message)
-                    
+
                     # 获取语言设置
                     language = message_data.get("language", "zh")
                     print(f"设置语言为: {language}")
-                    
+
                     # 创建回调实例
                     loop = asyncio.get_event_loop()
                     callback = SpeechRecognitionCallback('process0', websocket, loop, user)
-                    
+
                     # 创建识别实例
                     recognition = Recognition(
                         model='paraformer-realtime-v2',
@@ -162,24 +162,24 @@ async def websocket_speech(websocket: WebSocket):
                         semantic_punctuation_enabled=False,
                         callback=callback
                     )
-                    
+
                     # 启动识别
                     recognition.start()
                     is_recognition_active = True
                     print("语音识别已启动")
-                    
+
                     # 发送确认消息给客户端
                     await websocket.send_json({
                         'status': 'ready',
                         'message': '语音识别已准备就绪'
                     })
-                    
+
                 except json.JSONDecodeError:
                     print(f"无法解析JSON: {message}")
                 except Exception as e:
                     print(f"初始化识别错误: {str(e)}")
                     traceback.print_exc()
-                    
+
             elif "bytes" in data:  # 二进制音频数据
                 if recognition and is_recognition_active:
                     try:
@@ -200,7 +200,7 @@ async def websocket_speech(websocket: WebSocket):
                             'message': '请重新开始录音'
                         })
                     pass
-            
+
     except websockets.exceptions.ConnectionClosed:
         print("客户端断开连接")
     except Exception as e:
