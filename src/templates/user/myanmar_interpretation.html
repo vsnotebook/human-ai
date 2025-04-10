@@ -58,244 +58,269 @@
     </div>
 </div>
 
-<!-- 在 JavaScript 部分修改相关函数 -->
+<!-- 修改 JavaScript 部分 -->
 <script>
     const chatContainer = document.getElementById('chatContainer');
     const chineseBtn = document.getElementById('chineseBtn');
     const myanmarBtn = document.getElementById('myanmarBtn');
 
     let isRecording = false;
-    let socket = null;
-    let currentTranscription = '';
-    let audioContext = null;
-    let processorNode = null;
-    let currentSource = null;
-    let stream = null;
     let currentLang = '';
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let stream = null;
+    let audioContext = null;
+    let processor = null;
+    let input = null;
 
-    // 初始化WebSocket连接
-    function initWebSocket(language) {
-        // 关闭之前的连接
-        if (socket && socket.readyState !== WebSocket.CLOSED) {
-            socket.close();
-        }
+    // 按住说话事件处理
+    function handleTouchStart(btn, lang) {
+        return async (e) => {
+            e.preventDefault();
 
-        console.log('开始初始化WebSocket连接...');
+            currentLang = lang;
 
-        // 检查当前URL，确保使用正确的WebSocket地址
-        const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-        // 使用当前主机和端口
-        const host = window.location.host || 'localhost:8080';
-        const wsUrl = `${wsProtocol}//${host}/ws/speech`;
+            // 显示语音状态框
+            const voiceStatusBox = document.getElementById('voiceStatusBox');
+            const voiceStatusText = document.getElementById('voiceStatusText');
+            const waveCircle = document.getElementById('waveCircle');
 
-        console.log('尝试连接WebSocket:', wsUrl);
+            voiceStatusBox.classList.remove('hidden');
+            voiceStatusText.textContent = lang === 'chinese' ? '请说中文' : 'ဗမာစကားပြောပါ';
 
-        try {
-            socket = new WebSocket(wsUrl);
-
-            socket.onopen = function () {
-                console.log('WebSocket连接已建立');
-                // 发送语言设置
-                try {
-                    const langData = {
-                        language: language === 'chinese' ? 'zh' : 'my'
-                    };
-                    console.log('发送语言设置:', langData);
-                    socket.send(JSON.stringify(langData));
-                } catch (e) {
-                    console.error('发送语言设置错误:', e);
-                }
-            };
-
-            socket.onmessage = function (event) {
-                try {
-                    console.log('收到识别结果:', event.data);
-                    const data = JSON.parse(event.data);
-                    console.log('收到识别结果:', data);
-
-                    if (data.text) {
-                        // 更新当前识别文本
-                        currentTranscription = data.text;
-
-                        // 如果是句子结束，则发送翻译请求
-                        if (data.is_end) {
-                            sendTranslationRequest(currentTranscription, currentLang);
-                            currentTranscription = '';
-                        }
-                    } else if (data.status === 'ready') {
-                        console.log('识别服务就绪');
-                    } else if (data.status === 'stopped') {
-                        console.log('ASR服务已停止:', data.message);
-                    } else if (data.status === 'error') {
-                        showToast(data.message || '识别服务出错');
+            try {
+                // 获取麦克风权限
+                stream = await navigator.mediaDevices.getUserMedia({
+                    audio: {
+                        channelCount: 1,
+                        sampleRate: 16000,
+                        sampleSize: 16
                     }
-                } catch (e) {
-                    console.error('处理消息错误:', e, event.data);
-                }
-            };
+                });
 
-            socket.onerror = function (error) {
-                console.error('WebSocket错误:', error);
-                // showToast('WebSocket连接错误，请检查后端服务');
-            };
-
-            socket.onclose = function (event) {
-                console.log('WebSocket连接已关闭, 代码:', event.code, '原因:', event.reason);
-                if (event.code !== 1000) {
-                    // showToast('WebSocket连接已关闭: ' + (event.reason || '未知原因'));
-                }
-            };
-
-            return true;
-        } catch (e) {
-            console.error('WebSocket初始化错误:', e);
-            // showToast('无法连接到语音识别服务');
-            return false;
-        }
-    }
-
-    // 加载AudioWorklet
-    async function loadAudioWorklet() {
-        if (!audioContext) {
-            audioContext = new (window.AudioContext || window.webkitAudioContext)({sampleRate: 16000});
-        }
-
-        try {
-            // 直接加载外部JS文件
-            await audioContext.audioWorklet.addModule('/static/js/pcm-processor.js');
-            console.log('AudioWorklet加载成功');
-            return true;
-        } catch (e) {
-            console.error('加载AudioWorklet错误:', e);
-            showToast('无法初始化音频处理器');
-            return false;
-        }
-    }
-
-    // 初始化音频录制
-    async function initAudioRecorder(audioCallback) {
-        try {
-            if (!audioContext) {
-                const workletLoaded = await loadAudioWorklet();
-                if (!workletLoaded) {
-                    return false;
-                }
-            }
-
-            // 获取麦克风权限
-            stream = await navigator.mediaDevices.getUserMedia({
-                audio: {
-                    channelCount: 1,
-                    sampleRate: 16000,
-                    sampleSize: 16
-                }
-            });
-
-            // 创建音频源
-            currentSource = audioContext.createMediaStreamSource(stream);
-
-            // 创建处理节点
-            processorNode = new AudioWorkletNode(audioContext, 'pcm-processor');
-
-            // 监听从AudioWorkletProcessor发来的消息
-            processorNode.port.onmessage = (event) => {
-                if (event.data instanceof Int16Array) {
-                    if (audioCallback) {
-                        audioCallback(event.data.buffer);
-                    }
-                } else if (typeof event.data === 'object' && event.data.event) {
-                    console.log('Received event from processor:', event.data.event);
-                } else {
-                    console.log('Received message from processor:', event.data);
-                }
-            };
-
-            // 连接节点
-            currentSource.connect(processorNode);
-            processorNode.connect(audioContext.destination);
-            console.log('音频录制器已连接');
-            return true;
-        } catch (e) {
-            console.error('初始化音频录制器错误:', e);
-            showToast('无法访问麦克风');
-            return false;
-        }
-    }
-
-    // 停止音频录制
-    function stopAudioRecorder() {
-        // 标记录音即将停止，但先不断开连接
-        let pendingStop = true;
-        
-        // 给音频处理器发送停止消息，但保持连接以便发送剩余数据
-        if (processorNode) {
-            processorNode.port.postMessage('stop');
-            
-            // 监听处理器的消息，确认所有数据都已发送
-            const originalOnMessage = processorNode.port.onmessage;
-            processorNode.port.onmessage = (event) => {
-                // 调用原始的消息处理函数
-                if (originalOnMessage) {
-                    originalOnMessage(event);
-                }
+                // 创建音频上下文
+                audioContext = new (window.AudioContext || window.webkitAudioContext)({
+                    sampleRate: 16000
+                });
                 
-                // 当收到处理器发来的'stopped'事件，表示所有数据已处理完毕
-                if (typeof event.data === 'object' && event.data.event === 'stopped') {
-                    console.log('所有音频数据已处理完毕，现在发送stop命令');
-                    
-                    // 向WebSocket发送stop命令
-                    if (socket && socket.readyState === WebSocket.OPEN) {
-                        socket.send('stop');
-                    }
-                    
-                    // 完全断开连接
-                    completeDisconnect();
-                }
-            };
-            
-            // 设置超时保护，防止无限等待
-            setTimeout(() => {
-                if (pendingStop) {
-                    console.log('等待音频数据处理超时，强制断开连接');
-                    if (socket && socket.readyState === WebSocket.OPEN) {
-                        socket.send('stop');
-                    }
-                    completeDisconnect();
-                }
-            }, 1000); // 1秒超时
-        } else {
-            // 如果没有处理器，直接发送stop并断开连接
-            if (socket && socket.readyState === WebSocket.OPEN) {
-                socket.send('stop');
+                // 创建音频源
+                input = audioContext.createMediaStreamSource(stream);
+                
+                // 创建处理器
+                processor = audioContext.createScriptProcessor(4096, 1, 1);
+                
+                audioChunks = [];
+                
+                // 处理音频数据
+                processor.onaudioprocess = function(e) {
+                    const buffer = e.inputBuffer.getChannelData(0);
+                    const pcmData = new Float32Array(buffer);
+                    audioChunks.push(pcmData);
+                };
+                
+                // 连接节点
+                input.connect(processor);
+                processor.connect(audioContext.destination);
+                
+                isRecording = true;
+                
+                // 更新按钮样式
+                btn.classList.add('bg-blue-500', 'text-white');
+                btn.classList.remove('bg-gray-50', 'text-gray-800');
+                btn.textContent = lang === 'chinese' ? '松开结束' : 'လွှတ်ပါ';
+
+                // 显示录音动画
+                voiceStatusText.textContent = '聆听中...';
+                waveCircle.classList.remove('hidden');
+                waveCircle.style.animation = 'pulse 2s infinite';
+            } catch (error) {
+                console.error('获取麦克风权限失败:', error);
+                showError('无法访问麦克风');
             }
-            completeDisconnect();
+        };
+    }
+
+    function handleTouchEnd(btn, defaultText) {
+        return async () => {
+            if (isRecording) {
+                isRecording = false;
+
+                // 隐藏语音状态框
+                const voiceStatusBox = document.getElementById('voiceStatusBox');
+                const waveCircle = document.getElementById('waveCircle');
+                const voiceStatusText = document.getElementById('voiceStatusText');
+
+                voiceStatusText.textContent = '处理中...';
+
+                try {
+                    // 停止录音
+                    if (processor && input) {
+                        input.disconnect();
+                        processor.disconnect();
+                    }
+                    
+                    // 将Float32Array数据转换为WAV格式
+                    const wavBlob = createWavFile(audioChunks);
+                    
+                    // 创建FormData对象
+                    const formData = new FormData();
+                    formData.append('file', wavBlob, 'recording.wav');
+                    formData.append('language_code', currentLang === 'chinese' ? 'zh-CN' : 'my-MM');
+                    
+                    // 发送语音识别请求
+                    const response = await fetch('/speech-to-text', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    if (!response.ok) {
+                        throw new Error('语音识别请求失败');
+                    }
+                    
+                    const data = await response.json();
+                    
+                    if (data.text && data.text.trim() !== '') {
+                        // 发送翻译请求
+                        await sendTranslationRequest(data.text, currentLang);
+                    } else {
+                        showToast('未能识别到语音内容');
+                    }
+                } catch (error) {
+                    console.error('处理录音错误:', error);
+                    showError('处理录音失败: ' + error.message);
+                } finally {
+                    // 停止所有音频轨道
+                    if (stream) {
+                        stream.getTracks().forEach(track => track.stop());
+                        stream = null;
+                    }
+                    
+                    // 关闭音频上下文
+                    if (audioContext && audioContext.state !== 'closed') {
+                        audioContext.close().catch(err => console.error('关闭音频上下文失败:', err));
+                    }
+                    
+                    processor = null;
+                    input = null;
+                    audioContext = null;
+                    
+                    // 隐藏语音状态框
+                    voiceStatusBox.classList.add('hidden');
+                    waveCircle.classList.add('hidden');
+                    
+                    // 恢复按钮样式
+                    btn.classList.remove('bg-blue-500', 'text-white');
+                    btn.classList.add('bg-gray-50', 'text-gray-800');
+                    btn.textContent = defaultText;
+                }
+            }
+        };
+    }
+
+    // 创建WAV文件
+    function createWavFile(audioChunks) {
+        // 合并所有音频数据
+        let totalLength = 0;
+        for (let i = 0; i < audioChunks.length; i++) {
+            totalLength += audioChunks[i].length;
         }
         
-        // 完全断开所有连接的辅助函数
-        function completeDisconnect() {
-            pendingStop = false;
-            
-            // 断开处理器
-            if (processorNode) {
-                processorNode.disconnect();
-                processorNode = null;
-            }
-            
-            // 停止音频流
-            if (stream) {
-                const tracks = stream.getTracks();
-                tracks.forEach(track => track.stop());
-                stream = null;
-            }
-            
-            // 断开音频源
-            if (currentSource) {
-                currentSource.disconnect();
-                currentSource = null;
-            }
-            
-            console.log('音频录制器已完全停止');
+        // 创建合并后的Float32Array
+        const mergedData = new Float32Array(totalLength);
+        let offset = 0;
+        for (let i = 0; i < audioChunks.length; i++) {
+            mergedData.set(audioChunks[i], offset);
+            offset += audioChunks[i].length;
         }
+        
+        // 将Float32Array转换为Int16Array (16位PCM)
+        const pcmData = new Int16Array(mergedData.length);
+        for (let i = 0; i < mergedData.length; i++) {
+            // 将-1到1的浮点数转换为-32768到32767的整数
+            const s = Math.max(-1, Math.min(1, mergedData[i]));
+            pcmData[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+        }
+        
+        // 创建WAV文件头
+        const wavHeader = createWavHeader(pcmData.length);
+        
+        // 合并头部和数据
+        const wavFile = new Uint8Array(wavHeader.length + pcmData.length * 2);
+        wavFile.set(wavHeader, 0);
+        
+        // 将Int16Array数据复制到Uint8Array中
+        const pcmBytes = new Uint8Array(pcmData.buffer);
+        wavFile.set(pcmBytes, wavHeader.length);
+        
+        // 创建Blob对象
+        return new Blob([wavFile], { type: 'audio/wav' });
+    }
+
+    // 创建WAV文件头
+    function createWavHeader(dataLength) {
+        const numChannels = 1; // 单声道
+        const sampleRate = 16000; // 采样率
+        const bitsPerSample = 16; // 位深
+        const byteRate = sampleRate * numChannels * bitsPerSample / 8;
+        const blockAlign = numChannels * bitsPerSample / 8;
+        const dataSize = dataLength * bitsPerSample / 8;
+        const chunkSize = 36 + dataSize;
+        
+        const header = new ArrayBuffer(44);
+        const view = new DataView(header);
+        
+        // "RIFF"
+        view.setUint8(0, 0x52); // R
+        view.setUint8(1, 0x49); // I
+        view.setUint8(2, 0x46); // F
+        view.setUint8(3, 0x46); // F
+        
+        // 文件大小
+        view.setUint32(4, chunkSize, true);
+        
+        // "WAVE"
+        view.setUint8(8, 0x57);  // W
+        view.setUint8(9, 0x41);  // A
+        view.setUint8(10, 0x56); // V
+        view.setUint8(11, 0x45); // E
+        
+        // "fmt "
+        view.setUint8(12, 0x66); // f
+        view.setUint8(13, 0x6D); // m
+        view.setUint8(14, 0x74); // t
+        view.setUint8(15, 0x20); // 空格
+        
+        // fmt chunk大小
+        view.setUint32(16, 16, true);
+        
+        // 音频格式 (1 = PCM)
+        view.setUint16(20, 1, true);
+        
+        // 声道数
+        view.setUint16(22, numChannels, true);
+        
+        // 采样率
+        view.setUint32(24, sampleRate, true);
+        
+        // 字节率
+        view.setUint32(28, byteRate, true);
+        
+        // 块对齐
+        view.setUint16(32, blockAlign, true);
+        
+        // 位深
+        view.setUint16(34, bitsPerSample, true);
+        
+        // "data"
+        view.setUint8(36, 0x64); // d
+        view.setUint8(37, 0x61); // a
+        view.setUint8(38, 0x74); // t
+        view.setUint8(39, 0x61); // a
+        
+        // 数据大小
+        view.setUint32(40, dataSize, true);
+        
+        return new Uint8Array(header);
     }
 
     // 发送翻译请求
@@ -419,96 +444,6 @@
         }
     }
 
-    // 按住说话事件处理
-    function handleTouchStart(btn, lang) {
-        return async (e) => {
-            e.preventDefault();
-
-            currentLang = lang;
-
-            // 显示语音状态框
-            const voiceStatusBox = document.getElementById('voiceStatusBox');
-            const voiceStatusText = document.getElementById('voiceStatusText');
-            const waveCircle = document.getElementById('waveCircle');
-
-            voiceStatusBox.classList.remove('hidden');
-            voiceStatusText.textContent = lang === 'chinese' ? '请说中文' : 'ဗမာစကားပြောပါ';
-
-            console.log('准备初始化WebSocket连接...');
-            // 初始化WebSocket连接
-            const wsConnected = initWebSocket(lang);
-            console.log('WebSocket连接初始化结果:', wsConnected);
-
-            if (!wsConnected) {
-                showError('无法连接到语音识别服务');
-                return;
-            }
-
-            // 等待WebSocket连接建立
-            let checkCount = 0;
-            const maxChecks = 10;
-            const checkInterval = setInterval(() => {
-                checkCount++;
-                console.log(`检查WebSocket状态 (${checkCount}/${maxChecks}):`, socket ? socket.readyState : 'socket未创建');
-
-                if (socket && socket.readyState === WebSocket.OPEN) {
-                    clearInterval(checkInterval);
-                    console.log('--------------------------2');
-                    initAudioRecorder((audioBuffer) => {
-                        console.log('--------------------------3');
-                        if (socket && socket.readyState === WebSocket.OPEN) {
-                            console.log('--------------------------4');
-                            socket.send(audioBuffer);
-                        }
-                    }).then(recorderInitialized => {
-                        console.log('--------------------------5');
-                        if (recorderInitialized) {
-                            isRecording = true;
-                            btn.classList.add('bg-blue-500', 'text-white');
-                            btn.classList.remove('bg-gray-50', 'text-gray-800');
-                            btn.textContent = lang === 'chinese' ? '松开结束' : 'လွှတ်ပါ';
-
-                            // 显示录音动画
-                            voiceStatusText.textContent = '聆听中...';
-                            waveCircle.classList.remove('hidden');
-                            waveCircle.style.animation = 'pulse 2s infinite';
-                        } else {
-                            showError('无法初始化录音');
-                        }
-                    });
-                } else if (checkCount >= maxChecks) {
-                    clearInterval(checkInterval);
-                    showError('WebSocket连接超时，请重试');
-                }
-            }, 300);
-        };
-    }
-
-    function handleTouchEnd(btn, defaultText) {
-        return () => {
-            if (isRecording) {
-                isRecording = false;
-
-                // 隐藏语音状态框
-                const voiceStatusBox = document.getElementById('voiceStatusBox');
-                const waveCircle = document.getElementById('waveCircle');
-
-                voiceStatusBox.classList.add('hidden');
-                waveCircle.classList.add('hidden');
-
-                stopAudioRecorder();
-
-                if (socket && socket.readyState === WebSocket.OPEN) {
-                    socket.send('stop');
-                }
-
-                btn.classList.remove('bg-blue-500', 'text-white');
-                btn.classList.add('bg-gray-50', 'text-gray-800');
-                btn.textContent = defaultText;
-            }
-        };
-    }
-
     // 绑定触摸事件和鼠标事件
     chineseBtn.addEventListener('touchstart', handleTouchStart(chineseBtn, 'chinese'));
     chineseBtn.addEventListener('touchend', handleTouchEnd(chineseBtn, '按住说中文'));
@@ -525,6 +460,26 @@
     myanmarBtn.addEventListener('mousedown', handleTouchStart(myanmarBtn, 'myanmar'));
     myanmarBtn.addEventListener('mouseup', handleTouchEnd(myanmarBtn, 'ဗမာစကား'));
     myanmarBtn.addEventListener('mouseleave', handleTouchEnd(myanmarBtn, 'ဗမာစကား'));
+
+    // 添加CSS动画
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes pulse {
+            0% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.5;
+            }
+            100% {
+                transform: scale(1);
+                opacity: 0.8;
+            }
+        }
+    `;
+    document.head.appendChild(style);
 
     // 添加新消息的函数
     function addMessage(text, translation, isChineseFirst = true) {

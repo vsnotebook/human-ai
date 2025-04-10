@@ -19,6 +19,9 @@ class TextToSpeechRequest(BaseModel):
     text: str
     language_code: str
 
+class SpeechToTextRequest(BaseModel):
+    language_code: str
+
 
 router = APIRouter()
 translate_client = translate.Client()
@@ -39,6 +42,50 @@ async def myanmar_interpretation_page(request: Request, current_user=Depends(get
 @timing_decorator("语音识别")
 async def speech_recognition(audio_content: bytes, source_language: str, user_id: str, filename: str) -> str:
     return await SpeechService.transcribe_by_userid(audio_content, source_language, user_id, filename)
+
+# 添加新的语音识别接口
+@router.post("/speech-to-text")
+async def speech_to_text_api(
+    request: Request,
+    file: UploadFile = File(...),
+    language_code: str = Form(...)
+):
+    try:
+        # 获取当前用户
+        user = await get_current_user(request)
+        if not user:
+            return JSONResponse(
+                content={"error": "用户未登录，请先登录"},
+                status_code=401,
+            )
+
+        if not file.content_type.startswith("audio/"):
+            return JSONResponse(
+                content={"error": "无效的文件类型。只允许音频文件。"},
+                status_code=400,
+            )
+
+        # 读取音频内容
+        audio_content = await file.read()
+        
+        # 调用语音识别服务
+        transcription = await speech_recognition(
+            audio_content,
+            language_code,
+            user.get("id"),
+            file.filename
+        )
+        
+        # 返回识别结果
+        return {
+            "text": transcription,
+            "language": language_code
+        }
+
+    except ValueError as e:
+        return JSONResponse(content={"error": str(e)}, status_code=400)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @router.post("/myanmar-interpretation")

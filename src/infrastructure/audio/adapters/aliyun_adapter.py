@@ -52,7 +52,11 @@ class AliyunSpeechAdapter(SpeechRecognitionInterface):
             if result.status_code == HTTPStatus.OK:
                 # 提取识别文本
                 if result.output and result.output.get('sentence'):
-                    return result.output['sentence'][0]['text']
+                    sentence_ = result.output['sentence']
+                    text_ = sentence_[0]['text']
+                    # TODO  返回多个 要合在一起。
+                    print("阿里云识别结果:  "+text_)
+                    return text_
                 return ""
             else:
                 raise Exception(f"语音识别失败: {result.message}")

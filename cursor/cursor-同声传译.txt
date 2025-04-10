@@ -132,3 +132,42 @@ google的语音识别网址：https://cloud.google.com/speech-to-text/v2/docs/st
 google的语音识别代码参考
 要求代码高内聚，低耦合
 
+#############################################
+interpretation.py speech_service.py myanmar_interpretation.html
+google 的流式语音识别不支持缅甸语音。
+语音识别，去掉websocket，改为普通api请求。
+api接口参考，interpretation.py的/myanmar-interpretation
+
+/myanmar-interpretation 接口代码保持不变。
+添加 /speech-to-text 接口，专门用来识别语音。
+使用 /myanmar-interpretation/text 接口，用来翻译
+使用 /text-to-speech 接口，用来合成语音。
+
+如果语言是中文，则用阿里语言识别接口处理。
+如果语言是缅甸文，则用谷歌语言识别接口处理。
+
+
+
+user_service.py 报错无法使用mutagen获取音频时长。 前端预先将录入语言处理成阿里云能处理的格式。
+修改前端的语音录入方式。
+- 编码：PCM
+- 采样率：16kHz
+- 位深：16位
+- 声道：单声道
+使用wav格式。
+不要改后端
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

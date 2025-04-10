@@ -13,7 +13,7 @@ from src.services.firestore_service import FirestoreService as DBService
 class SpeechService:
 
     @staticmethod
-    async def transcribe_by_userid(audio_content: bytes, language_code: str, user_id: str = None, file_name: str = None) -> str:
+    async def transcribe_by_userid(audio_content: bytes, language_code: str, user_id: str = None, filename: str = None) -> str:
         if not user_id:
             print("用户ID为空")
             raise ValueError("系统错误")
@@ -30,11 +30,15 @@ class SpeechService:
         # 记录开始时间
         start_time = datetime.datetime.now()
 
-        # speech_service = AudioServiceFactory.get_speech_service(provider="google")
-        speech_service = AudioServiceFactory.get_speech_service(provider="aliyun")
+        # 根据语言选择不同的识别服务
+        # 如果是中文，使用阿里云服务
+        # 如果是缅甸语，使用谷歌服务
+        if language_code.startswith('zh'):
+            speech_service = AudioServiceFactory.get_speech_service(provider="aliyun")
+        else:
+            speech_service = AudioServiceFactory.get_speech_service(provider="google")
 
         # 执行语音识别
-        # transcription = await SpeechService.transcribe(audio_content, language_code)
         transcription = await speech_service.recognize(audio_content, language_code)
 
         # 记录结束时间
@@ -47,7 +51,7 @@ class SpeechService:
             "user_id": user_id,
             "task_type": "asr",  # 语音识别
             "language_code": language_code,
-            "file_name": file_name,
+            "file_name": filename,
             "audio_duration": audio_duration,
             "process_time": process_time,
             "text_length": len(transcription),
@@ -65,13 +69,6 @@ class SpeechService:
     @staticmethod
     async def transcribe(audio_content: bytes, language_code: str) -> str:
         # 获取语言对应的区域
-        # language_settings = LANGUAGE_CONFIG.get(language_code, {
-        #     "name": "English (United States)",
-        #     "region": "global",
-        #     "model": "long",
-        #     "language_code": "en-US"
-        # })
-
         language_settings = LANGUAGE_CONFIG.get(language_code)
 
         language_code = language_settings['language_code']
@@ -79,8 +76,6 @@ class SpeechService:
         model = language_settings['model']
 
         client_options = {"api_endpoint": f"{region}-speech.googleapis.com"}
-        # credentials = service_account.Credentials.from_service_account_file(CREDENTIALS_PATH)
-        # speech_client = speech.SpeechClient(credentials=credentials, client_options=client_options)
         speech_client = speech.SpeechClient(client_options=client_options)
 
         config = cloud_speech.RecognitionConfig(
@@ -89,7 +84,6 @@ class SpeechService:
             model=model,
             features=cloud_speech.RecognitionFeatures(
                 enable_automatic_punctuation=True,  # 自动添加标点
-                # enable_spoken_punctuation=True,  # 识别口语中的标点
             )
         )
 
