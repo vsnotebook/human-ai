@@ -2,6 +2,7 @@ from typing import Dict, Type
 from src.infrastructure.audio.interfaces import SpeechRecognitionInterface, TranslationInterface, TextToSpeechInterface
 from src.infrastructure.audio.adapters.google_adapter import GoogleSpeechAdapter, GoogleTranslateAdapter, GoogleTTSAdapter
 from src.infrastructure.audio.adapters.aliyun_adapter import AliyunSpeechAdapter, AliyunTranslateAdapter, AliyunTTSAdapter
+from src.infrastructure.audio.adapters.azure_adapter import AzureSpeechAdapter, AzureTranslateAdapter, AzureTTSAdapter
 from src.core.config import settings
 
 class AudioServiceFactory:
@@ -9,16 +10,19 @@ class AudioServiceFactory:
     _speech_adapters: Dict[str, Type[SpeechRecognitionInterface]] = {
         "google": GoogleSpeechAdapter,
         "aliyun": AliyunSpeechAdapter,
+        "azure": AzureSpeechAdapter,
     }
     
     _translate_adapters: Dict[str, Type[TranslationInterface]] = {
         "google": GoogleTranslateAdapter,
         "aliyun": AliyunTranslateAdapter,
+        "azure": AzureTranslateAdapter,
     }
     
     _tts_adapters: Dict[str, Type[TextToSpeechInterface]] = {
         "google": GoogleTTSAdapter,
         "aliyun": AliyunTTSAdapter,
+        "azure": AzureTTSAdapter,
     }
     
     @classmethod
@@ -31,6 +35,11 @@ class AudioServiceFactory:
         # 根据提供商获取配置
         if provider.lower() == "aliyun":
             return adapter_class()
+        elif provider.lower() == "azure":
+            return adapter_class(
+                # subscription_key=settings.AZURE_SPEECH_KEY,
+                # region=settings.AZURE_REGION
+            )
         else:
             return adapter_class()
     
@@ -47,6 +56,11 @@ class AudioServiceFactory:
                 access_key_id=settings.ALIYUN_ACCESS_KEY_ID,
                 access_key_secret=settings.ALIYUN_ACCESS_KEY_SECRET
             )
+        elif provider.lower() == "azure":
+            return adapter_class(
+                subscription_key=settings.AZURE_TRANSLATOR_KEY,
+                region=settings.AZURE_REGION
+            )
         else:
             return adapter_class()
     
@@ -62,6 +76,11 @@ class AudioServiceFactory:
             return adapter_class(
                 access_key_id=settings.ALIYUN_ACCESS_KEY_ID,
                 access_key_secret=settings.ALIYUN_ACCESS_KEY_SECRET
+            )
+        elif provider.lower() == "azure":
+            return adapter_class(
+                subscription_key=settings.AZURE_SPEECH_KEY,
+                region=settings.AZURE_REGION
             )
         else:
             return adapter_class()

@@ -34,9 +34,11 @@ class SpeechService:
         # 如果是中文，使用阿里云服务
         # 如果是缅甸语，使用谷歌服务
         if language_code.startswith('zh'):
-            speech_service = AudioServiceFactory.get_speech_service(provider="aliyun")
+            # speech_service = AudioServiceFactory.get_speech_service(provider="aliyun")
+            speech_service = AudioServiceFactory.get_speech_service(provider="azure")
         else:
-            speech_service = AudioServiceFactory.get_speech_service(provider="google")
+            # speech_service = AudioServiceFactory.get_speech_service(provider="google")
+            speech_service = AudioServiceFactory.get_speech_service(provider="azure")
 
         # 执行语音识别
         transcription = await speech_service.recognize(audio_content, language_code)
