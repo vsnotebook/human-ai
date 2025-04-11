@@ -17,7 +17,8 @@ class AzureSpeechAdapter(SpeechRecognitionInterface):
     async def recognize(self, audio_content: bytes, language_code: str, **kwargs) -> str:
         try:
             print("使用 Azure 语音识别")
-            
+            print(language_code)
+
             # 创建临时文件并写入音频数据
             with tempfile.NamedTemporaryFile(delete=False, suffix='.wav') as temp_file:
                 temp_file.write(audio_content)
@@ -59,6 +60,7 @@ class AzureSpeechAdapter(SpeechRecognitionInterface):
                     if os.path.exists(temp_file_path):
                         print(f"尝试删除临时文件: {temp_file_path}")
                         os.unlink(temp_file_path)
+                        print(f"删除临时文件: {temp_file_path}完成")
                 except Exception as e:
                     print(f"删除临时文件失败: {str(e)}，这不会影响识别结果")
             
