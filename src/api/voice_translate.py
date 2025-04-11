@@ -4,8 +4,9 @@ from fastapi.templating import Jinja2Templates
 from typing import Optional
 import os
 import tempfile
-from google.cloud import speech_v1p1beta1 as speech
-from google.cloud import translate_v2 as translate
+# 移除直接导入客户端
+# from google.cloud import speech_v1p1beta1 as speech
+# from google.cloud import translate_v2 as translate
 import requests
 import json
 import uuid
@@ -13,16 +14,17 @@ import urllib3
 from src.core.template import templates
 from src.services.speech_service import SpeechService
 from src.utils.http_session_util import get_current_user
+# 导入客户端管理模块
+from src.services.google_clients import get_speech_client, get_translate_client
 
 # 禁用SSL警告
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 router = APIRouter()
 
-# 语音识别客户端
-speech_client = speech.SpeechClient()
-# 翻译客户端
-translate_client = translate.Client()
+# 移除顶层客户端初始化
+# speech_client = speech.SpeechClient()
+# translate_client = translate.Client()
 
 
 @router.get("/user/voice-translate", response_class=HTMLResponse)
@@ -108,6 +110,11 @@ async def voice_translate_api(
 
 def transcribe_audio(file_path: str, language_code: str, model: str) -> str:
     """使用Google Speech-to-Text API转写音频"""
+    # 懒加载方式获取客户端
+    speech_client = get_speech_client()
+    
+    # 导入需要的类
+    from google.cloud import speech_v1p1beta1 as speech
 
     # 读取音频文件
     with open(file_path, "rb") as audio_file:
@@ -153,6 +160,8 @@ def transcribe_audio(file_path: str, language_code: str, model: str) -> str:
 
 def translate_text(target: str, text: str, source: str = None) -> dict:
     """使用Google Translate API翻译文本"""
+    # 懒加载方式获取客户端
+    translate_client = get_translate_client()
 
     if isinstance(text, bytes):
         text = text.decode("utf-8")
