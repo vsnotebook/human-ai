@@ -10,9 +10,11 @@ from http import HTTPStatus
 
 class AzureSpeechAdapter(SpeechRecognitionInterface):
     def __init__(self, subscription_key=None, region="southeastasia"):
-        self.subscription_key = subscription_key or os.environ.get('SPEECH_KEY')
+        # self.subscription_key = subscription_key or os.environ.get('SPEECH_KEY')
+        self.subscription_key = os.getenv('SPEECH_KEY')
         self.region = region
         self.endpoint = f"https://{region}.api.cognitive.microsoft.com/"
+        print(subscription_key)
     
     async def recognize(self, audio_content: bytes, language_code: str, **kwargs) -> str:
         try:
