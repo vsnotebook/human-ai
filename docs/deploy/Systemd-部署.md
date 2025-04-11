@@ -15,6 +15,7 @@ Group=ec2-user
 WorkingDirectory=/home/ec2-user/gits/human-ai
 Environment="APP_ENV=prod"
 Environment="GOOGLE_APPLICATION_CREDENTIALS=/home/ec2-user/.my/human-ai-454609-bf84b910d612.json"
+Environment="SPEECH_KEY=BeWpCdgXI6sVCcTze83M6sbJ7w7k9jiD47mNMy9YvuqzEpDYQL1qJQQJ99BDACqBBLyXJ3w3AAAYACOGVr7I"
 
 # 通过 venv 的 Python 解释器启动服务
 ExecStart=/home/ec2-user/gits/human-ai/.venv/bin/uvicorn src.main_web:app --port 8080 --workers 2

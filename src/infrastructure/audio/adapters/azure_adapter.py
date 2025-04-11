@@ -46,6 +46,7 @@ class AzureSpeechAdapter(SpeechRecognitionInterface):
                 speech_recognizer = speechsdk.SpeechRecognizer(speech_config=speech_config, audio_config=audio_config)
                 
                 # 执行语音识别
+                # TODO 一次识别，改成连续识别。
                 result = speech_recognizer.recognize_once_async().get()
                 
                 # 确保在尝试删除文件前释放所有资源
