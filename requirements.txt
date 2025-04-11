@@ -28,3 +28,4 @@ openai
 sse-starlette
 dashscope
 uvicorn[standard]
+azure-cognitiveservices-speech
