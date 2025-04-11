@@ -72,6 +72,10 @@ class AzureSpeechAdapter(SpeechRecognitionInterface):
                 return ""
             elif result.reason == speechsdk.ResultReason.Canceled:
                 cancellation_details = result.cancellation_details
+                print("Speech Recognition canceled: {}".format(cancellation_details.reason))
+                if cancellation_details.reason == speechsdk.CancellationReason.Error:
+                    print("Error details: {}".format(cancellation_details.error_details))
+                print(result.cancellation_details.error_details)
                 raise Exception(f"语音识别已取消: {cancellation_details.reason}")
                 
         except Exception as e:
